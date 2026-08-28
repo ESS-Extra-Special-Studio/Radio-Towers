@@ -9,6 +9,7 @@ displayName="RadioTowers"
 displayURL="https://modrinth.com/project/apocalypse-structures-radio-towers-and-airdrops"
 credits="Original mod by that1lilguy — https://www.curseforge.com/members/that1lilguy/projects — (project owner; not Extra Special Studio). Dead Air integration and maintenance builds: Extra Special Studio (collaborator). Panel GUIs use ExtraSpecialCore."
 authors="that1lilguy"
+logoFile="radiotowers.png"
 # Required on dedicated server and client: same JAR on both; red X if versions mismatch (universal mod).
 displayTest="MATCH_VERSION"
 description='''
