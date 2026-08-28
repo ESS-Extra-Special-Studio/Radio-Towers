@@ -1,0 +1,33 @@
+{
+  "_fv": 79,
+  "_type": "structure",
+  "definition": {
+    "structure": "airdrop",
+    "projection": "terrain_matching",
+    "ignoredBlocks": [
+      {
+        "value": "Blocks.STRUCTURE_BLOCK"
+      },
+      {
+        "value": "Blocks.SPONGE#1"
+      }
+    ],
+    "spacing": 170,
+    "separation": 110,
+    "restrictionBiomes": [
+      {
+        "value": "#forge:is_plains"
+      }
+    ],
+    "terrainAdaptation": "none",
+    "generationStep": "SURFACE_STRUCTURES",
+    "surfaceDetectionType": "OCEAN_FLOOR",
+    "useStartHeight": false,
+    "startHeightProviderType": "UNIFORM",
+    "startHeightMin": 0,
+    "startHeightMax": 128,
+    "size": 1,
+    "maxDistanceFromCenter": 64,
+    "jigsawPools": []
+  }
+}

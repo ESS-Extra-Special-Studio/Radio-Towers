@@ -1,0 +1,70 @@
+{
+  "mappings": {
+    "net/mcreator/radiotowers/mixin/LevelAddEntityMixin": {
+      "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_7967_(Lnet/minecraft/world/entity/Entity;)Z",
+      "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8847_(Lnet/minecraft/world/entity/Entity;)Z",
+      "addEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8872_(Lnet/minecraft/world/entity/Entity;)Z"
+    },
+    "net/mcreator/radiotowers/mixin/LivingEntityWaveMixin": {
+      "setInvulnerable(Z)V": "Lnet/minecraft/world/entity/Entity;m_20331_(Z)V"
+    },
+    "net/mcreator/radiotowers/mixin/LivingEntityFireImmuneWaveMixin": {
+      "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+    },
+    "net/mcreator/radiotowers/mixin/MobWaveMixin": {
+      "setNoAi": "Lnet/minecraft/world/entity/Mob;m_21557_(Z)V"
+    },
+    "net/mcreator/radiotowers/mixin/EntityInvulnWaveMixin": {
+      "setInvulnerable": "Lnet/minecraft/world/entity/Entity;m_20331_(Z)V"
+    },
+    "net/mcreator/radiotowers/mixin/EntitySetPosMixin": {
+      "setPos(DDD)V": "Lnet/minecraft/world/entity/Entity;m_6034_(DDD)V"
+    },
+    "net/mcreator/radiotowers/mixin/LivingEntityHurtWaveMixin": {
+      "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+    },
+    "net/mcreator/radiotowers/mixin/LevelTagWaveSpawnMixin": {
+      "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_7967_(Lnet/minecraft/world/entity/Entity;)Z",
+      "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8847_(Lnet/minecraft/world/entity/Entity;)Z",
+      "addEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8872_(Lnet/minecraft/world/entity/Entity;)Z"
+    },
+    "net/mcreator/radiotowers/mixin/MobNoAiWaveMixin": {
+      "setNoAi": "Lnet/minecraft/world/entity/Mob;m_21557_(Z)V"
+    }
+  },
+  "data": {
+    "searge": {
+      "net/mcreator/radiotowers/mixin/LevelAddEntityMixin": {
+        "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_7967_(Lnet/minecraft/world/entity/Entity;)Z",
+        "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8847_(Lnet/minecraft/world/entity/Entity;)Z",
+        "addEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8872_(Lnet/minecraft/world/entity/Entity;)Z"
+      },
+      "net/mcreator/radiotowers/mixin/LivingEntityWaveMixin": {
+        "setInvulnerable(Z)V": "Lnet/minecraft/world/entity/Entity;m_20331_(Z)V"
+      },
+      "net/mcreator/radiotowers/mixin/LivingEntityFireImmuneWaveMixin": {
+        "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+      },
+      "net/mcreator/radiotowers/mixin/MobWaveMixin": {
+        "setNoAi": "Lnet/minecraft/world/entity/Mob;m_21557_(Z)V"
+      },
+      "net/mcreator/radiotowers/mixin/EntityInvulnWaveMixin": {
+        "setInvulnerable": "Lnet/minecraft/world/entity/Entity;m_20331_(Z)V"
+      },
+      "net/mcreator/radiotowers/mixin/EntitySetPosMixin": {
+        "setPos(DDD)V": "Lnet/minecraft/world/entity/Entity;m_6034_(DDD)V"
+      },
+      "net/mcreator/radiotowers/mixin/LivingEntityHurtWaveMixin": {
+        "hurt": "Lnet/minecraft/world/entity/LivingEntity;m_6469_(Lnet/minecraft/world/damagesource/DamageSource;F)Z"
+      },
+      "net/mcreator/radiotowers/mixin/LevelTagWaveSpawnMixin": {
+        "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_7967_(Lnet/minecraft/world/entity/Entity;)Z",
+        "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8847_(Lnet/minecraft/world/entity/Entity;)Z",
+        "addEntity(Lnet/minecraft/world/entity/Entity;)Z": "Lnet/minecraft/server/level/ServerLevel;m_8872_(Lnet/minecraft/world/entity/Entity;)Z"
+      },
+      "net/mcreator/radiotowers/mixin/MobNoAiWaveMixin": {
+        "setNoAi": "Lnet/minecraft/world/entity/Mob;m_21557_(Z)V"
+      }
+    }
+  }
+}

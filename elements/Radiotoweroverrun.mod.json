@@ -1,0 +1,33 @@
+{
+  "_fv": 79,
+  "_type": "structure",
+  "definition": {
+    "structure": "tower_overrun",
+    "projection": "rigid",
+    "ignoredBlocks": [
+      {
+        "value": "Blocks.STRUCTURE_BLOCK"
+      },
+      {
+        "value": "Blocks.SPONGE#1"
+      }
+    ],
+    "spacing": 112,
+    "separation": 56,
+    "restrictionBiomes": [
+      {
+        "value": "#radiotowers:has_radio_tower"
+      }
+    ],
+    "terrainAdaptation": "beard_thin",
+    "generationStep": "SURFACE_STRUCTURES",
+    "surfaceDetectionType": "MOTION_BLOCKING_NO_LEAVES",
+    "useStartHeight": false,
+    "startHeightProviderType": "UNIFORM",
+    "startHeightMin": 0,
+    "startHeightMax": 128,
+    "size": 1,
+    "maxDistanceFromCenter": 64,
+    "jigsawPools": []
+  }
+}

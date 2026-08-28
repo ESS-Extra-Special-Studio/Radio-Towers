@@ -1,0 +1,65 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="Not specified"
+
+[[mods]]
+modId="radiotowers"
+version="${mod_version}"
+displayName="RadioTowers"
+displayURL="https://modrinth.com/project/apocalypse-structures-radio-towers-and-airdrops"
+credits="Original mod by that1lilguy — https://www.curseforge.com/members/that1lilguy/projects — (project owner; not Extra Special Studio). Dead Air integration and maintenance builds: Extra Special Studio (collaborator). Panel GUIs use ExtraSpecialCore."
+authors="that1lilguy"
+# Required on dedicated server and client: same JAR on both; red X if versions mismatch (universal mod).
+displayTest="MATCH_VERSION"
+description='''
+Server and client: install this mod on the dedicated server and on every client. Version must match on both sides.
+'''
+
+# Start of user code block mod configuration
+# End of user code block mod configuration
+
+[[dependencies.radiotowers]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1]"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
+    modId="dead_air"
+    mandatory=false
+    versionRange="[1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
+    modId="extraspecialcore"
+    mandatory=true
+    versionRange="${esc_version_range}"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
+    modId="tacz"
+    mandatory=false
+    versionRange="[1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Optional: defense waves + delayed airdrop delivery. Without these, Call Airdrop spawns the plane immediately.
+[[dependencies.radiotowers]]
+    modId="berezkas_zombie_waves_api"
+    mandatory=false
+    versionRange="[1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
+    modId="berezka_api"
+    mandatory=false
+    versionRange="[1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Start of user code block dependencies configuration
+# End of user code block dependencies configuration

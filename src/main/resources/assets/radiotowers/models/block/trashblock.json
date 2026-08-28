@@ -1,0 +1,9 @@
+{
+  "parent": "radiotowers:custom/trash",
+  "textures": {
+    "all": "radiotowers:block/ren.rgb_color.0001",
+    "particle": "radiotowers:block/ren.rgb_color.0001",
+    "missing": "radiotowers:block/ren.rgb_color.0001"
+  },
+  "render_type": "solid"
+}

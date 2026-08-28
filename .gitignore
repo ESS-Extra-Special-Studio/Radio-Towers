@@ -1,0 +1,32 @@
+# Gradle / Forge
+.gradle/
+build/
+run/
+out/
+bin/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# Logs / crashes
+*.log
+hs_err_pid*
+
+# JARs (build outputs — never commit binaries)
+*.jar
+*.war
+*.zip
+
+# MCreator local cache (if present)
+.mcreator/

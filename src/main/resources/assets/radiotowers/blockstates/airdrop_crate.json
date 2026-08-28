@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "radiotowers:block/airdrop_crate"
+    },
+    "facing=east": {
+      "model": "radiotowers:block/airdrop_crate",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "radiotowers:block/airdrop_crate",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "radiotowers:block/airdrop_crate",
+      "y": 270
+    }
+  }
+}

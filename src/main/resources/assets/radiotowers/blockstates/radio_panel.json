@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "radiotowers:block/radio_panel"
+    },
+    "facing=east": {
+      "model": "radiotowers:block/radio_panel",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "radiotowers:block/radio_panel",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "radiotowers:block/radio_panel",
+      "y": 270
+    }
+  }
+}

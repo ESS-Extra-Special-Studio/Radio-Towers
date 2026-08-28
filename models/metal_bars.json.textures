@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "default": {
+      "map": {
+        "missing": "iron_bars2"
+      },
+      "name": "default"
+    }
+  }
+}

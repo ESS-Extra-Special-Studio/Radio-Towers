@@ -1,0 +1,26 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+includeBuild('../../IdeaProjects/ESL') {
+    dependencySubstitution {
+        substitute module('uk.co.extraspecialstudio:extraspeciallib') using project(':')
+    }
+}
+
+includeBuild('../../IdeaProjects/ESC') {
+    dependencySubstitution {
+        substitute module('uk.creatopia.unbound:extraspecialcore') using project(':')
+        substitute module('uk.co.extraspecialstudio:extraspecialcore') using project(':')
+    }
+}

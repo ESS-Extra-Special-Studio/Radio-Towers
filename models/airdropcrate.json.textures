@@ -1,0 +1,10 @@
+{
+  "mappings": {
+    "default": {
+      "map": {
+        "missing": "airdrop_crate2"
+      },
+      "name": "default"
+    }
+  }
+}

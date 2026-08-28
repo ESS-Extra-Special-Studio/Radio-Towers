@@ -1,0 +1,56 @@
+{
+  "radio_tuning": {
+    "subtitle": "subtitles.radio_tuning",
+    "sounds": [
+      {
+        "name": "radiotowers:fm-radio-static-82334",
+        "stream": false
+      }
+    ]
+  },
+  "trash_walking": {
+    "subtitle": "subtitles.trash_walking",
+    "sounds": [
+      {
+        "name": "radiotowers:taking-trash-out-of-trash-can-100126",
+        "stream": false
+      }
+    ]
+  },
+  "fall_in_trash": {
+    "subtitle": "subtitles.fall_in_trash",
+    "sounds": [
+      {
+        "name": "radiotowers:dumpster_divingwav-14439_1",
+        "stream": false
+      }
+    ]
+  },
+  "planeflyby": {
+    "subtitle": "subtitles.planeflyby",
+    "sounds": [
+      {
+        "name": "radiotowers:sachintempini-airplane-293829",
+        "stream": false
+      }
+    ]
+  },
+  "parachute_opening": {
+    "subtitle": "subtitles.parachute_opening",
+    "sounds": [
+      {
+        "name": "radiotowers:parachute_free_sound_effect_128k",
+        "stream": false
+      }
+    ]
+  },
+  "siren": {
+    "subtitle": "subtitles.radiotowers.siren",
+    "sounds": [
+      {
+        "name": "radiotowers:siren",
+        "stream": false
+      }
+    ]
+  }
+}

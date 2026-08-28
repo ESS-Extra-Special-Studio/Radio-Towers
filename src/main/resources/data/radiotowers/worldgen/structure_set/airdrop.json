@@ -1,0 +1,14 @@
+{
+  "structures": [
+    {
+      "structure": "radiotowers:airdrop",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:random_spread",
+    "spacing": 170,
+    "separation": 110,
+    "salt": 839898102
+  }
+}

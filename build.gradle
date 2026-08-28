@@ -1,0 +1,115 @@
+buildscript {
+    repositories {
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.minecraftforge.gradle' version '[6.0.16,6.2)'
+}
+
+apply plugin: 'org.spongepowered.mixin'
+
+group = mod_group_id
+version = mod_version
+
+// Optional Berezka API: stub WavesManager for mixin AP / compile when libs/ has no API JAR (stub is not packaged in the mod).
+sourceSets {
+    berezkaStub {
+        java { srcDir 'src/berezkaStub/java' }
+    }
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+base {
+    archivesName = mod_id
+}
+
+repositories {
+    mavenCentral()
+    flatDir { dirs 'libs' }
+}
+
+minecraft {
+    mappings channel: mapping_channel, version: mapping_version
+    copyIdeResources = true
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods { radiotowers { source sourceSets.main } }
+        }
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'debug'
+            mods { radiotowers { source sourceSets.main } }
+        }
+    }
+}
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    implementation "uk.co.extraspecialstudio:extraspeciallib:1.0.0"
+    implementation "uk.creatopia.unbound:extraspecialcore:${esc_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    // Optional: real API on classpath when present (better signature match than stub).
+    def testMods = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods")
+    // TacZ (compileOnly): needed for correct GunShootEvent parameter type on NoMindlessShootingTacZListenerMixin (Mixin validates descriptors).
+    compileOnly fileTree(dir: project.file('libs').exists() ? 'libs' : testMods, include: ['*zombie*waves*.jar', '*berezka*zombie*.jar', 'tacz*.jar'])
+}
+
+afterEvaluate {
+    compileBerezkaStubJava.configure {
+        classpath = sourceSets.main.compileClasspath
+    }
+    compileJava.dependsOn compileBerezkaStubJava
+    compileJava.configure {
+        classpath += sourceSets.berezkaStub.output.classesDirs
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [
+        mod_id: mod_id, mod_version: mod_version, mod_name: mod_name,
+        esc_version_range: esc_version_range
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    archiveFileName = "${mod_id}-${mod_version}+${minecraft_version}-forge.jar"
+    manifest {
+        attributes(['Specification-Title': mod_id, 'Specification-Version': '1', 'Implementation-Title': project.name, 'Implementation-Version': project.jar.archiveVersion])
+    }
+    finalizedBy 'reobfJar'
+}
+
+def cIdeasModsDir = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods")
+tasks.named('build').configure {
+    doLast {
+        def jarFile = file("${layout.buildDirectory.get()}/libs/${mod_id}-${mod_version}+${minecraft_version}-forge.jar")
+        if (!jarFile.exists()) return
+        if (cIdeasModsDir.exists()) {
+            cIdeasModsDir.listFiles()?.findAll { it.name.startsWith("${mod_id}-") && it.name.endsWith('.jar') }?.each { it.delete() }
+            copy { from jarFile; into cIdeasModsDir }
+            println "Copied ${jarFile.name} to ${cIdeasModsDir}"
+        }
+    }
+}

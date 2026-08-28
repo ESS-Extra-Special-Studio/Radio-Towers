@@ -1,0 +1,564 @@
+{
+  "mod_elements": [
+    {
+      "name": "MetalBars",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "metal_bars",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/radiotowers/models/block/metal_bars.json",
+          "src/main/resources/assets/radiotowers/blockstates/metal_bars.json",
+          "src/main/java/net/mcreator/radiotowers/block/MetalBarsBlock.java",
+          "src/main/resources/assets/radiotowers/models/item/metal_bars.json",
+          "src/main/resources/data/radiotowers/loot_tables/blocks/metal_bars.json"
+        ]
+      }
+    },
+    {
+      "name": "RadioPanel",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radio_panel",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/block/RadioPanelBlock.java",
+          "src/main/resources/assets/radiotowers/models/item/radio_panel.json",
+          "src/main/resources/assets/radiotowers/models/block/radio_panel.json",
+          "src/main/resources/data/radiotowers/loot_tables/blocks/radio_panel.json",
+          "src/main/resources/assets/radiotowers/blockstates/radio_panel.json"
+        ]
+      }
+    },
+    {
+      "name": "AirdropCrate",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_crate",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/radiotowers/blockstates/airdrop_crate.json",
+          "src/main/resources/assets/radiotowers/models/block/airdrop_crate.json",
+          "src/main/java/net/mcreator/radiotowers/block/AirdropCrateBlock.java",
+          "src/main/java/net/mcreator/radiotowers/block/entity/AirdropCrateBlockEntity.java",
+          "src/main/resources/data/radiotowers/loot_tables/blocks/airdrop_crate.json",
+          "src/main/resources/assets/radiotowers/models/item/airdrop_crate.json"
+        ]
+      }
+    },
+    {
+      "name": "AirdropCrategui",
+      "type": "gui",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_crategui",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/world/inventory/AirdropCrateguiMenu.java",
+          "src/main/java/net/mcreator/radiotowers/client/gui/AirdropCrateguiScreen.java"
+        ]
+      }
+    },
+    {
+      "name": "AirdropCrateOnBlockRightClicked",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_crate_on_block_right_clicked",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/AirdropCrateOnBlockRightClickedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AirdropLoot",
+      "type": "loottable",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_loot",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/loot_tables/chests/airdrop_loot.json"
+        ]
+      }
+    },
+    {
+      "name": "Radiotower",
+      "type": "structure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radiotower",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/worldgen/structure/radiotower.json",
+          "src/main/resources/data/radiotowers/worldgen/structure_set/radiotower.json",
+          "src/main/resources/data/radiotowers/worldgen/template_pool/radiotower.json"
+        ]
+      }
+    },
+    {
+      "name": "Airdrop",
+      "type": "structure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/worldgen/structure_set/airdrop.json",
+          "src/main/resources/data/radiotowers/worldgen/structure/airdrop.json",
+          "src/main/resources/data/radiotowers/worldgen/template_pool/airdrop.json"
+        ]
+      }
+    },
+    {
+      "name": "RadioPanelOnBlockRightClicked",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radio_panel_on_block_right_clicked",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/RadioPanelOnBlockRightClickedProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Trashblock",
+      "type": "block",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "trashblock",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/radiotowers/blockstates/trashblock.json",
+          "src/main/java/net/mcreator/radiotowers/block/TrashblockBlock.java",
+          "src/main/resources/data/radiotowers/loot_tables/blocks/trashblock.json",
+          "src/main/resources/assets/radiotowers/models/block/trashblock.json",
+          "src/main/resources/assets/radiotowers/models/item/trashblock.json"
+        ]
+      }
+    },
+    {
+      "name": "Radiotowers",
+      "type": "tab",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radiotowers",
+      "metadata": {
+        "files": []
+      }
+    },
+    {
+      "name": "TrashblockOnTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "trashblock_on_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/TrashblockOnTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "distance",
+            "type": "number"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Radiotoweroverrun",
+      "type": "structure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radiotoweroverrun",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/worldgen/template_pool/radiotoweroverrun.json",
+          "src/main/resources/data/radiotowers/worldgen/structure/radiotoweroverrun.json",
+          "src/main/resources/data/radiotowers/worldgen/structure_set/radiotoweroverrun.json"
+        ]
+      }
+    },
+    {
+      "name": "RadioTowerOverrunLoot",
+      "type": "loottable",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radio_tower_overrun_loot",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/loot_tables/radio_tower_overrun_loot.json"
+        ]
+      }
+    },
+    {
+      "name": "Radiotower2",
+      "type": "structure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "radiotower_2",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/worldgen/structure_set/radiotower_2.json",
+          "src/main/resources/data/radiotowers/worldgen/template_pool/radiotower_2.json",
+          "src/main/resources/data/radiotowers/worldgen/structure/radiotower_2.json"
+        ]
+      }
+    },
+    {
+      "name": "Airdropentity",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdropentity",
+      "metadata": {
+        "files": [
+          "src/main/resources/assets/radiotowers/models/item/airdropentity_spawn_egg.json",
+          "src/main/java/net/mcreator/radiotowers/entity/AirdropentityEntity.java",
+          "src/main/java/net/mcreator/radiotowers/client/renderer/AirdropentityRenderer.java"
+        ]
+      }
+    },
+    {
+      "name": "AirdropentityOnInitialEntitySpawn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdropentity_on_initial_entity_spawn",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/AirdropentityOnInitialEntitySpawnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          }
+        ],
+        "return_type": "logic"
+      }
+    },
+    {
+      "name": "AirdropentityOnEntityTickUpdate",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdropentity_on_entity_tick_update",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/AirdropentityOnEntityTickUpdateProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "y",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Planeentity",
+      "type": "livingentity",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "planeentity",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/entity/PlaneentityEntity.java",
+          "src/main/java/net/mcreator/radiotowers/client/renderer/PlaneentityRenderer.java",
+          "src/main/resources/assets/radiotowers/models/item/planeentity_spawn_egg.json"
+        ]
+      }
+    },
+    {
+      "name": "PlaneentityOnInitialEntitySpawn",
+      "type": "procedure",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "planeentity_on_initial_entity_spawn",
+      "metadata": {
+        "files": [
+          "src/main/java/net/mcreator/radiotowers/procedures/PlaneentityOnInitialEntitySpawnProcedure.java"
+        ],
+        "dependencies": [
+          {
+            "name": "entity",
+            "type": "entity"
+          },
+          {
+            "name": "x",
+            "type": "number"
+          },
+          {
+            "name": "z",
+            "type": "number"
+          },
+          {
+            "name": "world",
+            "type": "world"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AirdropLootEasy",
+      "type": "loottable",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_loot_easy",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/loot_tables/airdrop_loot_easy.json"
+        ]
+      }
+    },
+    {
+      "name": "AirdropLootMedium",
+      "type": "loottable",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_loot_medium",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/loot_tables/airdrop_loot_medium.json"
+        ]
+      }
+    },
+    {
+      "name": "AirdropLootHard",
+      "type": "loottable",
+      "compiles": true,
+      "locked_code": false,
+      "registry_name": "airdrop_loot_hard",
+      "metadata": {
+        "files": [
+          "src/main/resources/data/radiotowers/loot_tables/airdrop_loot_hard.json"
+        ]
+      }
+    }
+  ],
+  "variable_elements": [
+    {
+      "name": "PlaneSpawnRange",
+      "type": "number",
+      "scope": "map",
+      "value": "80.0"
+    },
+    {
+      "name": "PlaneSpawnHeight",
+      "type": "number",
+      "scope": "map",
+      "value": "160.0"
+    },
+    {
+      "name": "PlaneSpawnHeightUpRangeMax",
+      "type": "number",
+      "scope": "map",
+      "value": "40.0"
+    },
+    {
+      "name": "PlaneSpawnHeightDownRangeMax",
+      "type": "number",
+      "scope": "map",
+      "value": "10.0"
+    }
+  ],
+  "sound_elements": [
+    {
+      "name": "radio_tuning",
+      "files": [
+        "fm-radio-static-82334"
+      ],
+      "category": "neutral",
+      "subtitle": "Radio Tuning"
+    },
+    {
+      "name": "trash_walking",
+      "files": [
+        "taking-trash-out-of-trash-can-100126"
+      ],
+      "category": "neutral",
+      "subtitle": "Walking In Trash"
+    },
+    {
+      "name": "fall_in_trash",
+      "files": [
+        "dumpster_divingwav-14439_1"
+      ],
+      "category": "neutral",
+      "subtitle": "Fall In Trash"
+    },
+    {
+      "name": "planeflyby",
+      "files": [
+        "sachintempini-airplane-293829"
+      ],
+      "category": "ambient",
+      "subtitle": "Supply plane flies by"
+    },
+    {
+      "name": "parachute_opening",
+      "files": [
+        "parachute_free_sound_effect_128k"
+      ],
+      "category": "ambient",
+      "subtitle": "Airdrop\u0027s parachute opens"
+    }
+  ],
+  "tag_elements": {
+    "BLOCKS:minecraft:needs_iron_tool": [
+      "~CUSTOM:RadioPanel"
+    ],
+    "BLOCKS:minecraft:mineable/pickaxe": [
+      "~CUSTOM:RadioPanel",
+      "~CUSTOM:MetalBars"
+    ],
+    "BLOCKS:minecraft:mineable/axe": [
+      "~CUSTOM:AirdropCrate"
+    ],
+    "BLOCKS:minecraft:climbable": [
+      "~CUSTOM:MetalBars"
+    ]
+  },
+  "tab_element_order": {},
+  "language_map": {
+    "en_us": {
+      "block.radiotowers.metal_bars": "Metal Bars",
+      "block.radiotowers.airdrop_crate": "Airdrop Crate",
+      "subtitles.fall_on_trash": "Fall On Trash",
+      "subtitles.radio_switch": "radio tunes",
+      "item.radiotowers.planeentity_spawn_egg": "Airdropentity Spawn Egg",
+      "subtitles.fall_in_trash": "Fall In Trash",
+      "item_group.radiotowers.radiotowers": "Radio Towers",
+      "subtitles.radio_tuning": "Radio Tuning",
+      "subtitles.trash_walking": "Walking In Trash",
+      "gui.radiotowers.airdrop_crategui.label_airfrop_crate": "Airdrop Crate",
+      "block.radiotowers.trashblock": "Trashblock",
+      "item.radiotowers.airdropentity_spawn_egg": "Airdropentity Spawn Egg",
+      "block.radiotowers.radio_panel": "Radio Panel",
+      "subtitles.planeflyby": "Supply plane flies by",
+      "entity.radiotowers.planeentity": "Airdropentity",
+      "subtitles.parachute_opening": "Airdrop\u0027s parachute opens",
+      "entity.radiotowers.airdropentity": "Airdropentity"
+    }
+  },
+  "metadata": {
+    "files": [
+      "src/main/java/net/mcreator/radiotowers/network/MenuStateUpdateMessage.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModScreens.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModMenus.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModBlocks.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModBlockEntities.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModItems.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModEntityRenderers.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModEntities.java",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModSounds.java",
+      "src/main/java/net/mcreator/radiotowers/RadiotowersMod.java",
+      "src/main/resources/pack.mcmeta",
+      "src/main/resources/META-INF/accesstransformer.cfg",
+      "src/main/resources/META-INF/mods.toml",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModModels.java",
+      "src/main/java/net/mcreator/radiotowers/network/RadiotowersModVariables.java",
+      "src/main/resources/assets/radiotowers/sounds.json",
+      "src/main/java/net/mcreator/radiotowers/init/RadiotowersModTabs.java"
+    ]
+  },
+  "foldersRoot": {
+    "name": "~",
+    "children": []
+  },
+  "workspaceSettings": {
+    "modid": "radiotowers",
+    "modName": "RadioTowers",
+    "version": "1.0.5",
+    "author": "Cristiano, MCreator",
+    "websiteURL": "https://mcreator.net",
+    "license": "Not specified",
+    "serverSideOnly": false,
+    "requiredMods": [],
+    "dependencies": [],
+    "dependants": [],
+    "mcreatorDependencies": [],
+    "currentGenerator": "forge-1.20.1",
+    "credits": "Created using mod maker MCreator - https://mcreator.net/about",
+    "modElementsPackage": "net.mcreator.radiotowers"
+  },
+  "mcreatorVersion": 202500345720
+}
