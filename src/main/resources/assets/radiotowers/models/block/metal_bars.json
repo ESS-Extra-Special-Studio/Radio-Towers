@@ -1,0 +1,9 @@
+{
+  "parent": "radiotowers:custom/metal_bars",
+  "textures": {
+    "all": "radiotowers:block/iron_bars2",
+    "particle": "radiotowers:block/iron_bars2",
+    "missing": "radiotowers:block/iron_bars2"
+  },
+  "render_type": "solid"
+}

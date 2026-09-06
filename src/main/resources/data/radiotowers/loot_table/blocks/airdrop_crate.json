@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:block",
+  "random_sequence": "radiotowers:blocks/airdrop_crate",
+  "pools": [
+    {
+      "rolls": 1.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "radiotowers:airdrop_crate"
+        }
+      ]
+    }
+  ]
+}

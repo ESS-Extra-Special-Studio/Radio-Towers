@@ -1,0 +1,9 @@
+{
+  "parent": "radiotowers:custom/airdropcrate",
+  "textures": {
+    "all": "radiotowers:block/airdrop_crate2",
+    "particle": "radiotowers:block/airdrop_crate2",
+    "missing": "radiotowers:block/airdrop_crate2"
+  },
+  "render_type": "solid"
+}

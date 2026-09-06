@@ -1,0 +1,49 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Client",
+      "presentation": {
+        "group": "Mod Development - radiotowers-1.21.1-neoforge",
+        "order": 0
+      },
+      "projectName": "radiotowers-1.21.1-neoforge",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\clientRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run",
+      "env": {},
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Server",
+      "presentation": {
+        "group": "Mod Development - radiotowers-1.21.1-neoforge",
+        "order": 1
+      },
+      "projectName": "radiotowers-1.21.1-neoforge",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\serverRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run",
+      "env": {},
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    }
+  ]
+}

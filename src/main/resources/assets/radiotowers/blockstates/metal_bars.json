@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "radiotowers:block/metal_bars"
+    },
+    "facing=east": {
+      "model": "radiotowers:block/metal_bars",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "radiotowers:block/metal_bars",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "radiotowers:block/metal_bars",
+      "y": 270
+    }
+  }
+}

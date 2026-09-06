@@ -1,0 +1,18 @@
+{
+    "required": true,
+    "minVersion": "0.8",
+    "plugin": "net.mcreator.radiotowers.mixin.RadiotowersMixinPlugin",
+    "package": "net.mcreator.radiotowers.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "mixins": [
+        "LevelTagWaveSpawnMixin",
+        "NoMindlessShootingTriggerHandlerMixin",
+        "RandomSpreadStructurePlacementAccessor",
+        "RandomSpreadStructurePlacementMixin",
+        "StructurePlacementSaltAccessor",
+        "WavesManagerMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

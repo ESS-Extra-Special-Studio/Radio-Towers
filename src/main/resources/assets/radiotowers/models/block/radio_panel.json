@@ -1,0 +1,9 @@
+{
+  "parent": "radiotowers:custom/radio_panel",
+  "textures": {
+    "all": "radiotowers:block/radio_pamel",
+    "particle": "radiotowers:block/radio_pamel",
+    "missing": "radiotowers:block/radio_pamel"
+  },
+  "render_type": "solid"
+}
