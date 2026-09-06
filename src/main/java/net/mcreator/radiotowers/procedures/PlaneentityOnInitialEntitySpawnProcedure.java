@@ -118,8 +118,10 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					entityToSpawn.setYRot(entity.getYRot());
 					entityToSpawn.setYBodyRot(entity.getYRot());
 					entityToSpawn.setYHeadRot(entity.getYRot());
-					// Fall straight down so crate lands at drop position (min offset from tower); no horizontal drift toward tower
-					entityToSpawn.setDeltaMovement(0, 0, 0);
+					// Fall straight down from the plane; give an initial descent so the crate cannot hang at drop height
+					entityToSpawn.setNoGravity(false);
+					entityToSpawn.setDeltaMovement(0, -0.25, 0);
+					entityToSpawn.hasImpulse = true;
 					if (entity instanceof net.mcreator.radiotowers.entity.PlaneentityEntity plane
 							&& entityToSpawn instanceof net.mcreator.radiotowers.entity.AirdropentityEntity airdrop) {
 						// Order: plane UUID map -> dimension "next" fallback -> plane's own data (set in deliverAt after spawn)

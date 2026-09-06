@@ -231,28 +231,65 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 			entity.discard();
 	}
 
+	/** Blocks descended per tick — positional fall, ignores gravity mods / NoAI physics quirks. */
+	private static final double FALL_STEP = 0.4;
+
+	/** Place crate when this close above the first solid block under the entity. */
+	private static final double LAND_CLEARANCE = 1.15;
+
+	/** First solid block under the entity, or null if none in build height. */
+	private static BlockPos findGroundBelow(LevelAccessor world, double x, double y, double z) {
+		int bx = Mth.floor(x);
+		int bz = Mth.floor(z);
+		int startY = Mth.floor(y);
+		int minY = world.getMinBuildHeight();
+		for (int yy = startY; yy >= minY; yy--) {
+			BlockPos p = new BlockPos(bx, yy, bz);
+			if (world.getBlockState(p).blocksMotion())
+				return p;
+		}
+		return null;
+	}
+
 	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
-		if (entity == null)
+		if (entity == null || world.isClientSide())
 			return;
-		if (entity instanceof LivingEntity living && !living.level().isClientSide()) {
-			if (entity.onGround()) {
-				living.removeAllEffects();
-				placeCrateAndDiscard(world, entity, BlockPos.containing(x, y, z));
+		if (!(entity instanceof AirdropentityEntity airdropEnt))
+			return;
+		if (!(entity instanceof LivingEntity living))
+			return;
+
+		// Do not trust entity physics in large packs — move the crate down ourselves.
+		entity.setNoGravity(true);
+		entity.setDeltaMovement(Vec3.ZERO);
+
+		if (touchesWater(world, x, y, z, entity)) {
+			living.removeAllEffects();
+			airdropEnt.getEntityData().set(AirdropentityEntity.DATA_IsOpening, false);
+			BlockPos cratePos = findSeafloorCratePos(world, x, y, z);
+			if (cratePos != null) {
+				placeCrateAndDiscard(world, entity, cratePos);
 				return;
 			}
-			if (entity instanceof AirdropentityEntity airdropEnt && touchesWater(world, x, y, z, entity)) {
-				living.removeAllEffects();
-				airdropEnt.getEntityData().set(AirdropentityEntity.DATA_IsOpening, false);
-				BlockPos cratePos = findSeafloorCratePos(world, x, y, z);
-				if (cratePos != null) {
-					placeCrateAndDiscard(world, entity, cratePos);
-					return;
-				}
-			}
-			MobEffectInstance slow = living.getEffect(MobEffects.SLOW_FALLING);
-			if (slow == null || slow.getDuration() < 40) {
-				living.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 80, 6, false, false));
-			}
 		}
+
+		BlockPos ground = findGroundBelow(world, x, y, z);
+		if (ground != null && y <= ground.getY() + LAND_CLEARANCE) {
+			living.removeAllEffects();
+			placeCrateAndDiscard(world, entity, ground.above());
+			return;
+		}
+
+		// Parachute VFX only (amp 0). Descent is positional below.
+		MobEffectInstance slow = living.getEffect(MobEffects.SLOW_FALLING);
+		if (slow == null || slow.getDuration() < 40 || slow.getAmplifier() > 0) {
+			living.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 80, 0, false, false));
+		}
+
+		double nextY = y - FALL_STEP;
+		if (ground != null && nextY < ground.getY() + LAND_CLEARANCE)
+			nextY = ground.getY() + LAND_CLEARANCE;
+		entity.setPos(x, nextY, z);
+		entity.hasImpulse = true;
 	}
 }

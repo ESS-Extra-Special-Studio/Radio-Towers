@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.2 (`1.2.2`)
+
+Update by: Extra_Special_K
+
+Requires **ExtraSpecialCore (ESC) 2.0.0** or newer. Catalog defense waves prefer **ExtraSpecialLIB (ESL)** when installed (Berezka remains an optional fallback).
+
+Fixed:
+
+- Forge crash on launch: `RandomSpreadStructurePlacementMixin` failed applying (`@Shadow spacing` missing from refmap). Spacing/separation/spreadType now use `@Accessor` field remaps so tower density config works under Forge SRG.
+- Airdrop crates hanging in the sky after the plane drop — descent no longer relies on pack gravity/Slow Falling quirks; crates step down and place on ground (Forge + NeoForge).
+
 ## 1.2.1 (`1.2.1`)
 
 Update by: Extra_Special_K
