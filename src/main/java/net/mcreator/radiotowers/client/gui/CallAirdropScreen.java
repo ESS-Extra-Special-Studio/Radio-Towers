@@ -92,9 +92,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private static final int SCROLLBAR_WIDTH = 8;
     /** Title band height (below search). */
     private static final int TITLE_BAND_HEIGHT = 44;
-    private static final int LIST_HINT_RESERVE = 18;
-    /** Keep search / list / hints inside the panel frame. */
-    private static final int INNER_PAD = 8;
+    private static final int LIST_HINT_RESERVE = 14;
+    private static final int SEARCH_HEIGHT = 20;
     /** Push lever, difficulty bar, and station buttons below the column top. */
     private static final int CONTROLS_TOP_OFFSET = 28;
     /** Buttons placed next to the item selection. */
@@ -202,22 +201,20 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private EscRect titleLine3;
 
     private void recomputeLayoutRegions(EscRect content) {
-        int chrome = Math.max(style.panelBorderWidth(), 1) + INNER_PAD;
-        EscRect inner = content.inset(EscInsets.of(chrome, chrome + 2, chrome, chrome));
+        // Match Forge CallAirdropScreen: columns on full contentRect (no extra INNER_PAD inset).
         if (ModList.get().isLoaded("dead_air")) {
-            EscRect[] cols = inner.splitColumns(new float[]{0.42f, 0.32f, 0.26f}, 12);
+            EscRect[] cols = content.splitColumns(new float[]{0.42f, 0.30f, 0.28f}, 10);
             listColumn = cols[0];
             controlsColumn = cols[1];
             hintColumn = cols[2];
         } else {
-            EscRect[] cols = inner.splitColumns(new float[]{0.52f, 0.48f}, 12);
+            EscRect[] cols = content.splitColumns(new float[]{0.52f, 0.48f}, 10);
             listColumn = cols[0];
             controlsColumn = cols[1];
             hintColumn = controlsColumn;
         }
 
-        int searchH = font != null ? EscSearchBox.recommendedHeight(font) : 20;
-        searchRect = resolve(listColumn, EscLayoutSpec.stretchH(0, searchH, EscInsets.ZERO));
+        searchRect = resolve(listColumn, EscLayoutSpec.stretchH(0, SEARCH_HEIGHT, EscInsets.ZERO));
         titleBand = new EscRect(listColumn.x(), searchRect.bottom() + 4, listColumn.width(), TITLE_BAND_HEIGHT);
         int titleLineH = EscText.measureLineHeight(font, EscFonts.DEFAULT) + 1;
         int titlePad = 2;
@@ -232,12 +229,10 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         );
 
         leverAreaRect = resolve(controlsColumn, EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, CONTROLS_TOP_OFFSET, LEVER_WIDTH, LEVER_HEIGHT));
-        int meterW = Math.max(48, Math.min(DIFFICULTY_BAR_WIDTH,
-            controlsColumn.width() - LEVER_WIDTH - GAP_LEVER_TO_DIFFICULTY));
         difficultyBarRect = new EscRect(
             leverAreaRect.right() + GAP_LEVER_TO_DIFFICULTY,
             leverAreaRect.bottom() - DIFFICULTY_BAR_HEIGHT,
-            meterW,
+            DIFFICULTY_BAR_WIDTH,
             DIFFICULTY_BAR_HEIGHT
         );
     }
@@ -541,7 +536,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        renderWorldDim(guiGraphics);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
