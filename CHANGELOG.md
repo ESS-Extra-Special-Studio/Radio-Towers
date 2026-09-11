@@ -1,3 +1,10 @@
+﻿## 1.2.3 (1.2.3)
+
+Update by: Extra_Special_K
+
+Changed:
+Version parity with NeoForge 1.2.3 (Call Airdrop layout alignment lives on NeoForge; Forge jar rebuilt to match numbering).
+
 # Changelog
 
 ## 1.2.2 (`1.2.2`)
@@ -9,7 +16,7 @@ Requires **ExtraSpecialCore (ESC) 2.0.0** or newer. Catalog defense waves prefer
 Fixed:
 
 - Forge crash on launch: `RandomSpreadStructurePlacementMixin` failed applying (`@Shadow spacing` missing from refmap). Spacing/separation/spreadType now use `@Accessor` field remaps so tower density config works under Forge SRG.
-- Airdrop crates hanging in the sky after the plane drop — descent no longer relies on pack gravity/Slow Falling quirks; crates step down and place on ground (Forge + NeoForge).
+- Airdrop crates hanging in the sky after the plane drop â€” descent no longer relies on pack gravity/Slow Falling quirks; crates step down and place on ground (Forge + NeoForge).
 
 ## 1.2.1 (`1.2.1`)
 
@@ -20,8 +27,8 @@ Requires **ExtraSpecialCore (ESC) 2.0.0** or newer. Catalog defense waves use **
 Fixed:
 
 - Call Airdrop **blacklist** and **customCatalogEntries** match TaCZ content ids by alias (`tacz:gun/m1911` / `tacz:m1911` / last path segment / GunId and AmmoId). Bare names such as `m1911` work. Custom lines reprice the live catalog row instead of missing it.
-- After the **last** defense wave, the airdrop is sent with no “next wave starting” message. Mid-sequence chat counts correctly (1 of 3, then 2 of 3, then inbound).
-- ESL-run waves are not also completed by the old kill-count / timer path, which had been reprinting “wave 1 of N”.
+- After the **last** defense wave, the airdrop is sent with no â€œnext wave startingâ€ message. Mid-sequence chat counts correctly (1 of 3, then 2 of 3, then inbound).
+- ESL-run waves are not also completed by the old kill-count / timer path, which had been reprinting â€œwave 1 of Nâ€.
 
 ## 1.2.0 (`1.2.0`)
 
@@ -31,12 +38,12 @@ Requires **ExtraSpecialCore (ESC) 2.0.0** or newer (and its ES Library dependenc
 
 Added:
 
-- Biome tag `#radiotowers:has_radio_tower` — towers spawn across common overworld land biomes (not plains-only).
+- Biome tag `#radiotowers:has_radio_tower` â€” towers spawn across common overworld land biomes (not plains-only).
 - Guaranteed STANDARD tower near world spawn (once per overworld); config `[worldgen] guaranteeSpawnTower` / `spawnTowerSearchRadiusChunks` (places into loaded chunks only).
 - `[worldgen] towerSpawnDensityPercent` in `radiotowers-common.toml` (default 100): scales natural radio tower spacing. Higher = denser. New chunks only.
-- `[airdrop] standardAirdropLootTable` — ResourceLocation for standard (non-catalog) airdrop crates (default `radiotowers:chests/airdrop_loot`).
-- `[airdrop] minimumCatalogPoints` — configurable minimum catalog order (default 10; 10-point steps).
-- `[waves] maxWaves`, `baseZombiesPerWave`, `zombiesPerTierStep` — pack-tunable wave rounds and zombie counts.
+- `[airdrop] standardAirdropLootTable` â€” ResourceLocation for standard (non-catalog) airdrop crates (default `radiotowers:chests/airdrop_loot`).
+- `[airdrop] minimumCatalogPoints` â€” configurable minimum catalog order (default 10; 10-point steps).
+- `[waves] maxWaves`, `baseZombiesPerWave`, `zombiesPerTierStep` â€” pack-tunable wave rounds and zombie counts.
 
 Changed:
 
@@ -55,7 +62,7 @@ Update by: Extra_Special_K
 Fixed:
 
 - Without Dead Air / Zombie Waves: the radio panel opens the Call Airdrop catalog instead of firing an empty standard airdrop (which filled crates with random forge-tag loot).
-- Airdrop catalog icons show each entry’s stack size (e.g. ×64 ammo).
+- Airdrop catalog icons show each entryâ€™s stack size (e.g. Ã—64 ammo).
 - Airdrop crate GUI binds to the real crate inventory when opened with null facing.
 - Ordered crates no longer clear and refill one tick later if already filled.
 - Bonus TaCZ ammo on standard loot-table crates always includes proper AmmoId NBT.
@@ -68,9 +75,9 @@ Update by: Extra_Special_K
 Added:
 
 -Config options for airdrop timing in `radiotowers-common.toml`:
-  - `[airdrop] standardAirdropCooldownMinutes` (default 3) — cooldown after a standard loot-table airdrop
-  - `[airdrop] waveDeliveryCooldownMinutes` (default 10) — cooldown after a wave-delivered catalog airdrop
-  - `[waves] waveDurationMinutes` (default 3) — how long each defense wave lasts before time-out
+  - `[airdrop] standardAirdropCooldownMinutes` (default 3) â€” cooldown after a standard loot-table airdrop
+  - `[airdrop] waveDeliveryCooldownMinutes` (default 10) â€” cooldown after a wave-delivered catalog airdrop
+  - `[waves] waveDurationMinutes` (default 3) â€” how long each defense wave lasts before time-out
 -Panel hint text uses the configured standard cooldown instead of a hard-coded "3 minute" string.
 
 ## 1.0.9 (`1.0.9`)
@@ -85,7 +92,7 @@ Changed:
 
 Fixed:
 
--Tower structure loot no longer uses live airdrop crate blocks — overrun/fenced tower templates now place vanilla chests for structure loot so wave deliveries and catalog fills cannot overwrite or bug out pre-generated tower chests.
+-Tower structure loot no longer uses live airdrop crate blocks â€” overrun/fenced tower templates now place vanilla chests for structure loot so wave deliveries and catalog fills cannot overwrite or bug out pre-generated tower chests.
 -Existing structure airdrop crates (older worlds) are treated as structure loot and skipped when placing new delivery crates nearby.
 
 ## 1.0.8 (`1.0.8`)
@@ -124,9 +131,9 @@ The dedicated server was failing because several **common** classes (loaded on t
 
 **What we changed**
 
-- **Client work from common code** — Panel open, HUD packet handling, and menu/screen sync now go through `SafeClientCalls` + `RadiotowersClientHooks` (reflection), so server bytecode no longer pulls in client classes.
-- **TaCZ / NMS mixin** — `NoMindlessShootingTacZListenerMixin` is registered only when TaCZ’s `GunShootEvent` is on the classpath, so servers **without** TaCZ do not load that mixin class (which referenced TaCZ types).
-- **Metadata** — `mods.toml`: `displayTest="MATCH_VERSION"` and a short description that the mod is required on **both** server and client with matching version.
+- **Client work from common code** â€” Panel open, HUD packet handling, and menu/screen sync now go through `SafeClientCalls` + `RadiotowersClientHooks` (reflection), so server bytecode no longer pulls in client classes.
+- **TaCZ / NMS mixin** â€” `NoMindlessShootingTacZListenerMixin` is registered only when TaCZâ€™s `GunShootEvent` is on the classpath, so servers **without** TaCZ do not load that mixin class (which referenced TaCZ types).
+- **Metadata** â€” `mods.toml`: `displayTest="MATCH_VERSION"` and a short description that the mod is required on **both** server and client with matching version.
 
 ---
 
@@ -140,7 +147,7 @@ Added:
 
 -Wave stability: wider spawn join capture; removed periodic excess-zombie discard; reconnect ghost-sweeps do not run during a live catalog wave (avoids wiping an active defense).
 
--Nuclear baseline: per-tick sky-to-ring teleport on living tick disabled so we don’t fight Berezka spawn position every tick.
+-Nuclear baseline: per-tick sky-to-ring teleport on living tick disabled so we donâ€™t fight Berezka spawn position every tick.
 
 -Airdrop cooldown enforced (3 min standard / 10 min after wave delivery); dev testing bypass removed from code.
 
@@ -152,36 +159,37 @@ Update by: Extra_Special_K
 
 Added:
 
--Airdrop plane and crate entities – Flyover plane, parachute crate, spawn/tick/render pipeline, and server procedures to deliver ordered or loot-table drops.
+-Airdrop plane and crate entities â€“ Flyover plane, parachute crate, spawn/tick/render pipeline, and server procedures to deliver ordered or loot-table drops.
 
--Full airdrop networking – Custom packets for calling airdrops, syncing wave and cooldown state, and driving Dead Air panel activation with station IDs.
+-Full airdrop networking â€“ Custom packets for calling airdrops, syncing wave and cooldown state, and driving Dead Air panel activation with station IDs.
 
--radiotowers-common.toml – Configurable airdrop catalog (tags, blacklist, custom entries, TaCZ toggle, wave behaviour, difficulty caps).
+-radiotowers-common.toml â€“ Configurable airdrop catalog (tags, blacklist, custom entries, TaCZ toggle, wave behaviour, difficulty caps).
 
--Call Airdrop screen – Point-budget loot catalog with search, difficulty meter, textured start lever, and Dead Air station controls (Turn off, default cycle, Dynamic, Internet) when the Zombie Waves API is installed.
+-Call Airdrop screen â€“ Point-budget loot catalog with search, difficulty meter, textured start lever, and Dead Air station controls (Turn off, default cycle, Dynamic, Internet) when the Zombie Waves API is installed.
 
--Radio panel modes – RadioTowers-only: immediate standard airdrop from the panel. With Dead Air but without Zombie Waves: Radio Panel screen with the same lever and station buttons, standard loot-table airdrop, and 3-minute cooldown. With Zombie Waves: full catalog + defense-wave flow.
+-Radio panel modes â€“ RadioTowers-only: immediate standard airdrop from the panel. With Dead Air but without Zombie Waves: Radio Panel screen with the same lever and station buttons, standard loot-table airdrop, and 3-minute cooldown. With Zombie Waves: full catalog + defense-wave flow.
 
--Optional mod hooks (non-mandatory dependencies) – Dead Air, TaCZ, Berezka Zombie Waves API, and Berezka API are optional at load time; mixin plugin skips wave mixins when the API is not installed.
+-Optional mod hooks (non-mandatory dependencies) â€“ Dead Air, TaCZ, Berezka Zombie Waves API, and Berezka API are optional at load time; mixin plugin skips wave mixins when the API is not installed.
 
--Berezka Zombie Waves integration – Airdrop “points” map to wave count and tier; plane spawns after waves complete; ground snap, spawn caps, replacement/agro handlers, wave-end detection, and cleanup against stuck or duplicate mobs.
+-Berezka Zombie Waves integration â€“ Airdrop â€œpointsâ€ map to wave count and tier; plane spawns after waves complete; ground snap, spawn caps, replacement/agro handlers, wave-end detection, and cleanup against stuck or duplicate mobs.
 
--Persisted wave state – SavedData for pending airdrops so behaviour is tied to the world across sessions where applicable.
+-Persisted wave state â€“ SavedData for pending airdrops so behaviour is tied to the world across sessions where applicable.
 
--Persisted airdrop cooldowns – Overworld SavedData stores per-player cooldown end times (3 min after a standard call, 10 min after a wave-delivered catalog run); not reset by leaving to the menu or restarting the game.
+-Persisted airdrop cooldowns â€“ Overworld SavedData stores per-player cooldown end times (3 min after a standard call, 10 min after a wave-delivered catalog run); not reset by leaving to the menu or restarting the game.
 
--Airdrop wave HUD – Client overlay for active wave index, zombie count, and wave timer.
+-Airdrop wave HUD â€“ Client overlay for active wave index, zombie count, and wave timer.
 
--TaCZ catalog and crates – When TaCZ is present: guns and ammo in the catalog, sane stack sizes and NBT for tacz:ammo vs ammo boxes in crates and orders.
+-TaCZ catalog and crates â€“ When TaCZ is present: guns and ammo in the catalog, sane stack sizes and NBT for tacz:ammo vs ammo boxes in crates and orders.
 
--Extra loot tables – Additional airdrop difficulty loot (airdrop_loot_easy / _medium / _hard) beyond the single chests/airdrop_loot table in the reference build.
+-Extra loot tables â€“ Additional airdrop difficulty loot (airdrop_loot_easy / _medium / _hard) beyond the single chests/airdrop_loot table in the reference build.
 
--Internet station screen – Sub-screen for the Internet station option from the panel UI.
+-Internet station screen â€“ Sub-screen for the Internet station option from the panel UI.
 
--Misc integration – Reflection helpers for Berezka curWorld, optional suppression of duplicate Berezka wave chat, drowned kill counting hook, level load cleanup for planes and pending waves.
+-Misc integration â€“ Reflection helpers for Berezka curWorld, optional suppression of duplicate Berezka wave chat, drowned kill counting hook, level load cleanup for planes and pending waves.
 
 Dependencies:
 
 -JAR only.
 
 -This build additionally declares optional dependencies on dead_air, tacz, berezkas_zombie_waves_api, and berezka_api (all mandatory=false).
+
