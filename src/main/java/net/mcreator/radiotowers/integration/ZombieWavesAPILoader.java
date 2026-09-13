@@ -552,9 +552,12 @@ public final class ZombieWavesAPILoader {
             int killed = Math.max(0, Math.min(p.killedCountThisWave, p.maxZombiesPerWave));
             int zombies = Math.max(0, p.maxZombiesPerWave - killed);
             ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
-            if (player != null) {
-                RadiotowersNetwork.sendToPlayer(player,
-                    new WaveStatePacket(currentWave, p.totalWaves, zombies, secondsRemaining, true));
+            var packet = new WaveStatePacket(currentWave, p.totalWaves, zombies, secondsRemaining, true);
+            for (java.util.UUID memberId : p.effectiveMembers()) {
+                ServerPlayer m = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
+                if (m != null) {
+                    RadiotowersNetwork.sendToPlayer(m, packet);
+                }
             }
         });
     }

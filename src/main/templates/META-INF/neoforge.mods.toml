@@ -44,6 +44,13 @@ ordering="AFTER"
 side="BOTH"
 
 [[dependencies.${mod_id}]]
+modId="esn"
+type="optional"
+versionRange="${esn_version_range}"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
 modId="dead_air"
 type="optional"
 versionRange="[1.0,)"

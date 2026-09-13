@@ -61,6 +61,7 @@ neoForge {
 dependencies {
     implementation "uk.co.extraspecialstudio:extraspeciallib:${esl_version}"
     implementation "uk.co.extraspecialstudio:extraspecialcore:${esc_version}"
+    implementation "uk.co.extraspecialstudio:esn:${esn_version}"
 }
 
 afterEvaluate {
@@ -91,7 +92,8 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
             mod_authors            : mod_authors,
             mod_description        : mod_description,
             esc_version_range      : esc_version_range,
-            esl_version_range      : esl_version_range
+            esl_version_range      : esl_version_range,
+            esn_version_range      : esn_version_range
     ]
     inputs.properties replaceProperties
     expand replaceProperties

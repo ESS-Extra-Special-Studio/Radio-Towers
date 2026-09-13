@@ -89,6 +89,11 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 	@Override
 	protected InteractionResult useWithoutItem(BlockState blockstate, Level world, BlockPos pos, Player entity, BlockHitResult hit) {
 		if (entity instanceof ServerPlayer player) {
+			BlockEntity be = world.getBlockEntity(pos);
+			if (be instanceof AirdropCrateBlockEntity crate && !crate.canPlayerOpen(player.getUUID())) {
+				player.sendSystemMessage(Component.literal("[RadioTowers] This airdrop crate is for lobby members only."));
+				return InteractionResult.FAIL;
+			}
 			player.openMenu(new MenuProvider() {
 				@Override
 				public Component getDisplayName() {

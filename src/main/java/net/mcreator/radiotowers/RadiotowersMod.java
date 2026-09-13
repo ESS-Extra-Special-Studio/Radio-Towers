@@ -55,6 +55,7 @@ public class RadiotowersMod {
 		NeoForge.EVENT_BUS.register(this);
 		bus.addListener(this::commonSetup);
 		bus.addListener(RadiotowersNetwork::register);
+		net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.register();
 		RadiotowersModSounds.REGISTRY.register(bus);
 		RadiotowersModBlocks.REGISTRY.register(bus);
 		RadiotowersModBlockEntities.REGISTRY.register(bus);

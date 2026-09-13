@@ -16,6 +16,12 @@ includeBuild('../ESL - 1.21.1 NeoForge') {
     }
 }
 
+includeBuild('../ESN - 1.21.1 NeoForge') {
+    dependencySubstitution {
+        substitute module('uk.co.extraspecialstudio:esn') using project(':')
+    }
+}
+
 includeBuild('../ESC - 1.21.1 NeoForge') {
     dependencySubstitution {
         substitute module('uk.co.extraspecialstudio:extraspecialcore') using project(':')

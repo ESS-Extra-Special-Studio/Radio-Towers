@@ -867,7 +867,7 @@ public class WaveMobAggroHandler {
     private static void setTargetToActivatingPlayerOrTower(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending) {
         if (level.getServer() == null) return;
         if (AirdropConfig.isWaveAggroExcluded(mob.getType())) return;
-        ServerPlayer player = level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted);
+        ServerPlayer player = pickAggroTarget(level, mob, pending);
         BlockPos tower = pending.waveStartPos;
         long now = level.getGameTime();
         int mobId = mob.getId();
@@ -908,6 +908,23 @@ public class WaveMobAggroHandler {
             LAST_PATH_TO_TOWER_AT.put(mobId, now);
         }
         LAST_DIST_SQ_TO_TOWER.put(mobId, distSqToTower);
+    }
+
+    /** Nearest alive lobby member within aggro range, else host if online. */
+    private static ServerPlayer pickAggroTarget(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending) {
+        ServerPlayer best = null;
+        double bestDist = Double.MAX_VALUE;
+        for (UUID memberId : pending.effectiveMembers()) {
+            ServerPlayer p = level.getServer().getPlayerList().getPlayer(memberId);
+            if (p == null || !p.isAlive() || p.level() != level) continue;
+            double d = mob.distanceToSqr(p);
+            if (d < bestDist) {
+                bestDist = d;
+                best = p;
+            }
+        }
+        if (best != null) return best;
+        return level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted);
     }
 
     /** If mob is physically stuck (sky/block/fluid) AND has made no progress for STUCK_NO_PROGRESS_TICKS, respawn to ring. Never respawn moving mobs just for "no progress". */

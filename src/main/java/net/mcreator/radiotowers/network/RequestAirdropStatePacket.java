@@ -66,7 +66,8 @@ public class RequestAirdropStatePacket implements CustomPacketPayload {
             }
             // Only show "called in" at this tower if this exact panel has a pending airdrop for this player
             var pending = PendingAirdropStorage.getPendingForPanel(serverLevel, msg.panelPos);
-            boolean waveInProgress = pending != null && player.getUUID().equals(pending.playerWhoStarted);
+            boolean waveInProgress = pending != null && (player.getUUID().equals(pending.playerWhoStarted)
+                || pending.effectiveMembers().contains(player.getUUID()));
             RadiotowersNetwork.sendToPlayer(player,
                 new AirdropStatePacket(waveInProgress, cooldownEnd));
         });

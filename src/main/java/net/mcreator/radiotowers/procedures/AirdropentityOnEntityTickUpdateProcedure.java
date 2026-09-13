@@ -35,7 +35,8 @@ import java.util.List;
 public class AirdropentityOnEntityTickUpdateProcedure {
 
 	/** Fill crate at pos from order next tick so the block entity exists. */
-	private static void fillCrateFromOrder(ServerLevel level, BlockPos pos, List<String> ids, List<Integer> qty) {
+	private static void fillCrateFromOrder(ServerLevel level, BlockPos pos, List<String> ids, List<Integer> qty,
+			java.util.Collection<java.util.UUID> memberUuids) {
 		try {
 			BlockEntity be = level.getBlockEntity(pos);
 			if (!(be instanceof AirdropCrateBlockEntity crate)) return;
@@ -153,6 +154,9 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 				}
 			}
 			crate.setFilledFromOrder(true);
+			if (memberUuids != null && !memberUuids.isEmpty()) {
+				crate.setAllowedOpeners(memberUuids);
+			}
 			crate.setChanged();
 		} catch (Exception e) {
 			net.mcreator.radiotowers.RadiotowersMod.LOGGER.warn("Airdrop crate fill failed: {}", e.getMessage());
@@ -207,15 +211,16 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 			if (hasOrder && entity instanceof AirdropentityEntity airdrop && world instanceof ServerLevel _level) {
 				List<String> ids = airdrop.getAirdropItemIds();
 				List<Integer> qty = airdrop.getAirdropQuantities();
+				java.util.Set<java.util.UUID> members = airdrop.isMembersOnlyCrate() ? airdrop.getLobbyMembers() : java.util.Set.of();
 				BlockPos posFinal = deliveryPos.immutable();
-				fillCrateFromOrder(_level, posFinal, ids, qty);
+				fillCrateFromOrder(_level, posFinal, ids, qty, members);
 				// Retry once only if the BE wasn't ready; never clear+refill an already-filled order crate
 				// (opening mid-refill caused ghost slots / click reshuffles with TaCZ).
 				net.mcreator.radiotowers.RadiotowersMod.queueServerWork(1, () -> {
 					BlockEntity be = _level.getBlockEntity(posFinal);
 					if (be instanceof AirdropCrateBlockEntity crate && crate.isFilledFromOrder())
 						return;
-					fillCrateFromOrder(_level, posFinal, ids, qty);
+					fillCrateFromOrder(_level, posFinal, ids, qty, members);
 				});
 			} else if (!hasOrder && world instanceof ServerLevel _level && _level.getServer() != null) {
 				double cx = deliveryPos.getX() + 0.5;

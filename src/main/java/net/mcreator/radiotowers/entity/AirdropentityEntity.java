@@ -36,6 +36,8 @@ public class AirdropentityEntity extends Monster {
 	private List<String> airdropItemIds = new ArrayList<>();
 	private List<Integer> airdropQuantities = new ArrayList<>();
 	private int airdropDifficulty;
+	private final java.util.Set<java.util.UUID> lobbyMembers = new java.util.LinkedHashSet<>();
+	private boolean membersOnlyCrate;
 
 	public void setAirdropOrder(List<String> itemIds, List<Integer> quantities) {
 		this.airdropItemIds = itemIds != null ? new ArrayList<>(itemIds) : new ArrayList<>();
@@ -46,6 +48,20 @@ public class AirdropentityEntity extends Monster {
 			if (this.airdropQuantities.size() > this.airdropItemIds.size())
 				this.airdropQuantities = this.airdropQuantities.subList(0, this.airdropItemIds.size());
 		}
+	}
+
+	public void setLobbyMembers(java.util.Collection<java.util.UUID> members, boolean membersOnly) {
+		lobbyMembers.clear();
+		if (members != null) lobbyMembers.addAll(members);
+		this.membersOnlyCrate = membersOnly && !lobbyMembers.isEmpty();
+	}
+
+	public java.util.Set<java.util.UUID> getLobbyMembers() {
+		return java.util.Collections.unmodifiableSet(lobbyMembers);
+	}
+
+	public boolean isMembersOnlyCrate() {
+		return membersOnlyCrate;
 	}
 
 	public List<String> getAirdropItemIds() { return new ArrayList<>(airdropItemIds); }
@@ -130,6 +146,10 @@ public class AirdropentityEntity extends Monster {
 		for (Integer i : airdropQuantities) qty.add(net.minecraft.nbt.IntTag.valueOf(i));
 		compound.put("AirdropQuantities", qty);
 		compound.putInt("AirdropDifficulty", airdropDifficulty);
+		compound.putBoolean("MembersOnlyCrate", membersOnlyCrate);
+		ListTag members = new ListTag();
+		for (java.util.UUID u : lobbyMembers) members.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
+		compound.put("LobbyMembers", members);
 	}
 
 	@Override
@@ -148,6 +168,16 @@ public class AirdropentityEntity extends Monster {
 			for (int i = 0; i < qty.size(); i++) airdropQuantities.add(((net.minecraft.nbt.NumericTag) qty.get(i)).getAsInt());
 		}
 		if (compound.contains("AirdropDifficulty", 3)) airdropDifficulty = compound.getInt("AirdropDifficulty");
+		membersOnlyCrate = compound.getBoolean("MembersOnlyCrate");
+		lobbyMembers.clear();
+		if (compound.contains("LobbyMembers", 9)) {
+			ListTag members = compound.getList("LobbyMembers", 8);
+			for (int i = 0; i < members.size(); i++) {
+				try {
+					lobbyMembers.add(java.util.UUID.fromString(members.get(i).getAsString()));
+				} catch (Exception ignored) {}
+			}
+		}
 	}
 
 	@Override

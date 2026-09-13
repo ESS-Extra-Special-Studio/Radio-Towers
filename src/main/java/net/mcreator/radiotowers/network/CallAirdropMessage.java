@@ -95,6 +95,11 @@ public class CallAirdropMessage implements CustomPacketPayload {
                 return;
             }
             if (!standardAirdrop && !AirdropDifficultyTier.canStart(msg.totalDifficulty)) return; // require 10-point increments unless standard airdrop (loot table)
+            if (net.mcreator.radiotowers.lobby.AirdropLobbyService.hasGuestsBlockingSoloStart(sender.getUUID())) {
+                sender.sendSystemMessage(Component.literal(
+                    "[RadioTowers] Guests are in your airdrop lobby - use Lobby → Go (everyone must be ready)."));
+                return;
+            }
             ServerLevel level = sender.serverLevel();
             // Wave integration priority: ESL > Berezka > immediate
             boolean hasWaveBackend = !standardAirdrop

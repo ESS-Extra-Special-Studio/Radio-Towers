@@ -1,4 +1,19 @@
-﻿## 1.2.3 (1.2.3 NeoForge 1.21.1)
+﻿## 1.2.4 (1.2.4 NeoForge 1.21.1)
+
+Update by: Extra_Special_K
+
+Added:
+Optional airdrop lobby on a shared server. Invite online players, ready-check, shared countdown, then Go. The solo lever path is unchanged.
+Pending invites block Go until cancelled, and the lobby says why Go is blocked.
+Accept teleports to the tower panel and chat says so. Decline is equally clear.
+Lobbied crates are members-only. Solo crates stay world loot.
+Config lobbyMaxPlayers, lobbyCountdownSeconds, lobbyInviteTimeoutSeconds, lobbyMembersOnlyCrates.
+Commands /radiotowers lobby accept, decline, and ready (chat buttons on the invite).
+Airdrop Lobby screen (online list, party, status banner) using ESC.
+Changed:
+ESL is required (ESC already required it). ESN is optional. Without ESN the solo path still works and the lobby does not.
+
+## 1.2.3 (1.2.3 NeoForge 1.21.1)
 
 Update by: Extra_Special_K
 

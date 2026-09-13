@@ -43,6 +43,8 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	private boolean filledFromOrder = false;
 	/** Worldgen / structure chest disguised as airdrop crate — never fill from live deliveries. */
 	private boolean structureLoot = false;
+	/** When non-empty, only these UUIDs may open the crate (lobbied delivery). */
+	private final java.util.Set<java.util.UUID> allowedOpeners = new java.util.LinkedHashSet<>();
 
 	public AirdropCrateBlockEntity(BlockPos position, BlockState state) {
 		super(RadiotowersModBlockEntities.AIRDROP_CRATE.get(), position, state);
@@ -53,6 +55,15 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		super.loadAdditional(compound, registries);
 		this.filledFromOrder = compound.getBoolean("FilledFromOrder");
 		this.structureLoot = compound.getBoolean("StructureLoot");
+		allowedOpeners.clear();
+		if (compound.contains("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_LIST)) {
+			net.minecraft.nbt.ListTag list = compound.getList("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_STRING);
+			for (int i = 0; i < list.size(); i++) {
+				try {
+					allowedOpeners.add(java.util.UUID.fromString(list.get(i).getAsString()));
+				} catch (Exception ignored) {}
+			}
+		}
 		if (!this.tryLoadLootTable(compound))
 			this.stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
 		ContainerHelper.loadAllItems(compound, this.stacks, registries);
@@ -68,6 +79,13 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		super.saveAdditional(compound, registries);
 		compound.putBoolean("FilledFromOrder", this.filledFromOrder);
 		compound.putBoolean("StructureLoot", this.structureLoot);
+		if (!allowedOpeners.isEmpty()) {
+			net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+			for (java.util.UUID u : allowedOpeners) {
+				list.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
+			}
+			compound.put("AllowedOpenerStrings", list);
+		}
 		if (!this.trySaveLootTable(compound)) {
 			ContainerHelper.saveAllItems(compound, this.stacks, registries);
 		}
@@ -153,6 +171,21 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 
 	public boolean isFilledFromOrder() {
 		return this.filledFromOrder;
+	}
+
+	public void setAllowedOpeners(java.util.Collection<java.util.UUID> uuids) {
+		allowedOpeners.clear();
+		if (uuids != null) allowedOpeners.addAll(uuids);
+		setChanged();
+	}
+
+	public boolean hasOpenRestriction() {
+		return !allowedOpeners.isEmpty();
+	}
+
+	public boolean canPlayerOpen(java.util.UUID playerUuid) {
+		if (allowedOpeners.isEmpty()) return true;
+		return playerUuid != null && allowedOpeners.contains(playerUuid);
 	}
 
 	/** True for tower worldgen loot crates — must not receive live airdrop / wave delivery fills. */
