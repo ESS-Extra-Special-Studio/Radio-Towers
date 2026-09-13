@@ -51,6 +51,22 @@ public final class RadiotowersClientHooks {
 		AirdropWaveHudData.setAirdropState(waveInProgress, cooldownEndGameTime);
 	}
 
+	public static void applyLobbySync(Object syncPacket) {
+		if (syncPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby sync) {
+			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applySync(sync);
+		}
+	}
+
+	public static void applyLobbyCountdown(Object countdownPacket) {
+		if (countdownPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Countdown countdown) {
+			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applyCountdown(countdown);
+		}
+	}
+
+	public static void openLobbyScreen(java.util.UUID lobbyId, BlockPos panelPos) {
+		net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.openScreen(lobbyId, panelPos);
+	}
+
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {
 		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor && needClientUpdate) {
 			accessor.updateMenuState(elementType, name, elementState);

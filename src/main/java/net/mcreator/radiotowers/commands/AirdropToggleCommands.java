@@ -26,6 +26,22 @@ public class AirdropToggleCommands {
     }
 
     private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Player-facing lobby clicks (no OP required). Separate register so parent OP gate does not apply.
+        dispatcher.register(
+            Commands.literal("radiotowers")
+                .then(Commands.literal("lobby")
+                    .then(Commands.literal("accept")
+                        .then(Commands.argument("id", StringArgumentType.string())
+                            .executes(ctx -> lobbyAccept(ctx.getSource(), StringArgumentType.getString(ctx, "id")))))
+                    .then(Commands.literal("decline")
+                        .then(Commands.argument("id", StringArgumentType.string())
+                            .executes(ctx -> lobbyDecline(ctx.getSource(), StringArgumentType.getString(ctx, "id")))))
+                    .then(Commands.literal("ready")
+                        .executes(ctx -> lobbyReady(ctx.getSource(), null))
+                        .then(Commands.argument("id", StringArgumentType.string())
+                            .executes(ctx -> lobbyReady(ctx.getSource(), StringArgumentType.getString(ctx, "id")))))
+                )
+        );
         dispatcher.register(
             Commands.literal("radiotowers")
                 .requires(src -> src.hasPermission(2))
@@ -62,6 +78,40 @@ public class AirdropToggleCommands {
                             .executes(ctx -> profileLoad(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
                 )
         );
+    }
+
+    private static int lobbyAccept(CommandSourceStack src, String id) {
+        if (!(src.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)) return 0;
+        try {
+            net.mcreator.radiotowers.lobby.AirdropLobbyService.handleAccept(player, java.util.UUID.fromString(id));
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Invalid lobby id"));
+            return 0;
+        }
+    }
+
+    private static int lobbyDecline(CommandSourceStack src, String id) {
+        if (!(src.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)) return 0;
+        try {
+            net.mcreator.radiotowers.lobby.AirdropLobbyService.handleDecline(player, java.util.UUID.fromString(id));
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Invalid lobby id"));
+            return 0;
+        }
+    }
+
+    private static int lobbyReady(CommandSourceStack src, String id) {
+        if (!(src.getEntity() instanceof net.minecraft.server.level.ServerPlayer player)) return 0;
+        try {
+            java.util.UUID lobbyId = id != null && !id.isBlank() ? java.util.UUID.fromString(id) : null;
+            net.mcreator.radiotowers.lobby.AirdropLobbyService.handleReady(player, lobbyId, true);
+            return 1;
+        } catch (Exception e) {
+            src.sendFailure(Component.literal("Invalid lobby id"));
+            return 0;
+        }
     }
 
     private static void line(CommandSourceStack src, String text) {

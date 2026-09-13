@@ -74,6 +74,11 @@ public class CallAirdropMessage {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();
             if (sender == null || sender.serverLevel() == null) return;
+            if (net.mcreator.radiotowers.lobby.AirdropLobbyService.hasGuestsBlockingSoloStart(sender.getUUID())) {
+                sender.sendSystemMessage(Component.literal(
+                    "[RadioTowers] Guests are in your airdrop lobby — use Lobby → Go (everyone must be ready)."));
+                return;
+            }
             boolean standardAirdrop = (msg.totalDifficulty == 0 && (msg.itemIds == null || msg.itemIds.isEmpty()));
             if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
                 sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));

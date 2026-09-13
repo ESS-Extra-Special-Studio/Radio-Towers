@@ -7,6 +7,7 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 
 import net.mcreator.radiotowers.RadiotowersMod;
+import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.entity.PlaneentityEntity;
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
 import net.mcreator.radiotowers.init.RadiotowersModEntities;
@@ -15,9 +16,11 @@ import net.mcreator.radiotowers.network.AirdropStatePacket;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -56,12 +59,28 @@ public final class PendingAirdropStorage {
         public long lastWaveCompletedAtGameTime;
         /** ESL wave controller ID when using ESL waves (null when using Berezka or no wave system). */
         public java.util.UUID eslControllerId;
+        /** Accepted lobby members (includes host). Empty/solo = host only. */
+        public final Set<UUID> memberUuids;
+        /** ESL lobby id when this delivery was lobbied; null for solo. */
+        public final UUID lobbyId;
+        /** When true, crate opens are restricted to {@link #memberUuids}. */
+        public final boolean membersOnlyCrate;
 
         public boolean isEslManaged() {
             return eslControllerId != null;
         }
 
+        /** Accepted members for aggro / fan-out; always includes host. */
+        public Set<UUID> effectiveMembers() {
+            if (memberUuids != null && !memberUuids.isEmpty()) return memberUuids;
+            return Set.of(playerWhoStarted);
+        }
+
         public Pending(BlockPos waveStartPos, BlockPos panelPos, List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted, long storedAtGameTime, int wavesRemaining, int totalWaves, int tierDifficulty, int maxZombiesPerWave) {
+            this(waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted, storedAtGameTime, wavesRemaining, totalWaves, tierDifficulty, maxZombiesPerWave, null, null, false);
+        }
+
+        public Pending(BlockPos waveStartPos, BlockPos panelPos, List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted, long storedAtGameTime, int wavesRemaining, int totalWaves, int tierDifficulty, int maxZombiesPerWave, Set<UUID> memberUuids, UUID lobbyId, boolean membersOnlyCrate) {
             this.waveStartPos = waveStartPos != null ? waveStartPos.immutable() : panelPos.immutable();
             this.panelPos = panelPos.immutable();
             this.itemIds = new ArrayList<>(itemIds != null ? itemIds : List.of());
@@ -77,11 +96,17 @@ public final class PendingAirdropStorage {
             this.spawnCountThisWave = 0;
             this.killedCountThisWave = 0;
             this.lastWaveCompletedAtGameTime = 0;
+            LinkedHashSet<UUID> members = new LinkedHashSet<>();
+            if (memberUuids != null) members.addAll(memberUuids);
+            if (playerWhoStarted != null) members.add(playerWhoStarted);
+            this.memberUuids = Collections.unmodifiableSet(members);
+            this.lobbyId = lobbyId;
+            this.membersOnlyCrate = membersOnlyCrate;
         }
 
         /** New pending with the same wave state but new itemIds/quantities (for updating selection while wave is running). */
         public Pending copyWithOrder(List<String> itemIds, List<Integer> quantities) {
-            Pending p = new Pending(waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted, storedAtGameTime, wavesRemaining, totalWaves, tierDifficulty, maxZombiesPerWave);
+            Pending p = new Pending(waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted, storedAtGameTime, wavesRemaining, totalWaves, tierDifficulty, maxZombiesPerWave, memberUuids, lobbyId, membersOnlyCrate);
             p.currentWaveStartedAtGameTime = this.currentWaveStartedAtGameTime;
             p.wavesRemaining = this.wavesRemaining;
             p.spawnCountThisWave = this.spawnCountThisWave;
@@ -102,6 +127,7 @@ public final class PendingAirdropStorage {
     private static final Map<UUID, DeliveryOrderSnapshot> DELIVERY_ORDER_BY_PLANE = new ConcurrentHashMap<>();
     /** Dimension -> next delivery order. Fallback so the 65-tick callback always gets the order even if plane UUID doesn't match. */
     private static final Map<ResourceKey<Level>, DeliveryOrderSnapshot> NEXT_DELIVERY_ORDER_BY_DIMENSION = new ConcurrentHashMap<>();
+    private static final Map<ResourceKey<Level>, DeliveryMembersSnapshot> NEXT_DELIVERY_MEMBERS_BY_DIMENSION = new ConcurrentHashMap<>();
 
     public static void putDeliveryOrderForPlane(UUID planeUuid, List<String> itemIds, List<Integer> quantities) {
         if (planeUuid != null && itemIds != null && !itemIds.isEmpty())
@@ -112,6 +138,16 @@ public final class PendingAirdropStorage {
     public static void putNextDeliveryOrder(ResourceKey<Level> dimension, List<String> itemIds, List<Integer> quantities) {
         if (dimension != null && itemIds != null && !itemIds.isEmpty())
             NEXT_DELIVERY_ORDER_BY_DIMENSION.put(dimension, new DeliveryOrderSnapshot(itemIds, quantities));
+    }
+
+    public static void putNextDeliveryMembers(ResourceKey<Level> dimension, Set<UUID> members, boolean membersOnly) {
+        if (dimension == null || members == null || members.isEmpty()) return;
+        NEXT_DELIVERY_MEMBERS_BY_DIMENSION.put(dimension, new DeliveryMembersSnapshot(members, membersOnly));
+    }
+
+    @javax.annotation.Nullable
+    public static DeliveryMembersSnapshot takeNextDeliveryMembers(ResourceKey<Level> dimension) {
+        return dimension != null ? NEXT_DELIVERY_MEMBERS_BY_DIMENSION.remove(dimension) : null;
     }
 
     /** Take and remove the next delivery order for this dimension. Returns null if none. */
@@ -128,6 +164,7 @@ public final class PendingAirdropStorage {
     public static void clearAllDeliveryOrders() {
         DELIVERY_ORDER_BY_PLANE.clear();
         NEXT_DELIVERY_ORDER_BY_DIMENSION.clear();
+        NEXT_DELIVERY_MEMBERS_BY_DIMENSION.clear();
     }
 
     /** Snapshot of itemIds + quantities for one delivery. */
@@ -140,14 +177,33 @@ public final class PendingAirdropStorage {
         }
     }
 
+    public static final class DeliveryMembersSnapshot {
+        public final Set<UUID> members;
+        public final boolean membersOnly;
+        DeliveryMembersSnapshot(Set<UUID> members, boolean membersOnly) {
+            this.members = Collections.unmodifiableSet(new LinkedHashSet<>(members));
+            this.membersOnly = membersOnly;
+        }
+    }
+
     public static void store(ServerLevel level, BlockPos waveStartPos, BlockPos panelPos,
                              List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted,
                              int wavesRemaining, int totalWaves, int tierDifficulty) {
+        store(level, waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted,
+            wavesRemaining, totalWaves, tierDifficulty, null, null);
+    }
+
+    public static void store(ServerLevel level, BlockPos waveStartPos, BlockPos panelPos,
+                             List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted,
+                             int wavesRemaining, int totalWaves, int tierDifficulty,
+                             Set<UUID> memberUuids, UUID lobbyId) {
         long gameTime = level.getGameTime();
         int maxZombies = AirdropDifficultyTier.getZombiesPerWaveForTier(tierDifficulty);
+        boolean membersOnly = AirdropConfig.isLobbyMembersOnlyCrates()
+            && lobbyId != null && memberUuids != null && memberUuids.size() > 1;
         BY_DIMENSION
             .computeIfAbsent(level.dimension(), k -> new ConcurrentHashMap<>())
-            .put(waveStartPos.immutable(), new Pending(waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted, gameTime, wavesRemaining, totalWaves, tierDifficulty, maxZombies));
+            .put(waveStartPos.immutable(), new Pending(waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted, gameTime, wavesRemaining, totalWaves, tierDifficulty, maxZombies, memberUuids, lobbyId, membersOnly));
     }
 
     /** Update the loot order for this player's current pending (so reopening GUI and clicking Start uses latest selection). */
@@ -327,13 +383,16 @@ public final class PendingAirdropStorage {
                 pe.setAirdropDifficulty(p.difficulty);
             }
         }
-        AirdropCooldown.setCooldownAfterWaveDelivery(level, p.playerWhoStarted);
-        var player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
-        if (player != null) {
-            RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
-                new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, p.playerWhoStarted)));
-            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                "message.radiotowers.wave.all_cleared_airdrop_inbound"));
+        if (p.membersOnlyCrate) {
+            putNextDeliveryMembers(level.dimension(), p.effectiveMembers(), true);
+        }
+        net.mcreator.radiotowers.lobby.AirdropLobbyService.applySharedCooldownWave(level, p.effectiveMembers());
+        for (UUID memberId : p.effectiveMembers()) {
+            var player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
+            if (player != null) {
+                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.radiotowers.wave.all_cleared_airdrop_inbound"));
+            }
         }
     }
 
@@ -341,8 +400,9 @@ public final class PendingAirdropStorage {
     public static boolean hasPendingForPlayer(ServerLevel level, java.util.UUID playerUuid) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null) return false;
-        for (Pending p : map.values())
-            if (playerUuid.equals(p.playerWhoStarted)) return true;
+        for (Pending p : map.values()) {
+            if (playerUuid.equals(p.playerWhoStarted) || p.effectiveMembers().contains(playerUuid)) return true;
+        }
         return false;
     }
 

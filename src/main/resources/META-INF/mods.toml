@@ -41,6 +41,20 @@ Server and client: install this mod on the dedicated server and on every client.
     side="BOTH"
 
 [[dependencies.radiotowers]]
+    modId="extraspeciallib"
+    mandatory=true
+    versionRange="[1.1.0,2.0)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
+    modId="esn"
+    mandatory=false
+    versionRange="[1.0,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.radiotowers]]
     modId="tacz"
     mandatory=false
     versionRange="[1.0,)"

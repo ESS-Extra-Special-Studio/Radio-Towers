@@ -55,7 +55,8 @@ public class RequestAirdropStatePacket {
             }
             // Only show "called in" at this tower if this exact panel has a pending airdrop for this player
             var pending = PendingAirdropStorage.getPendingForPanel(serverLevel, msg.panelPos);
-            boolean waveInProgress = pending != null && player.getUUID().equals(pending.playerWhoStarted);
+            boolean waveInProgress = pending != null && (player.getUUID().equals(pending.playerWhoStarted)
+                || pending.effectiveMembers().contains(player.getUUID()));
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
                 new AirdropStatePacket(waveInProgress, cooldownEnd));
         });

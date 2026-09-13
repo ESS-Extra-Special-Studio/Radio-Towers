@@ -24,3 +24,9 @@ includeBuild('../../IdeaProjects/ESC') {
         substitute module('uk.co.extraspecialstudio:extraspecialcore') using project(':')
     }
 }
+
+includeBuild('../../IdeaProjects/ESN') {
+    dependencySubstitution {
+        substitute module('uk.co.extraspecialstudio:esn') using project(':')
+    }
+}

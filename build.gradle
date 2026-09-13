@@ -63,8 +63,9 @@ mixin {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation "uk.co.extraspecialstudio:extraspeciallib:1.0.0"
+    implementation "uk.co.extraspecialstudio:extraspeciallib:1.1.0"
     implementation "uk.creatopia.unbound:extraspecialcore:${esc_version}"
+    implementation "uk.co.extraspecialstudio:esn:1.0.1"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     // Optional: real API on classpath when present (better signature match than stub).
     def testMods = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods")

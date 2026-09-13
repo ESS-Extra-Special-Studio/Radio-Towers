@@ -52,6 +52,12 @@ public class AirdropConfig {
     public static final ForgeConfigSpec.IntValue STANDARD_AIRDROP_COOLDOWN_MINUTES;
     public static final ForgeConfigSpec.IntValue WAVE_DELIVERY_COOLDOWN_MINUTES;
 
+    // --- Lobby (multiplayer airdrop) ---
+    public static final ForgeConfigSpec.IntValue LOBBY_MAX_PLAYERS;
+    public static final ForgeConfigSpec.IntValue LOBBY_COUNTDOWN_SECONDS;
+    public static final ForgeConfigSpec.IntValue LOBBY_INVITE_TIMEOUT_SECONDS;
+    public static final ForgeConfigSpec.BooleanValue LOBBY_MEMBERS_ONLY_CRATES;
+
         // --- Waves (ESL Wave API preferred; Berezka optional fallback) ---
     public static final ForgeConfigSpec.BooleanValue USE_ZOMBIE_WAVES_FOR_AIRDROP;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> WAVES_AGGRO_EXCLUDE_ENTITY_IDS;
@@ -123,6 +129,21 @@ public class AirdropConfig {
         WAVE_DELIVERY_COOLDOWN_MINUTES = BUILDER
             .comment("Minutes before the player can request another wave-delivered catalog airdrop.")
             .defineInRange("waveDeliveryCooldownMinutes", 10, 0, 120);
+        LOBBY_MAX_PLAYERS = BUILDER
+            .comment(
+                "----- AIRDROP LOBBY -----",
+                "Max players in one airdrop lobby (host included). Requires ESL + ESN."
+            )
+            .defineInRange("lobbyMaxPlayers", 6, 2, 100);
+        LOBBY_COUNTDOWN_SECONDS = BUILDER
+            .comment("Seconds of shared countdown after the host clicks Go with guests.")
+            .defineInRange("lobbyCountdownSeconds", 5, 1, 60);
+        LOBBY_INVITE_TIMEOUT_SECONDS = BUILDER
+            .comment("Seconds before a pending invite expires.")
+            .defineInRange("lobbyInviteTimeoutSeconds", 300, 30, 3600);
+        LOBBY_MEMBERS_ONLY_CRATES = BUILDER
+            .comment("When true, lobbied deliveries lock crates to lobby members only. Solo stays world-loot.")
+            .define("lobbyMembersOnlyCrates", true);
 
         // Common catalog switches.
         INCLUDE_TACZ_AMMO = BUILDER
@@ -280,6 +301,23 @@ public class AirdropConfig {
         return Math.max(0, WAVE_DELIVERY_COOLDOWN_MINUTES.get()) * 60 * 20;
     }
 
+    public static int getLobbyMaxPlayers() {
+        return Math.max(2, LOBBY_MAX_PLAYERS.get());
+    }
+
+    public static int getLobbyCountdownSeconds() {
+        return Math.max(1, LOBBY_COUNTDOWN_SECONDS.get());
+    }
+
+    public static long getLobbyInviteTimeoutTicks() {
+        return Math.max(20L, (long) LOBBY_INVITE_TIMEOUT_SECONDS.get() * 20L);
+    }
+
+    /** Lobbied deliveries restrict crate opens to party members when enabled. */
+    public static boolean isLobbyMembersOnlyCrates() {
+        return LOBBY_MEMBERS_ONLY_CRATES.get();
+    }
+
     /**
      * Loot table id for standard (non-catalog) airdrop crates.
      * Invalid config values fall back to {@link #DEFAULT_STANDARD_LOOT_TABLE}.
@@ -331,6 +369,10 @@ public class AirdropConfig {
         ACTIVE_AIRDROP_PROFILE.set("");
         STANDARD_AIRDROP_COOLDOWN_MINUTES.set(0);
         WAVE_DELIVERY_COOLDOWN_MINUTES.set(1);
+        LOBBY_MAX_PLAYERS.set(6);
+        LOBBY_COUNTDOWN_SECONDS.set(5);
+        LOBBY_INVITE_TIMEOUT_SECONDS.set(300);
+        LOBBY_MEMBERS_ONLY_CRATES.set(true);
         INCLUDE_TACZ_AMMO.set(true);
         INCLUDE_TACZ_GUNS.set(true);
         SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.set(false);
@@ -369,6 +411,10 @@ public class AirdropConfig {
         ACTIVE_AIRDROP_PROFILE.set("");
         STANDARD_AIRDROP_COOLDOWN_MINUTES.set(3);
         WAVE_DELIVERY_COOLDOWN_MINUTES.set(10);
+        LOBBY_MAX_PLAYERS.set(6);
+        LOBBY_COUNTDOWN_SECONDS.set(5);
+        LOBBY_INVITE_TIMEOUT_SECONDS.set(300);
+        LOBBY_MEMBERS_ONLY_CRATES.set(true);
         INCLUDE_TACZ_AMMO.set(true);
         INCLUDE_TACZ_GUNS.set(true);
         SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.set(false);
@@ -406,6 +452,10 @@ public class AirdropConfig {
         ACTIVE_AIRDROP_PROFILE.save();
         STANDARD_AIRDROP_COOLDOWN_MINUTES.save();
         WAVE_DELIVERY_COOLDOWN_MINUTES.save();
+        LOBBY_MAX_PLAYERS.save();
+        LOBBY_COUNTDOWN_SECONDS.save();
+        LOBBY_INVITE_TIMEOUT_SECONDS.save();
+        LOBBY_MEMBERS_ONLY_CRATES.save();
         INCLUDE_TACZ_AMMO.save();
         INCLUDE_TACZ_GUNS.save();
         SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.save();

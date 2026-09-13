@@ -261,6 +261,11 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         addRenderableWidget(lever);
 
         int y = leverBounds.bottom() + 14 - controlsColumn.y();
+        if (net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.isAvailable()) {
+            addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.lobby")), controlsColumn,
+                EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> onOpenLobby());
+            y += 24;
+        }
         if (ModList.get().isLoaded("dead_air")) {
             turnOffButton = addAnchoredButton(EscText.literal(getPowerButtonLabel()), controlsColumn,
                 EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> onTurnOff());
@@ -438,6 +443,29 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         orderQuantities.clear();
         boolean hasWaveApi = ModList.get().isLoaded("berezkas_zombie_waves_api") || ModList.get().isLoaded("berezka_zombie_waves_api");
         if (!hasWaveApi && minecraft != null) minecraft.setScreen(null);
+    }
+
+    private void onOpenLobby() {
+        if (!net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.isAvailable()) return;
+        List<String> itemIds = new ArrayList<>();
+        List<Integer> quantities = new ArrayList<>();
+        int total = 0;
+        for (var e : orderQuantities.entrySet()) {
+            int qty = e.getValue();
+            if (qty <= 0) continue;
+            int idx = e.getKey();
+            if (idx >= 0 && idx < catalog.size()) {
+                AirdropCatalog.Entry entry = catalog.get(idx);
+                itemIds.add(entry.getItemId().toString());
+                quantities.add(qty * entry.getDefaultStackSize());
+                total += entry.getDifficultyPoints() * qty;
+            }
+        }
+        total = Math.min(total, AirdropCatalog.getMaxTotalDifficulty());
+        net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.prepareOpen(this, panelPos,
+            new net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.OrderSnapshot(total, itemIds, quantities));
+        net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.channel()
+            .sendToServer(new net.mcreator.radiotowers.network.lobby.LobbyPackets.Open(panelPos));
     }
 
     private void onTurnOff() {

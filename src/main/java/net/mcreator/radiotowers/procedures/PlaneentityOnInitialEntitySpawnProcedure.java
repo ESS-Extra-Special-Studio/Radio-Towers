@@ -136,6 +136,10 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 							airdrop.setAirdropOrder(java.util.Collections.emptyList(), java.util.Collections.emptyList());
 						}
 						airdrop.setAirdropDifficulty(plane.getAirdropDifficulty());
+						var members = PendingAirdropStorage.takeNextDeliveryMembers(_level.dimension());
+						if (members != null) {
+							airdrop.setLobbyMembers(members.members, members.membersOnly);
+						}
 					}
 				}
 			} catch (Exception e) {

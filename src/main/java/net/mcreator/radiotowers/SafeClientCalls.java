@@ -28,6 +28,18 @@ public final class SafeClientCalls {
 		invokeVoid("applyAirdropStatePacket", new Class<?>[] { boolean.class, long.class }, new Object[] { waveInProgress, cooldownEndGameTime });
 	}
 
+	public static void applyLobbySync(Object syncPacket) {
+		invokeVoid("applyLobbySync", new Class<?>[] { Object.class }, new Object[] { syncPacket });
+	}
+
+	public static void applyLobbyCountdown(Object countdownPacket) {
+		invokeVoid("applyLobbyCountdown", new Class<?>[] { Object.class }, new Object[] { countdownPacket });
+	}
+
+	public static void openLobbyScreen(java.util.UUID lobbyId, BlockPos panelPos) {
+		invokeVoid("openLobbyScreen", new Class<?>[] { java.util.UUID.class, BlockPos.class }, new Object[] { lobbyId, panelPos });
+	}
+
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {
 		invokeVoid("onClientSendMenuStateUpdate",
 			new Class<?>[] { RadiotowersModMenus.MenuAccessor.class, int.class, String.class, Object.class, boolean.class },
