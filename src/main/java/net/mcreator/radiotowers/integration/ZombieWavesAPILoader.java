@@ -12,13 +12,13 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Skeleton;
-import net.minecraft.world.entity.monster.Stray;
-import net.minecraft.world.entity.monster.WitherSkeleton;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.ZombieVillager;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.skeleton.Stray;
+import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.ZombieVillager;
 import net.minecraft.world.entity.monster.Zoglin;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -93,7 +93,7 @@ public final class ZombieWavesAPILoader {
         }
         BerezkaWaveChatSilencer.apply();
         // Debounce: if we already started at this position very recently, don't end+restart (avoids double-click / multiple starts)
-        String startKey = level.dimension().location() + "_" + groundPos.getX() + "_" + groundPos.getY() + "_" + groundPos.getZ();
+        String startKey = level.dimension().identifier() + "_" + groundPos.getX() + "_" + groundPos.getY() + "_" + groundPos.getZ();
         long now = level.getGameTime();
         Long lastStart = LAST_START_AT.get(startKey);
         if (lastStart != null && (now - lastStart) < WAVE_START_DEBOUNCE_TICKS) {
@@ -181,8 +181,8 @@ public final class ZombieWavesAPILoader {
             if (apiPos != null) {
                 int r = 120;
                 AABB box = new AABB(
-                    apiPos.getX() - r, level.getMinBuildHeight(), apiPos.getZ() - r,
-                    apiPos.getX() + r, level.getMaxBuildHeight(), apiPos.getZ() + r
+                    apiPos.getX() - r, level.getMinY(), apiPos.getZ() - r,
+                    apiPos.getX() + r, level.getMaxY(), apiPos.getZ() + r
                 );
                 for (net.minecraft.world.entity.Mob m : level.getEntitiesOfClass(net.minecraft.world.entity.Mob.class, box)) {
                     if (!m.isAlive() || m.isRemoved()) continue;
@@ -490,16 +490,16 @@ public final class ZombieWavesAPILoader {
             ACTIVE_DEFENSE_SESSION_BY_DIM.remove(dim);
         }
         RadiotowersNetwork.sendToPlayersInDimension(level,
-            new DefenseSessionSyncPacket(dim.location(), active));
+            new DefenseSessionSyncPacket(dim.identifier(), active));
     }
 
     /** Server -> one player: current defense session flag (call on login so client mirror matches). */
     public static void pushDefenseSessionStateToPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         boolean active = ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
         RadiotowersNetwork.sendToPlayer(player,
-            new DefenseSessionSyncPacket(level.dimension().location(), active));
+            new DefenseSessionSyncPacket(level.dimension().identifier(), active));
     }
 
     /**
@@ -782,8 +782,8 @@ public final class ZombieWavesAPILoader {
         if (level == null || level.isClientSide() || center == null) return 0;
         final int horizontalRadius = WAVE_AREA_RANGE;
         AABB box = new AABB(
-            center.getX() - horizontalRadius, level.getMinBuildHeight(), center.getZ() - horizontalRadius,
-            center.getX() + horizontalRadius, level.getMaxBuildHeight(), center.getZ() + horizontalRadius);
+            center.getX() - horizontalRadius, level.getMinY(), center.getZ() - horizontalRadius,
+            center.getX() + horizontalRadius, level.getMaxY(), center.getZ() + horizontalRadius);
         int removed = 0;
         for (Mob mob : level.getEntitiesOfClass(Mob.class, box)) {
             if (mob.isRemoved() || !mob.isAlive()) continue;
@@ -815,9 +815,9 @@ public final class ZombieWavesAPILoader {
         if (level == null || level.isClientSide()) return 0;
         int[] removed = {0};
         LoadedEntityScan.forEach(level, LivingEntity.class, entity -> {
-            if (entity.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-                || entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) {
+            if (entity.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || entity.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+                || entity.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)) {
                 entity.discard();
                 removed[0]++;
             }
@@ -832,8 +832,8 @@ public final class ZombieWavesAPILoader {
     public static int sweepBrokenUndeadNearWave(ServerLevel level, BlockPos center, int horizontalRadius) {
         if (level == null || level.isClientSide() || center == null) return 0;
         AABB box = new AABB(
-            center.getX() - horizontalRadius, level.getMinBuildHeight(), center.getZ() - horizontalRadius,
-            center.getX() + horizontalRadius, level.getMaxBuildHeight(), center.getZ() + horizontalRadius);
+            center.getX() - horizontalRadius, level.getMinY(), center.getZ() - horizontalRadius,
+            center.getX() + horizontalRadius, level.getMaxY(), center.getZ() + horizontalRadius);
         int removed = 0;
         for (Mob mob : level.getEntitiesOfClass(Mob.class, box)) {
             if (mob.isRemoved() || !mob.isAlive()) continue;
@@ -889,27 +889,27 @@ public final class ZombieWavesAPILoader {
     /** Count only wave-spawned Zombie/Drowned in the area. Uses RING_POSITION_SET so our replacements (which have that tag only) are counted; WAVE_SPAWN_TAG/REPLACEMENT_TAG are removed after processing. */
     private static int countWaveZombiesInArea(ServerLevel level, BlockPos waveStartPos) {
         AABB box = new AABB(
-            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_AREA_RANGE,
-            waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_AREA_RANGE);
+            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinY(), waveStartPos.getZ() - WAVE_AREA_RANGE,
+            waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxY(), waveStartPos.getZ() + WAVE_AREA_RANGE);
         return (int) level.getEntitiesOfClass(LivingEntity.class, box).stream()
             .filter(e -> e != null && e.isAlive() && !e.isRemoved())
-            .filter(e -> e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG))
+            .filter(e -> e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false))
             .count();
     }
 
     /** Discard any still-alive wave mobs in the arena that are tagged for our wave logic. */
     private static int discardRemainingWaveMobsInArea(ServerLevel level, BlockPos waveStartPos) {
         AABB box = new AABB(
-            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_AREA_RANGE,
-            waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_AREA_RANGE);
+            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinY(), waveStartPos.getZ() - WAVE_AREA_RANGE,
+            waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxY(), waveStartPos.getZ() + WAVE_AREA_RANGE);
         int removed = 0;
         for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box)) {
             if (e == null || e.isRemoved() || !e.isAlive()) continue;
-            if (!e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                && !e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                && !e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) continue;
+            if (!e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                && !e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                && !e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)) continue;
             e.discard();
             removed++;
         }

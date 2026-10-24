@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -27,7 +27,7 @@ import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
  * Server responds with AirdropStatePacket. Wave-in-progress is only true if this player has a pending airdrop at this panel.
  */
 public class RequestAirdropStatePacket implements CustomPacketPayload {
-    public static final Type<RequestAirdropStatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "request_airdrop_state"));
+    public static final Type<RequestAirdropStatePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "request_airdrop_state"));
     public static final StreamCodec<FriendlyByteBuf, RequestAirdropStatePacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> RequestAirdropStatePacket.encode(msg, buf), RequestAirdropStatePacket::new);
 
     @Override
@@ -55,8 +55,8 @@ public class RequestAirdropStatePacket implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             ServerPlayer player = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
-            if (player == null || player.serverLevel() == null) return;
-            var serverLevel = player.serverLevel();
+            if (player == null || player.level() == null) return;
+            var serverLevel = player.level();
             long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(serverLevel, player.getUUID());
             // Always sync Boss / Endless unlock flags (soft-dep Dead Air; both false without DA).
             RadiotowersNetwork.sendToPlayer(player,

@@ -6,17 +6,17 @@
       "request": "launch",
       "name": "Client",
       "presentation": {
-        "group": "Mod Development - radiotowers-1.21.1-neoforge",
+        "group": "Mod Development - radiotowers-1.21.11-neoforge",
         "order": 0
       },
-      "projectName": "radiotowers-1.21.1-neoforge",
+      "projectName": "radiotowers-1.21.11-neoforge",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\clientRunProgramArgs.txt"
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\build\\moddev\\clientRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\clientRunVmArgs.txt",
-        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\bin\\main"
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},
@@ -28,17 +28,17 @@
       "request": "launch",
       "name": "Server",
       "presentation": {
-        "group": "Mod Development - radiotowers-1.21.1-neoforge",
+        "group": "Mod Development - radiotowers-1.21.11-neoforge",
         "order": 1
       },
-      "projectName": "radiotowers-1.21.1-neoforge",
+      "projectName": "radiotowers-1.21.11-neoforge",
       "mainClass": "net.neoforged.devlaunch.Main",
       "args": [
-        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\serverRunProgramArgs.txt"
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\build\\moddev\\serverRunProgramArgs.txt"
       ],
       "vmArgs": [
-        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\build\\moddev\\serverRunVmArgs.txt",
-        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.1 NeoForge\\bin\\main"
+        "@C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dradiotowers%%C:\\Users\\Ksivi\\IdeaProjects\\RadioTowers - 1.21.11 NeoForge\\bin\\main"
       ],
       "cwd": "${workspaceFolder}\\run",
       "env": {},

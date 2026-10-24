@@ -6,6 +6,7 @@ import net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork;
 import net.mcreator.radiotowers.network.lobby.LobbyPackets;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.BlockPos;
@@ -229,8 +230,8 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
             String q = nameFilter == null ? "" : nameFilter.trim().toLowerCase(Locale.ROOT);
             for (PlayerInfo info : minecraft.getConnection().getOnlinePlayers()) {
                 if (info == null || info.getProfile() == null) continue;
-                UUID id = info.getProfile().getId();
-                String name = info.getProfile().getName();
+                UUID id = info.getProfile().id();
+                String name = info.getProfile().name();
                 if (id == null || name == null || name.isBlank()) continue;
                 if (id.equals(self) || inLobby.contains(id)) continue;
                 if (!q.isEmpty() && !name.toLowerCase(Locale.ROOT).contains(q)) continue;
@@ -507,7 +508,10 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             int rowH = style.listRowHeight();
             if (rowH > 0 && onlineList != null && onlineViewport != null && onlineViewport.contains(mouseX, mouseY)) {
@@ -541,7 +545,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
                 }
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override

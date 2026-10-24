@@ -87,9 +87,9 @@ public final class WaveMobRemovalLogger {
         }
 
         boolean hasWaveTag =
-            e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
+            e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
                 || (e instanceof Mob mob && WaveMobAggroHandler.isWaveSpawnedMob(mob));
 
         RadiotowersMod.LOGGER.warn(
@@ -122,9 +122,9 @@ public final class WaveMobRemovalLogger {
             net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()),
             e.blockPosition(),
             true,
-            e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
+            e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
                 || WaveMobAggroHandler.isWaveSpawnedMob(e)
         );
     }

@@ -41,7 +41,7 @@ public abstract class NoMindlessShootingTacZListenerMixin {
                 return;
             }
             if (player instanceof ServerPlayer sp) {
-                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.serverLevel())) {
+                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.level())) {
                     ci.cancel();
                 }
                 return;

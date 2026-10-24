@@ -16,9 +16,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscAnchor;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscFonts;
@@ -156,7 +157,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 continue;
             }
             ItemStack stack = getDisplayStack(e);
-            ResourceLocation itemId = e.getItemId();
+            Identifier itemId = e.getItemId();
             String id = itemId.toString().toLowerCase(Locale.ROOT);
             String rawName = stack.isEmpty() ? id : stack.getHoverName().getString().toLowerCase(Locale.ROOT);
             if ("minecraft".equals(itemId.getNamespace()) && itemId.getPath().startsWith("music_disc_"))
@@ -198,7 +199,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     /** Stack to show in the airdrop list. Uses TaCZ creative-cache stack when available. For ammo, never show iron ammo_box: use tacz:ammo stack or build one. */
     private static ItemStack getDisplayStack(AirdropCatalog.Entry e) {
-        ResourceLocation id = e.getItemId();
+        Identifier id = e.getItemId();
         if ("tacz".equals(id.getNamespace())) {
             String path = id.getPath();
             if (path.startsWith("ammo/")) {
@@ -729,7 +730,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             if (qty > 0)
                 guiGraphics.fill(listLeft + 2, y + 1, listLeft + listWidth - 2, y + ROW_HEIGHT - 1, 0x4044AA44);
             ItemStack stack = getDisplayStack(e);
-            ResourceLocation itemId = e.getItemId();
+            Identifier itemId = e.getItemId();
             boolean useTaczPlaceholder = AirdropConfig.SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.get()
                 && "tacz".equals(itemId.getNamespace())
                 && (itemId.getPath().startsWith("ammo/") || itemId.getPath().startsWith("gun/"));
@@ -823,7 +824,10 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             if (tabAirdropRect != null && tabAirdropRect.contains(mouseX, mouseY)) {
                 selectTab(ModeTab.AIRDROP);
@@ -838,8 +842,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 return true;
             }
         }
-        if (!isAirdropTab()) return super.mouseClicked(mouseX, mouseY, button);
-        if (listAreaRect == null) return super.mouseClicked(mouseX, mouseY, button);
+        if (!isAirdropTab()) return super.mouseClicked(event, doubled);
+        if (listAreaRect == null) return super.mouseClicked(event, doubled);
         int visibleRows = getListVisibleRows();
         int listBottom = getListBottom();
         int trackHeight = listAreaRect.height();
@@ -858,7 +862,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         }
         if (mouseX >= listLeft && mouseX <= listLeft + listWidth && mouseY >= listTop && mouseY < listBottom) {
             int row = (int) ((mouseY - listTop) / ROW_HEIGHT);
-            if (row >= visibleRows) return super.mouseClicked(mouseX, mouseY, button);
+            if (row >= visibleRows) return super.mouseClicked(event, doubled);
             int idx = scrollOffset + row;
             if (idx >= 0 && idx < listSize) {
                 int catalogIdx = filteredIndices.get(idx);
@@ -872,7 +876,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override

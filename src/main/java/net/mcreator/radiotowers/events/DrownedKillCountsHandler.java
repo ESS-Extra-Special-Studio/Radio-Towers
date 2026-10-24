@@ -41,9 +41,9 @@ public class DrownedKillCountsHandler {
             // our killedCountThisWave and trigger early wave completion / wrong airdrop credits.
             boolean looksLikeWaveMob =
                 WaveMobAggroHandler.isWaveSpawnedMob(dead)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG);
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false);
             if (!looksLikeWaveMob) return;
 
             if (!DEATH_COUNTED_ENTITY_IDS.add(dead.getId())) return;
@@ -58,9 +58,9 @@ public class DrownedKillCountsHandler {
 
         boolean waveMob =
             WaveMobAggroHandler.isWaveSpawnedMob(dead)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG);
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false);
         if (!waveMob) return;
 
         // Count death once per entity id.

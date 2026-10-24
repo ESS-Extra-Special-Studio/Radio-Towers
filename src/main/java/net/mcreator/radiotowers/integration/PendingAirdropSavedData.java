@@ -1,10 +1,12 @@
 package net.mcreator.radiotowers.integration;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -27,44 +29,57 @@ public class PendingAirdropSavedData extends SavedData {
         super();
     }
 
-    public static PendingAirdropSavedData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    public static final Codec<PendingAirdropSavedData> CODEC = CompoundTag.CODEC.xmap(
+        PendingAirdropSavedData::fromTag, PendingAirdropSavedData::toTag);
+    public static final SavedDataType<PendingAirdropSavedData> TYPE = new SavedDataType<>(
+        DATA_NAME,
+        context -> {
+            CompoundTag legacy = LegacySavedDataFiles.readLegacy(context, DATA_NAME);
+            PendingAirdropSavedData data = legacy != null ? fromTag(legacy) : new PendingAirdropSavedData();
+            if (legacy != null) data.setDirty();
+            return data;
+        },
+        context -> CODEC,
+        DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+
+    public static PendingAirdropSavedData fromTag(CompoundTag tag) {
         PendingAirdropSavedData data = new PendingAirdropSavedData();
-        ListTag list = tag.getList("pending", Tag.TAG_COMPOUND);
+        ListTag list = tag.getListOrEmpty("pending");
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            BlockPos waveStart = net.minecraft.core.BlockPos.of(entry.getLong("wavePos"));
-            if (entry.contains("wavePos", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
-                int[] a = entry.getIntArray("wavePos");
+            CompoundTag entry = list.getCompoundOrEmpty(i);
+            BlockPos waveStart = BlockPos.of(entry.getLongOr("wavePos", 0L));
+            var waveInts = entry.getIntArray("wavePos");
+            if (waveInts.isPresent() && waveInts.get().length >= 3) {
+                int[] a = waveInts.get();
                 waveStart = new BlockPos(a[0], a[1], a[2]);
-            } else if (entry.contains("wavePos", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
-                CompoundTag wp = entry.getCompound("wavePos");
-                waveStart = new BlockPos(wp.getInt("X"), wp.getInt("Y"), wp.getInt("Z"));
+            } else if (entry.get("wavePos") instanceof CompoundTag wp) {
+                waveStart = new BlockPos(wp.getIntOr("X", 0), wp.getIntOr("Y", 0), wp.getIntOr("Z", 0));
             }
             BlockPos panelPos = waveStart;
-            if (entry.contains("panelPos", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
-                int[] a = entry.getIntArray("panelPos");
+            var panelInts = entry.getIntArray("panelPos");
+            if (panelInts.isPresent() && panelInts.get().length >= 3) {
+                int[] a = panelInts.get();
                 panelPos = new BlockPos(a[0], a[1], a[2]);
-            } else if (entry.contains("panelPos", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
-                CompoundTag pp = entry.getCompound("panelPos");
-                panelPos = new BlockPos(pp.getInt("X"), pp.getInt("Y"), pp.getInt("Z"));
+            } else if (entry.get("panelPos") instanceof CompoundTag pp) {
+                panelPos = new BlockPos(pp.getIntOr("X", 0), pp.getIntOr("Y", 0), pp.getIntOr("Z", 0));
             }
             List<String> itemIds = new ArrayList<>();
-            ListTag ids = entry.getList("itemIds", Tag.TAG_STRING);
-            for (int j = 0; j < ids.size(); j++) itemIds.add(ids.get(j).getAsString());
+            ListTag ids = entry.getListOrEmpty("itemIds");
+            for (int j = 0; j < ids.size(); j++) itemIds.add(ids.getStringOr(j, ""));
             List<Integer> quantities = new ArrayList<>();
-            ListTag qty = entry.getList("quantities", Tag.TAG_INT);
-            for (int j = 0; j < qty.size(); j++) quantities.add(((net.minecraft.nbt.NumericTag) qty.get(j)).getAsInt());
-            int difficulty = entry.getInt("difficulty");
-            UUID player = entry.hasUUID("player") ? entry.getUUID("player") : null;
+            ListTag qty = entry.getListOrEmpty("quantities");
+            for (int j = 0; j < qty.size(); j++) quantities.add(qty.getIntOr(j, 0));
+            int difficulty = entry.getIntOr("difficulty", 0);
+            UUID player = entry.read("player", UUIDUtil.CODEC).orElse(null);
             if (player == null) continue;
-            long storedAt = entry.getLong("storedAt");
-            long waveStartedAt = entry.getLong("waveStartedAt");
-            int wavesRemaining = entry.getInt("wavesRemaining");
-            int totalWaves = entry.getInt("totalWaves");
-            int tier = entry.getInt("tier");
-            int maxZombies = entry.getInt("maxZombies");
-            int spawnCount = entry.getInt("spawnCount");
-            int killedCount = entry.getInt("killedCount");
+            long storedAt = entry.getLongOr("storedAt", 0L);
+            long waveStartedAt = entry.getLongOr("waveStartedAt", 0L);
+            int wavesRemaining = entry.getIntOr("wavesRemaining", 0);
+            int totalWaves = entry.getIntOr("totalWaves", 0);
+            int tier = entry.getIntOr("tier", 0);
+            int maxZombies = entry.getIntOr("maxZombies", 0);
+            int spawnCount = entry.getIntOr("spawnCount", 0);
+            int killedCount = entry.getIntOr("killedCount", 0);
             PendingAirdropStorage.Pending p = new PendingAirdropStorage.Pending(waveStart, panelPos, itemIds, quantities, difficulty, player, storedAt, wavesRemaining, totalWaves, tier, maxZombies);
             p.currentWaveStartedAtGameTime = waveStartedAt;
             p.wavesRemaining = wavesRemaining;
@@ -75,8 +90,8 @@ public class PendingAirdropSavedData extends SavedData {
         return data;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
         ListTag list = new ListTag();
         for (Map.Entry<BlockPos, PendingAirdropStorage.Pending> e : pending.entrySet()) {
             PendingAirdropStorage.Pending p = e.getValue();
@@ -90,7 +105,7 @@ public class PendingAirdropSavedData extends SavedData {
             for (Integer n : p.quantities) qty.add(net.minecraft.nbt.IntTag.valueOf(n));
             entry.put("quantities", qty);
             entry.putInt("difficulty", p.difficulty);
-            entry.putUUID("player", p.playerWhoStarted);
+            entry.store("player", UUIDUtil.CODEC, p.playerWhoStarted);
             entry.putLong("storedAt", p.storedAtGameTime);
             entry.putLong("waveStartedAt", p.currentWaveStartedAtGameTime);
             entry.putInt("wavesRemaining", p.wavesRemaining);
@@ -110,6 +125,6 @@ public class PendingAirdropSavedData extends SavedData {
     }
 
     public static PendingAirdropSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(PendingAirdropSavedData::new, PendingAirdropSavedData::load), DATA_NAME);
+        return level.getDataStorage().computeIfAbsent(TYPE);
     }
 }

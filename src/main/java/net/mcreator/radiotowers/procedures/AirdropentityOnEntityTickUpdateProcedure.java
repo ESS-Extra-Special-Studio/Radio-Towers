@@ -9,7 +9,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -50,7 +50,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 					try {
 						String idStr = ids.get(i);
 						if (idStr == null || idStr.isEmpty()) continue;
-						ResourceLocation id = ResourceLocation.parse(idStr);
+						Identifier id = Identifier.parse(idStr);
 						ItemStack stack = ItemStack.EMPTY;
 						int unitsPerStack = 1;
 						String path = id.getPath();
@@ -102,7 +102,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 							if (TaczAirdropIntegration.isTaczContentId(id) && (path.startsWith("ammo/") || path.startsWith("gun/"))) {
 								// Never use registry lookup for tacz content IDs (no such registry key); skip to avoid iron ammo box
 							} else {
-								var item = BuiltInRegistries.ITEM.get(id);
+								var item = BuiltInRegistries.ITEM.getValue(id);
 								if (item != null && item != Items.AIR) {
 									stack = new ItemStack(item);
 								} else {
@@ -177,7 +177,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		int bx = Mth.floor(x);
 		int bz = Mth.floor(z);
 		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+		int minY = world.getMinY();
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			BlockState st = world.getBlockState(p);
@@ -227,7 +227,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 				double cy = deliveryPos.getY();
 				double cz = deliveryPos.getZ() + 0.5;
 				String lootTableId = net.mcreator.radiotowers.config.AirdropConfig.getStandardAirdropLootTable().toString();
-				_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(cx, cy, cz), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
+				_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(cx, cy, cz), Vec2.ZERO, _level, net.minecraft.server.permissions.LevelBasedPermissionSet.OWNER, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
 						"data merge block ~ ~ ~ {LootTable:\"" + lootTableId + "\"}");
 			}
 		}
@@ -246,7 +246,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		int bx = Mth.floor(x);
 		int bz = Mth.floor(z);
 		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+		int minY = world.getMinY();
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			if (world.getBlockState(p).blocksMotion())
@@ -294,6 +294,6 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		if (ground != null && nextY < ground.getY() + LAND_CLEARANCE)
 			nextY = ground.getY() + LAND_CLEARANCE;
 		entity.setPos(x, nextY, z);
-		entity.hasImpulse = true;
+		entity.hurtMarked = true;
 	}
 }

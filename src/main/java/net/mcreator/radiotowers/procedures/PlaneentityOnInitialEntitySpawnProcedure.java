@@ -4,14 +4,14 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Mth;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 
@@ -76,9 +76,9 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		}
 		if (world instanceof Level _level) {
 			if (!_level.isClientSide()) {
-				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
+				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.getValue(Identifier.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
 			} else {
-				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
+				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.getValue(Identifier.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
 			}
 		}
 		RadiotowersMod.queueServerWork(65, () -> {
@@ -113,7 +113,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					dropX = x + Math.cos(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 					dropZ = z + Math.sin(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 				}
-				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED);
+				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), EntitySpawnReason.MOB_SUMMONED);
 				if (entityToSpawn != null) {
 					entityToSpawn.setYRot(entity.getYRot());
 					entityToSpawn.setYBodyRot(entity.getYRot());
@@ -121,7 +121,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					// Fall straight down from the plane; give an initial descent so the crate cannot hang at drop height
 					entityToSpawn.setNoGravity(false);
 					entityToSpawn.setDeltaMovement(0, -0.25, 0);
-					entityToSpawn.hasImpulse = true;
+					entityToSpawn.hurtMarked = true;
 					if (entity instanceof net.mcreator.radiotowers.entity.PlaneentityEntity plane
 							&& entityToSpawn instanceof net.mcreator.radiotowers.entity.AirdropentityEntity airdrop) {
 						// Order: plane UUID map -> dimension "next" fallback -> plane's own data (set in deliverAt after spawn)

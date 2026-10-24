@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.client.model;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -16,12 +16,13 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 // Made with Blockbench 5.2.2 — crashed wreck variant of Modelplane (same airplane.png atlas)
-public class Modelplanecrashed<T extends Entity> extends EntityModel<T> {
+public class Modelplanecrashed extends EntityModel<LivingEntityRenderState> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-			ResourceLocation.fromNamespaceAndPath("radiotowers", "modelplanecrashed"), "main");
+			Identifier.fromNamespaceAndPath("radiotowers", "modelplanecrashed"), "main");
 	private final ModelPart bone;
 
 	public Modelplanecrashed(ModelPart root) {
+		super(root);
 		this.bone = root.getChild("bone");
 	}
 
@@ -94,11 +95,7 @@ public class Modelplanecrashed<T extends Entity> extends EntityModel<T> {
 	}
 
 	@Override
-	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+	public void setupAnim(LivingEntityRenderState state) {
 	}
 
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
-	}
 }

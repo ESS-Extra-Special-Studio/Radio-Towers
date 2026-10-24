@@ -3,15 +3,18 @@ package net.mcreator.radiotowers.airdrop;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.display.SlotDisplayContext;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.fml.ModList;
@@ -34,7 +37,7 @@ import java.util.function.Supplier;
 public final class TaczAirdropIntegration {
 
     /** Content ID (tacz:ammo/xxx or tacz:gun/xxx) -> exact ItemStack from creative tab. Populated when BuildCreativeModeTabContentsEvent fires for a tacz tab. */
-    private static final Map<ResourceLocation, ItemStack> CREATIVE_STACK_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Identifier, ItemStack> CREATIVE_STACK_CACHE = new ConcurrentHashMap<>();
 
     /** Set by client (CallAirdropScreen) before building catalog so recipe fallback can use level.getRecipeManager() without reflection. */
     private static volatile Level clientLevelForCatalog = null;
@@ -46,7 +49,7 @@ public final class TaczAirdropIntegration {
     public static void captureCreativeTabStacks(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event) {
         if (!ModList.get().isLoaded("tacz")) return;
         try {
-            ResourceLocation tabId = event.getTabKey().location();
+            Identifier tabId = event.getTabKey().identifier();
             if (!"tacz".equals(tabId.getNamespace())) return;
 
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
@@ -61,12 +64,12 @@ public final class TaczAirdropIntegration {
 
             for (ItemStack stack : java.util.Collections.<ItemStack>emptyList()) {
                 Item item = stack.getItem();
-                ResourceLocation contentId = null;
+                Identifier contentId = null;
                 boolean isAmmoItem = false;
                 if (iAmmoBoxClass.isInstance(item)) {
                     try {
                         Object id = getAmmoIdBox.invoke(item, stack);
-                        if (id instanceof ResourceLocation rl) contentId = rl;
+                        if (id instanceof Identifier rl) contentId = rl;
                     } catch (Exception ignored) {}
                 }
                 if (contentId == null && getAmmoIdAmmo != null) {
@@ -74,31 +77,31 @@ public final class TaczAirdropIntegration {
                         Class<?> iAmmoClass = Class.forName("com.tacz.guns.api.item.IAmmo");
                         if (iAmmoClass.isInstance(item)) {
                             Object id = getAmmoIdAmmo.invoke(item, stack);
-                            if (id instanceof ResourceLocation rl) contentId = rl;
+                            if (id instanceof Identifier rl) contentId = rl;
                         }
                     } catch (Exception ignored) {}
                 }
                 if (contentId != null) {
-                    ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(item);
+                    Identifier itemKey = BuiltInRegistries.ITEM.getKey(item);
                     isAmmoItem = itemKey != null && "ammo".equals(itemKey.getPath());
                 }
                 if (contentId == null && iGunClass.isInstance(item)) {
                     try {
                         Object id = getGunId.invoke(item, stack);
-                        if (id instanceof ResourceLocation rl) contentId = rl;
+                        if (id instanceof Identifier rl) contentId = rl;
                     } catch (Exception ignored) {}
                 }
                 if (contentId != null && !shouldExclude(contentId.getPath())) {
                     if (contentId.getNamespace().isEmpty() || "minecraft".equals(contentId.getNamespace()))
-                        contentId = ResourceLocation.fromNamespaceAndPath("tacz", contentId.getPath());
+                        contentId = Identifier.fromNamespaceAndPath("tacz", contentId.getPath());
                     ItemStack copy = stack.copy();
                     String path = contentId.getPath();
-                    ResourceLocation ammoCatalogKey = ResourceLocation.fromNamespaceAndPath("tacz", path.startsWith("ammo/") ? path : "ammo/" + path);
+                    Identifier ammoCatalogKey = Identifier.fromNamespaceAndPath("tacz", path.startsWith("ammo/") ? path : "ammo/" + path);
                     boolean isAmmo = iAmmoBoxClass.isInstance(item) || isAmmoItem;
                     if (isAmmo) {
                         ItemStack existing = CREATIVE_STACK_CACHE.get(ammoCatalogKey);
                         if (existing != null && !isAmmoItem) {
-                            ResourceLocation existingId = BuiltInRegistries.ITEM.getKey(existing.getItem());
+                            Identifier existingId = BuiltInRegistries.ITEM.getKey(existing.getItem());
                             if (existingId != null && "ammo".equals(existingId.getPath()))
                                 continue;
                         }
@@ -107,7 +110,7 @@ public final class TaczAirdropIntegration {
                     if (!path.startsWith("ammo/") && isAmmo)
                         CREATIVE_STACK_CACHE.put(ammoCatalogKey, copy);
                     if (!path.startsWith("gun/") && (iGunClass.isInstance(item)))
-                        CREATIVE_STACK_CACHE.put(ResourceLocation.fromNamespaceAndPath("tacz", "gun/" + path), copy);
+                        CREATIVE_STACK_CACHE.put(Identifier.fromNamespaceAndPath("tacz", "gun/" + path), copy);
                 }
             }
             if (!CREATIVE_STACK_CACHE.isEmpty()) {
@@ -118,31 +121,31 @@ public final class TaczAirdropIntegration {
     }
 
     /** Returns a copy of the cached creative stack for this content ID, or null if not cached. Tries catalog key and alternate (caliber/gun name only) so display always finds the stack. */
-    public static ItemStack getCachedCreativeStack(ResourceLocation contentId) {
+    public static ItemStack getCachedCreativeStack(Identifier contentId) {
         ItemStack cached = CREATIVE_STACK_CACHE.get(contentId);
         if (cached != null) return cached.copy();
         String path = contentId.getPath();
         String ns = contentId.getNamespace();
         if (path.startsWith("ammo/") && path.length() > 5) {
             String caliber = path.substring(5);
-            cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, "ammo/" + caliber));
+            cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, "ammo/" + caliber));
             if (cached == null && caliber.contains("x")) {
                 String taczCaliber = caliber.replace("_", "");
-                cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, "ammo/" + taczCaliber));
-                if (cached == null) cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, taczCaliber));
+                cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, "ammo/" + taczCaliber));
+                if (cached == null) cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, taczCaliber));
             }
             if (cached == null) {
                 String alt = ammoCaliberCacheAlternate(caliber);
-                if (alt != null) cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, "ammo/" + alt));
+                if (alt != null) cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, "ammo/" + alt));
             }
         }
         if (cached == null && path.startsWith("gun/") && path.length() > 4) {
             String gunName = path.substring(4);
-            cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, gunName));
+            cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, gunName));
             if (cached == null && gunName.length() > 0) {
                 String withUnderscore = gunName.replaceFirst("([a-zA-Z]+)([0-9]+)", "$1_$2");
                 if (!withUnderscore.equals(gunName))
-                    cached = CREATIVE_STACK_CACHE.get(ResourceLocation.fromNamespaceAndPath(ns, withUnderscore));
+                    cached = CREATIVE_STACK_CACHE.get(Identifier.fromNamespaceAndPath(ns, withUnderscore));
             }
             if (cached == null)
                 cached = tryFindGunCacheByPath(gunName, ns);
@@ -170,7 +173,7 @@ public final class TaczAirdropIntegration {
     private static ItemStack tryFindGunCacheByPath(String gunName, String namespace) {
         String lower = gunName.toLowerCase(Locale.ROOT);
         String lowerNoUnderscore = lower.replace("_", "");
-        for (Map.Entry<ResourceLocation, ItemStack> entry : CREATIVE_STACK_CACHE.entrySet()) {
+        for (Map.Entry<Identifier, ItemStack> entry : CREATIVE_STACK_CACHE.entrySet()) {
             String keyPath = entry.getKey().getPath();
             String keyGun = (keyPath.startsWith("gun/") && keyPath.length() > 4) ? keyPath.substring(4) : keyPath;
             String keyLower = keyGun.toLowerCase(Locale.ROOT);
@@ -182,33 +185,33 @@ public final class TaczAirdropIntegration {
     }
 
     /** TaCZ Recipe ID for ammo with "x" uses no underscore (e.g. 57x28 not 5_7x28). */
-    private static ResourceLocation ammoIdTaczFormat(ResourceLocation ammoId) {
+    private static Identifier ammoIdTaczFormat(Identifier ammoId) {
         String path = ammoId.getPath();
         String caliber = path.startsWith("ammo/") ? path.substring(5) : path;
         if (!caliber.contains("x")) return ammoId;
         String taczCaliber = caliber.replace("_", "");
-        return ResourceLocation.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + taczCaliber);
+        return Identifier.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + taczCaliber);
     }
 
     /** Build ammo display stack for crate/loot. Use ammo_box and set NBT (API + direct tag) so server and client get correct caliber. Never returns ammo_box without AmmoId tag. */
-    public static ItemStack createAmmoDisplayStack(ResourceLocation ammoId) {
+    public static ItemStack createAmmoDisplayStack(Identifier ammoId) {
         if (ammoId == null) return ItemStack.EMPTY;
         String path = ammoId.getPath();
-        ResourceLocation aid = path.startsWith("ammo/") ? ammoId : ResourceLocation.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + path);
-        ResourceLocation taczAid = ammoIdTaczFormat(aid);
-        ResourceLocation[] idsToTry = path.contains("x") ? new ResourceLocation[]{taczAid, aid} : new ResourceLocation[]{aid};
+        Identifier aid = path.startsWith("ammo/") ? ammoId : Identifier.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + path);
+        Identifier taczAid = ammoIdTaczFormat(aid);
+        Identifier[] idsToTry = path.contains("x") ? new Identifier[]{taczAid, aid} : new Identifier[]{aid};
         Item ammoBox = resolveAmmoBoxItem();
         if (ammoBox != null) {
-            for (ResourceLocation tryId : idsToTry) {
+            for (Identifier tryId : idsToTry) {
                 ItemStack stack = buildAmmoBoxStackWithNbt(ammoBox, tryId);
                 if (!stack.isEmpty()) return stack;
             }
             ItemStack stack = buildAmmoBoxStackWithNbt(ammoBox, aid);
             if (!stack.isEmpty()) return stack;
         }
-        Item ammoItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("tacz", "ammo"));
+        Item ammoItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("tacz", "ammo"));
         if (ammoItem != null && ammoItem != Items.AIR) {
-            for (ResourceLocation tryId : idsToTry) {
+            for (Identifier tryId : idsToTry) {
                 ItemStack stack = tryBuildAmmoStackWithNbt(ammoItem, tryId);
                 if (!stack.isEmpty()) return stack;
                 stack = tryBuildAmmoStackWithRawNbt(ammoItem, tryId);
@@ -222,20 +225,20 @@ public final class TaczAirdropIntegration {
      * Build for crate: ammo stack with NBT only (no reflection). Prefer tacz:ammo (AmmoItem) so client shows caliber icon; fallback to ammo_box.
      * TaCZ reads AmmoId/AmmoCount from tag for display.
      */
-    public static ItemStack createAmmoStackForCrateRawNbt(ResourceLocation ammoId) {
+    public static ItemStack createAmmoStackForCrateRawNbt(Identifier ammoId) {
         if (ammoId == null) return ItemStack.EMPTY;
-        ResourceLocation aid = ammoId.getPath().startsWith("ammo/") ? ammoId : ResourceLocation.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + ammoId.getPath());
+        Identifier aid = ammoId.getPath().startsWith("ammo/") ? ammoId : Identifier.fromNamespaceAndPath(ammoId.getNamespace(), "ammo/" + ammoId.getPath());
         // Prefer tacz:ammo (AmmoItem) so client renders caliber-specific icon; ammo_box often shows as generic "iron ammo box" without correct NBT handling
         Item ammoItem = resolveAmmoBaseItem();
         if (ammoItem == null || ammoItem == Items.AIR) ammoItem = resolveAmmoBoxItem();
-        if (ammoItem == null || ammoItem == Items.AIR) ammoItem = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("tacz", "ammo_box"));
+        if (ammoItem == null || ammoItem == Items.AIR) ammoItem = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("tacz", "ammo_box"));
         if (ammoItem == null || ammoItem == Items.AIR) return ItemStack.EMPTY;
         int rounds = getAmmoStackSize(aid);
         ItemStack stack = new ItemStack(ammoItem, 1);
         CompoundTag tag = net.mcreator.radiotowers.ItemCustomNbt.copy(stack);
         tag.putString("AmmoId", aid.toString());
         // tacz:ammo uses stack count for rounds; AmmoCount is for ammo_box only (wrong tag hides count in GUI).
-        ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(ammoItem);
+        Identifier itemKey = BuiltInRegistries.ITEM.getKey(ammoItem);
         if (itemKey != null && "ammo".equals(itemKey.getPath()) && "tacz".equals(itemKey.getNamespace())) {
             stack.setCount(Math.min(rounds, Math.max(1, stack.getItem().getMaxStackSize(stack))));
             tag.remove("AmmoCount");
@@ -246,12 +249,12 @@ public final class TaczAirdropIntegration {
     }
 
     /** Build ammo_box stack with caliber NBT (API reflection + direct tag so server always has correct data for client). Never returns a stack without AmmoId tag. */
-    private static ItemStack buildAmmoBoxStackWithNbt(Item ammoBox, ResourceLocation ammoId) {
+    private static ItemStack buildAmmoBoxStackWithNbt(Item ammoBox, Identifier ammoId) {
         ItemStack stack = new ItemStack(ammoBox, 1);
         try {
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
             if (iAmmoBoxClass.isInstance(ammoBox)) {
-                java.lang.reflect.Method setAmmoId = iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, ResourceLocation.class);
+                java.lang.reflect.Method setAmmoId = iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, Identifier.class);
                 java.lang.reflect.Method setAmmoCount = iAmmoBoxClass.getMethod("setAmmoCount", ItemStack.class, int.class);
                 setAmmoId.invoke(ammoBox, stack, ammoId);
                 setAmmoCount.invoke(ammoBox, stack, getAmmoStackSize(ammoId));
@@ -285,13 +288,13 @@ public final class TaczAirdropIntegration {
     }
 
     /** Try to call setAmmoId/setAmmoCount on the item's class (AmmoItem may not implement IAmmoBox but have same NBT methods). */
-    private static ItemStack tryBuildAmmoStackWithNbt(Item item, ResourceLocation ammoId) {
+    private static ItemStack tryBuildAmmoStackWithNbt(Item item, Identifier ammoId) {
         try {
             Class<?> c = item.getClass();
             java.lang.reflect.Method setAmmoId = null, setAmmoCount = null;
             while (c != null) {
                 try {
-                    if (setAmmoId == null) setAmmoId = c.getDeclaredMethod("setAmmoId", ItemStack.class, ResourceLocation.class);
+                    if (setAmmoId == null) setAmmoId = c.getDeclaredMethod("setAmmoId", ItemStack.class, Identifier.class);
                     if (setAmmoCount == null) setAmmoCount = c.getDeclaredMethod("setAmmoCount", ItemStack.class, int.class);
                 } catch (NoSuchMethodException e) { c = c.getSuperclass(); continue; }
                 if (setAmmoId != null && setAmmoCount != null) break;
@@ -313,12 +316,12 @@ public final class TaczAirdropIntegration {
     }
 
     /** Try writing ammo NBT directly (TaCZ may read AmmoId from tag for model). */
-    private static ItemStack tryBuildAmmoStackWithRawNbt(Item ammoItem, ResourceLocation ammoId) {
+    private static ItemStack tryBuildAmmoStackWithRawNbt(Item ammoItem, Identifier ammoId) {
         int rounds = getAmmoStackSize(ammoId);
         ItemStack stack = new ItemStack(ammoItem, 1);
         CompoundTag tag = net.mcreator.radiotowers.ItemCustomNbt.copy(stack);
         tag.putString("AmmoId", ammoId.toString());
-        ResourceLocation itemKey = BuiltInRegistries.ITEM.getKey(ammoItem);
+        Identifier itemKey = BuiltInRegistries.ITEM.getKey(ammoItem);
         if (itemKey != null && "ammo".equals(itemKey.getPath()) && "tacz".equals(itemKey.getNamespace())) {
             stack.setCount(Math.min(rounds, Math.max(1, stack.getItem().getMaxStackSize(stack))));
             tag.remove("AmmoCount");
@@ -331,7 +334,7 @@ public final class TaczAirdropIntegration {
     /** True if the stack is the TaCZ ammo_box item (generic iron box icon). */
     public static boolean isAmmoBoxStack(ItemStack stack) {
         if (stack == null || stack.isEmpty()) return false;
-        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id != null && "tacz".equals(id.getNamespace()) && "ammo_box".equals(id.getPath());
     }
 
@@ -348,24 +351,24 @@ public final class TaczAirdropIntegration {
     private static final Map<String, String> GUN_DISPLAY_ALT_PATHS = Map.of();
 
     /** Build gun display stack; tries alternate path (e.g. hk_416a5) so icon matches TaCZ model. */
-    public static ItemStack createGunDisplayStackWithAlternates(ResourceLocation gunId) {
+    public static ItemStack createGunDisplayStackWithAlternates(Identifier gunId) {
         if (gunId == null || !gunId.getPath().startsWith("gun/")) return ItemStack.EMPTY;
         String path = gunId.getPath();
         String gunName = path.substring(4);
         String ns = gunId.getNamespace();
         String altPath = GUN_DISPLAY_ALT_PATHS.get(gunName.toLowerCase(Locale.ROOT));
         if (altPath != null) {
-            ResourceLocation altId = ResourceLocation.fromNamespaceAndPath(ns, "gun/" + altPath);
+            Identifier altId = Identifier.fromNamespaceAndPath(ns, "gun/" + altPath);
             ItemStack s = buildGunStack(altId);
             if (!s.isEmpty()) return s;
         }
         return buildGunStack(gunId);
     }
 
-    private static ItemStack buildGunStack(ResourceLocation gunId) {
+    private static ItemStack buildGunStack(Identifier gunId) {
         try {
             Class<?> iGunClass = Class.forName("com.tacz.guns.api.item.IGun");
-            java.lang.reflect.Method setGunId = iGunClass.getMethod("setGunId", ItemStack.class, ResourceLocation.class);
+            java.lang.reflect.Method setGunId = iGunClass.getMethod("setGunId", ItemStack.class, Identifier.class);
             Item gunItem = resolveGunBaseItem();
             if (gunItem == null || !iGunClass.isInstance(gunItem)) return ItemStack.EMPTY;
             ItemStack stack = new ItemStack(gunItem, 1);
@@ -430,7 +433,7 @@ public final class TaczAirdropIntegration {
     }
 
     /** Airdrop / crate: content IDs may use tacz, tac_zero, etc. — must not require namespace {@code tacz} exactly. */
-    public static boolean isTaczContentId(ResourceLocation id) {
+    public static boolean isTaczContentId(Identifier id) {
         return id != null && isTaczNamespace(id.getNamespace());
     }
 
@@ -463,21 +466,21 @@ public final class TaczAirdropIntegration {
     }
 
     /** Human-readable name for ammo ID (e.g. ammo/5_56x45 -> "5.56x45 Ammo") so GUI never shows "Iron Ammo Box". */
-    private static String ammoDisplayName(ResourceLocation id) {
+    private static String ammoDisplayName(Identifier id) {
         String segment = lastPathSegment(id.getPath());
         String display = segment.replace('_', '.');
         return display + " Ammo";
     }
 
     /** Human-readable name for gun ID (e.g. gun/glock_17 -> "GLOCK 17", gun/m1911 -> "M1911") so GUI shows gun name. */
-    private static String gunDisplayName(ResourceLocation id) {
+    private static String gunDisplayName(Identifier id) {
         String segment = lastPathSegment(id.getPath());
         String withSpaces = segment.replace('_', ' ');
         return withSpaces.toUpperCase(Locale.ROOT);
     }
 
     /** For airdrop GUI: show this name for TaCZ ammo/gun so list shows "9mm Ammo", "UZI" etc. without changing the stack (keeps TaCZ texture). Returns null to use stack name. */
-    public static String getDisplayNameForCatalog(ResourceLocation itemId, String stackHoverName) {
+    public static String getDisplayNameForCatalog(Identifier itemId, String stackHoverName) {
         if (itemId == null || !isTaczNamespace(itemId.getNamespace())) return null;
         String path = itemId.getPath();
         if (path.startsWith("ammo/")) {
@@ -556,7 +559,7 @@ public final class TaczAirdropIntegration {
      * Rounds per full in-game stack for tacz:ammo/&lt;caliber&gt; (matches TaCZ stack sizes in creative).
      * Used for catalog boxes and airdrop crate {@code AmmoCount}. Order: specific calibers before broad substrings.
      */
-    private static int getAmmoStackSize(ResourceLocation ammoId) {
+    private static int getAmmoStackSize(Identifier ammoId) {
         if (ammoId == null) return BULLET_DEFAULT_STACK;
         String path = ammoId.getPath();
         String caliber = path.startsWith("ammo/") ? path.substring(5) : path;
@@ -596,12 +599,12 @@ public final class TaczAirdropIntegration {
     }
 
     /** Public hook for airdrop fill: rounds per full stack for this tacz ammo content id (for {@code AmmoCount}). */
-    public static int getRoundsPerFullStackForAmmoContentId(ResourceLocation ammoId) {
+    public static int getRoundsPerFullStackForAmmoContentId(Identifier ammoId) {
         return getAmmoStackSize(ammoId);
     }
 
     /** Points per ammo type. RPG/rocket ammo = 20 per stack; others use BULLET_STACK_POINTS. */
-    private static int ammoPoints(ResourceLocation ammoId) {
+    private static int ammoPoints(Identifier ammoId) {
         if (ammoId == null) return BULLET_STACK_POINTS;
         String path = ammoId.getPath();
         String caliber = path.startsWith("ammo/") ? path.substring(5) : path;
@@ -639,9 +642,9 @@ public final class TaczAirdropIntegration {
     /** Add TaCZ ammo: whitelist match OR fuzzy path. Skip base ammo_box and ammo/… (content IDs need NBT – added via API/addKnownTaczIdsToCatalog to avoid "Iron Ammo Box"). */
     public static void addAmmoToCatalog(List<AirdropCatalog.Entry> entries) {
         if (!AirdropConfig.INCLUDE_TACZ_AMMO.get()) return;
-        Item ammoBoxItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo_box"));
+        Item ammoBoxItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo_box"));
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -658,9 +661,9 @@ public final class TaczAirdropIntegration {
     /** Add TaCZ guns: whitelist match OR fuzzy path. Skip base gun and gun/… (content IDs need NBT – added via API/addKnownTaczIdsToCatalog). */
     public static void addGunsToCatalog(List<AirdropCatalog.Entry> entries) {
         if (!AirdropConfig.INCLUDE_TACZ_GUNS.get()) return;
-        Item gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:gun"));
+        Item gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:gun"));
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -674,7 +677,7 @@ public final class TaczAirdropIntegration {
         }
     }
 
-    private static boolean alreadyInList(List<AirdropCatalog.Entry> entries, ResourceLocation id) {
+    private static boolean alreadyInList(List<AirdropCatalog.Entry> entries, Identifier id) {
         for (AirdropCatalog.Entry e : entries)
             if (e.getItemId().equals(id)) return true;
         return false;
@@ -683,10 +686,10 @@ public final class TaczAirdropIntegration {
     /** Fallback: add any tacz item that looks like ammo or gun. Skip base ammo_box/gun and ammo/… gun/… (content IDs need NBT). */
     public static void addTaczFallbackToCatalog(List<AirdropCatalog.Entry> entries) {
         if (!AirdropConfig.INCLUDE_TACZ_AMMO.get() && !AirdropConfig.INCLUDE_TACZ_GUNS.get()) return;
-        Item ammoBoxItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo_box"));
-        Item gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:gun"));
+        Item ammoBoxItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo_box"));
+        Item gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:gun"));
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -711,10 +714,10 @@ public final class TaczAirdropIntegration {
      */
     public static void addAnyMatchingTaczItems(List<AirdropCatalog.Entry> entries) {
         if (!AirdropConfig.INCLUDE_TACZ_AMMO.get() && !AirdropConfig.INCLUDE_TACZ_GUNS.get()) return;
-        Item ammoBoxItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo_box"));
-        Item gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:gun"));
+        Item ammoBoxItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo_box"));
+        Item gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:gun"));
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -742,10 +745,10 @@ public final class TaczAirdropIntegration {
         if (!AirdropConfig.INCLUDE_TACZ_AMMO.get() && !AirdropConfig.INCLUDE_TACZ_GUNS.get()) return;
         if (!ModList.get().isLoaded("tacz")) return;
         if (entries.stream().anyMatch(e -> isTaczNamespace(e.getItemId().getNamespace()))) return;
-        Item ammoBoxItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo_box"));
-        Item gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:gun"));
+        Item ammoBoxItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo_box"));
+        Item gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:gun"));
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -775,9 +778,9 @@ public final class TaczAirdropIntegration {
         boolean wantAmmo = AirdropConfig.INCLUDE_TACZ_AMMO.get();
         boolean wantGuns = AirdropConfig.INCLUDE_TACZ_GUNS.get();
         try {
-            Set<ResourceLocation> ammoIds;
-            Set<ResourceLocation> gunIds;
-            if (FMLEnvironment.dist == Dist.CLIENT) {
+            Set<Identifier> ammoIds;
+            Set<Identifier> gunIds;
+            if (FMLEnvironment.getDist().isClient()) {
                 ammoIds = getIdsViaTimelessApi("getAllClientAmmoIndex");
                 gunIds = getIdsViaTimelessApi("getAllClientGunIndex");
             } else {
@@ -787,7 +790,7 @@ public final class TaczAirdropIntegration {
             if (ammoIds.isEmpty()) ammoIds = getIdsViaTimelessApi("getAllCommonAmmoIndex");
             if (gunIds.isEmpty()) gunIds = getIdsViaTimelessApi("getAllCommonGunIndex");
 
-            // Fallback: CommonAssetsManager provider (server/singleplayer path). Returns Set<Entry<ResourceLocation, ...>>.
+            // Fallback: CommonAssetsManager provider (server/singleplayer path). Returns Set<Entry<Identifier, ...>>.
             if (ammoIds.isEmpty() || gunIds.isEmpty()) {
                 Object commonManager = Class.forName("com.tacz.guns.resource.CommonAssetsManager")
                     .getMethod("get").invoke(null);
@@ -798,7 +801,7 @@ public final class TaczAirdropIntegration {
             }
 
             // Fallback: discover from GunSmithTable recipes (client has synced recipes; result stacks carry gun/ammo NBT).
-            if ((ammoIds.isEmpty() || gunIds.isEmpty()) && FMLEnvironment.dist == Dist.CLIENT) {
+            if ((ammoIds.isEmpty() || gunIds.isEmpty()) && FMLEnvironment.getDist().isClient()) {
                 if (!(ammoIds instanceof java.util.HashSet)) ammoIds = new java.util.HashSet<>(ammoIds);
                 if (!(gunIds instanceof java.util.HashSet)) gunIds = new java.util.HashSet<>(gunIds);
                 getIdsFromGunSmithRecipes(ammoIds, gunIds);
@@ -808,7 +811,7 @@ public final class TaczAirdropIntegration {
             if (ammoIds.isEmpty()) {
                 ammoIds = new java.util.HashSet<>();
                 for (String caliber : TAC_I_AMMO_CALIBERS)
-                    ammoIds.add(ResourceLocation.parse("tacz:ammo/" + caliber));
+                    ammoIds.add(Identifier.parse("tacz:ammo/" + caliber));
             }
 
             // Catalog stacks use IAmmoBox API (setAmmoId/setAmmoCount); tacz:ammo item is IAmmo only — use ammo_box here.
@@ -818,7 +821,7 @@ public final class TaczAirdropIntegration {
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
             Class<?> iGunClass = Class.forName("com.tacz.guns.api.item.IGun");
 
-            for (ResourceLocation ammoId : ammoIds) {
+            for (Identifier ammoId : ammoIds) {
                 if (!wantAmmo) continue;
                 if (ammoId == null || "ammo".equals(ammoId.getPath())) continue;
                 if (shouldExclude(ammoId.getPath())) continue;
@@ -826,12 +829,12 @@ public final class TaczAirdropIntegration {
                 if (alreadyInList(entries, ammoId)) continue;
                 if (ammoBoxItem == null || !iAmmoBoxClass.isInstance(ammoBoxItem)) continue;
                 final Item ab = ammoBoxItem;
-                final ResourceLocation aid = ammoId;
+                final Identifier aid = ammoId;
                 final int roundsPerBox = getAmmoStackSize(aid);
                 Supplier<ItemStack> creator = () -> {
                     try {
                         ItemStack stack = new ItemStack(ab, 1);
-                        iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, ResourceLocation.class).invoke(ab, stack, aid);
+                        iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, Identifier.class).invoke(ab, stack, aid);
                         iAmmoBoxClass.getMethod("setAmmoCount", ItemStack.class, int.class).invoke(ab, stack, roundsPerBox);
                         return stack;
                     } catch (Exception e) { return ItemStack.EMPTY; }
@@ -840,7 +843,7 @@ public final class TaczAirdropIntegration {
                 if (e.isValid()) entries.add(e);
             }
 
-            for (ResourceLocation gunId : gunIds) {
+            for (Identifier gunId : gunIds) {
                 if (!wantGuns) continue;
                 if (gunId == null) continue;
                 if (shouldExclude(gunId.getPath())) continue;
@@ -848,11 +851,11 @@ public final class TaczAirdropIntegration {
                 if (alreadyInList(entries, gunId)) continue;
                 if (gunItem == null || !iGunClass.isInstance(gunItem)) continue;
                 final Item gi = gunItem;
-                final ResourceLocation gid = gunId;
+                final Identifier gid = gunId;
                 Supplier<ItemStack> creator = () -> {
                     try {
                         ItemStack stack = new ItemStack(gi, 1);
-                        iGunClass.getMethod("setGunId", ItemStack.class, ResourceLocation.class).invoke(gi, stack, gid);
+                        iGunClass.getMethod("setGunId", ItemStack.class, Identifier.class).invoke(gi, stack, gid);
                         return stack;
                     } catch (Exception e) { return ItemStack.EMPTY; }
                 };
@@ -865,19 +868,19 @@ public final class TaczAirdropIntegration {
         }
     }
 
-    private static Set<ResourceLocation> getIdsViaTimelessApi(String methodName) {
+    private static Set<Identifier> getIdsViaTimelessApi(String methodName) {
         try {
             Object set = Class.forName("com.tacz.guns.api.TimelessAPI").getMethod(methodName).invoke(null);
-            Set<ResourceLocation> out = new java.util.HashSet<>();
+            Set<Identifier> out = new java.util.HashSet<>();
             if (set instanceof Iterable<?> it) {
                 for (Object o : it) {
                     if (o == null) continue;
-                    if (o instanceof ResourceLocation rl) out.add(rl);
+                    if (o instanceof Identifier rl) out.add(rl);
                     else {
                         // In case this is an entry set (Map.Entry), take key.
                         try {
                             Object k = o.getClass().getMethod("getKey").invoke(o);
-                            if (k instanceof ResourceLocation rl2) out.add(rl2);
+                            if (k instanceof Identifier rl2) out.add(rl2);
                         } catch (Exception ignored) {}
                     }
                 }
@@ -892,13 +895,18 @@ public final class TaczAirdropIntegration {
      * On client, GunSmithTable recipes are synced; each recipe result is a stack with gun/ammo NBT.
      * Extract all gun and ammo IDs from those results. Also scan all recipes by type in case the type key differs.
      */
-    private static void getIdsFromGunSmithRecipes(Set<ResourceLocation> ammoIds, Set<ResourceLocation> gunIds) {
+    private static void getIdsFromGunSmithRecipes(Set<Identifier> ammoIds, Set<Identifier> gunIds) {
         Level level = clientLevelForCatalog;
         if (level == null) {
             return;
         }
         try {
-            RecipeManager recipeManager = level.getRecipeManager();
+            MinecraftServer server = null;
+            try {
+                Object invoked = level.getClass().getMethod("getServer").invoke(level);
+                if (invoked instanceof MinecraftServer found) server = found;
+            } catch (Throwable ignored) {}
+            RecipeManager recipeManager = server != null ? server.getRecipeManager() : null;
             if (recipeManager == null) return;
 
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
@@ -906,58 +914,39 @@ public final class TaczAirdropIntegration {
             java.lang.reflect.Method getAmmoId = iAmmoBoxClass.getMethod("getAmmoId", ItemStack.class);
             java.lang.reflect.Method getGunId = iGunClass.getMethod("getGunId", ItemStack.class);
 
-            // Use RecipeManager API directly (no reflection – obfuscation breaks getMethod at runtime). Use raw type to satisfy generics.
-            RecipeType<?> taczType = BuiltInRegistries.RECIPE_TYPE.get(ResourceLocation.parse("tacz:gun_smith_table_crafting"));
-            @SuppressWarnings({"unchecked", "rawtypes"})
-            java.util.List<Recipe<?>> recipes = taczType != null
-                ? (java.util.List) recipeManager.getAllRecipesFor((RecipeType) taczType)
-                : java.util.Collections.emptyList();
-
-            // If no TaCZ recipes, scan all recipe types for any result that is tacz gun/ammo_box
-            if (recipes.isEmpty()) {
-                for (RecipeType<?> type : BuiltInRegistries.RECIPE_TYPE) {
-                    if (type == null) continue;
-                    @SuppressWarnings({"unchecked", "rawtypes"})
-                    java.util.List<Recipe<?>> list = (java.util.List) recipeManager.getAllRecipesFor((RecipeType) type);
-                    for (Recipe<?> r : list) {
-                        if (r == null) continue;
-                        ItemStack result = r.getResultItem(level.registryAccess());
-                        if (result.isEmpty()) continue;
-                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(result.getItem());
-                        if (id != null && isTaczNamespace(id.getNamespace())
-                            && (iAmmoBoxClass.isInstance(result.getItem()) || iGunClass.isInstance(result.getItem()))) {
-                            if (iAmmoBoxClass.isInstance(result.getItem())) {
-                                try {
-                                    Object rl = getAmmoId.invoke(result.getItem(), result);
-                                    if (rl instanceof ResourceLocation loc) ammoIds.add(loc);
-                                } catch (Exception ignored) {}
-                            } else {
-                                try {
-                                    Object rl = getGunId.invoke(result.getItem(), result);
-                                    if (rl instanceof ResourceLocation loc) gunIds.add(loc);
-                                } catch (Exception ignored) {}
-                            }
-                        }
-                    }
+            RecipeType<?> taczType = BuiltInRegistries.RECIPE_TYPE.getValue(Identifier.parse("tacz:gun_smith_table_crafting"));
+            java.util.List<Recipe<?>> recipes = new java.util.ArrayList<>();
+            for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+                Recipe<?> recipe = holder.value();
+                if (recipe == null) continue;
+                if (taczType == null || recipe.getType() == taczType) recipes.add(recipe);
+            }
+            if (recipes.isEmpty() && taczType != null) {
+                for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+                    if (holder.value() != null) recipes.add(holder.value());
                 }
-            } else {
-                for (Recipe<?> recipe : recipes) {
-                    ItemStack resultStack = recipe.getResultItem(level.registryAccess());
-                    if (resultStack.isEmpty()) continue;
-                    Item item = resultStack.getItem();
-                    ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(item);
-                    if (itemId == null || !isTaczNamespace(itemId.getNamespace())) continue;
-                    if (iAmmoBoxClass.isInstance(item)) {
-                        try {
-                            Object id = getAmmoId.invoke(item, resultStack);
-                            if (id instanceof ResourceLocation rl) ammoIds.add(rl);
-                        } catch (Exception ignored) {}
-                    } else if (iGunClass.isInstance(item)) {
-                        try {
-                            Object id = getGunId.invoke(item, resultStack);
-                            if (id instanceof ResourceLocation rl) gunIds.add(rl);
-                        } catch (Exception ignored) {}
-                    }
+            }
+            var context = SlotDisplayContext.fromLevel(level);
+            for (Recipe<?> recipe : recipes) {
+                ItemStack resultStack = ItemStack.EMPTY;
+                for (var display : recipe.display()) {
+                    resultStack = display.result().resolveForFirstStack(context);
+                    if (!resultStack.isEmpty()) break;
+                }
+                if (resultStack.isEmpty()) continue;
+                Item item = resultStack.getItem();
+                Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+                if (itemId == null || !isTaczNamespace(itemId.getNamespace())) continue;
+                if (iAmmoBoxClass.isInstance(item)) {
+                    try {
+                        Object id = getAmmoId.invoke(item, resultStack);
+                        if (id instanceof Identifier rl) ammoIds.add(rl);
+                    } catch (Exception ignored) {}
+                } else if (iGunClass.isInstance(item)) {
+                    try {
+                        Object id = getGunId.invoke(item, resultStack);
+                        if (id instanceof Identifier rl) gunIds.add(rl);
+                    } catch (Exception ignored) {}
                 }
             }
         } catch (Throwable t) {
@@ -965,15 +954,15 @@ public final class TaczAirdropIntegration {
         }
     }
 
-    private static Set<ResourceLocation> getKeysFromEntrySet(Object provider, String methodName) {
+    private static Set<Identifier> getKeysFromEntrySet(Object provider, String methodName) {
         try {
-            Set<ResourceLocation> out = new java.util.HashSet<>();
+            Set<Identifier> out = new java.util.HashSet<>();
             Object set = provider.getClass().getMethod(methodName).invoke(provider);
             if (set instanceof Iterable<?> it) {
                 for (Object o : it) {
                     if (o == null) continue;
                     Object k = o.getClass().getMethod("getKey").invoke(o);
-                    if (k instanceof ResourceLocation rl) out.add(rl);
+                    if (k instanceof Identifier rl) out.add(rl);
                 }
             }
             return out;
@@ -986,7 +975,7 @@ public final class TaczAirdropIntegration {
         try {
             Class<?> iface = Class.forName(interfaceName);
             for (Item item : BuiltInRegistries.ITEM) {
-                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                Identifier id = BuiltInRegistries.ITEM.getKey(item);
                 if (id != null && isTaczNamespace(id.getNamespace()) && iface.isInstance(item))
                     return item;
             }
@@ -998,7 +987,7 @@ public final class TaczAirdropIntegration {
     private static Item resolveAmmoBoxItem() {
         try {
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
-            Item ammoBoxItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo_box"));
+            Item ammoBoxItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo_box"));
             if (ammoBoxItem != null && ammoBoxItem != Items.AIR && iAmmoBoxClass.isInstance(ammoBoxItem))
                 return ammoBoxItem;
             return findFirstTaczItemImplementing("com.tacz.guns.api.item.IAmmoBox");
@@ -1011,7 +1000,7 @@ public final class TaczAirdropIntegration {
     private static Item resolveAmmoBaseItem() {
         try {
             Class<?> iAmmoClass = Class.forName("com.tacz.guns.api.item.IAmmo");
-            Item ammoItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:ammo"));
+            Item ammoItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:ammo"));
             if (ammoItem != null && ammoItem != Items.AIR && iAmmoClass.isInstance(ammoItem))
                 return ammoItem;
             return resolveAmmoBoxItem();
@@ -1022,9 +1011,9 @@ public final class TaczAirdropIntegration {
 
     /** TaCZ registers tacz:modern_kinetic_gun (no "tacz:gun"). Prefer that as base for setGunId stacks. */
     private static Item resolveGunBaseItem() {
-        Item gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:modern_kinetic_gun"));
+        Item gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:modern_kinetic_gun"));
         if (gunItem != null && gunItem != Items.AIR) return gunItem;
-        gunItem = BuiltInRegistries.ITEM.get(ResourceLocation.parse("tacz:gun"));
+        gunItem = BuiltInRegistries.ITEM.getValue(Identifier.parse("tacz:gun"));
         if (gunItem != null && gunItem != Items.AIR) return gunItem;
         return findFirstTaczItemImplementing("com.tacz.guns.api.item.IGun");
     }
@@ -1035,7 +1024,7 @@ public final class TaczAirdropIntegration {
     }
 
     /** Raw-NBT fallback for crate guns so we never degrade to generic base gun item. */
-    public static ItemStack createGunStackForCrateRawNbt(ResourceLocation gunId) {
+    public static ItemStack createGunStackForCrateRawNbt(Identifier gunId) {
         if (gunId == null || !gunId.getPath().startsWith("gun/")) return ItemStack.EMPTY;
         Item gunItem = resolveGunBaseItem();
         if (gunItem == null || gunItem == Items.AIR) return ItemStack.EMPTY;
@@ -1058,7 +1047,7 @@ public final class TaczAirdropIntegration {
             Class<?> iAmmoBoxClass = Class.forName("com.tacz.guns.api.item.IAmmoBox");
             Class<?> iGunClass = Class.forName("com.tacz.guns.api.item.IGun");
             for (Item item : BuiltInRegistries.ITEM) {
-                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                Identifier id = BuiltInRegistries.ITEM.getKey(item);
                 if (id == null || item == Items.AIR || !isTaczNamespace(id.getNamespace())) continue;
                 String path = id.getPath();
                 if (shouldExclude(path)) continue;
@@ -1088,21 +1077,21 @@ public final class TaczAirdropIntegration {
         Item gunItem = resolveGunBaseItem();
 
         // Plain registry items by path (real item, real icon)
-        for (ResourceLocation key : BuiltInRegistries.ITEM.keySet()) {
+        for (Identifier key : BuiltInRegistries.ITEM.keySet()) {
             if (!wantAmmo) break;
             if (key == null || !isTaczNamespace(key.getNamespace())) continue;
             String path = key.getPath();
             if (!path.startsWith("ammo/") || path.length() <= 5) continue;
             if (shouldExclude(path)) continue;
             if (alreadyInList(entries, key)) continue;
-            Item item = BuiltInRegistries.ITEM.get(key);
+            Item item = BuiltInRegistries.ITEM.getValue(key);
             if (item == null || item == Items.AIR) continue;
             AirdropCatalog.Entry e = new AirdropCatalog.Entry(key, ammoPoints(key), 1);
             if (e.isValid()) entries.add(e);
         }
         if (wantAmmo) {
         for (Item item : BuiltInRegistries.ITEM) {
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || item == Items.AIR) continue;
             if (!isTaczNamespace(id.getNamespace())) continue;
             String path = id.getPath();
@@ -1110,13 +1099,13 @@ public final class TaczAirdropIntegration {
             if (!ammoPath) continue;
             if (shouldExclude(path)) continue;
             if (alreadyInList(entries, id)) continue;
-            ResourceLocation ammoId = path.startsWith("ammo/") ? id : ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "ammo/" + path);
+            Identifier ammoId = path.startsWith("ammo/") ? id : Identifier.fromNamespaceAndPath(id.getNamespace(), "ammo/" + path);
             AirdropCatalog.Entry e = new AirdropCatalog.Entry(id, ammoPoints(ammoId), 1);
             if (e.isValid()) entries.add(e);
         }
         for (Item item : getTaczAmmoItems()) {
             if (item == ammoBoxItem) continue;
-            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            Identifier id = BuiltInRegistries.ITEM.getKey(item);
             if (id == null || alreadyInList(entries, id)) continue;
             if ("ammo_box".equals(id.getPath()) || "ammo".equals(id.getPath())) continue;
             AirdropCatalog.Entry e = new AirdropCatalog.Entry(id, ammoPoints(id), 1);
@@ -1129,27 +1118,27 @@ public final class TaczAirdropIntegration {
             Class<?> iGunClass = Class.forName("com.tacz.guns.api.item.IGun");
             for (String caliber : TAC_I_AMMO_CALIBERS) {
                 if (!wantAmmo) break;
-                if (alreadyInList(entries, ResourceLocation.parse("tacz:ammo/" + caliber))) continue;
-                if (alreadyInList(entries, ResourceLocation.parse("tacz:" + caliber))) continue;
-                ResourceLocation idAmmo = ResourceLocation.parse("tacz:ammo/" + caliber);
-                ResourceLocation idBare = ResourceLocation.parse("tacz:" + caliber);
-                Item registeredAmmo = BuiltInRegistries.ITEM.get(idAmmo);
-                if (registeredAmmo == null || registeredAmmo == Items.AIR) registeredAmmo = BuiltInRegistries.ITEM.get(idBare);
-                ResourceLocation idToUse = (registeredAmmo != null && registeredAmmo != Items.AIR) ? BuiltInRegistries.ITEM.getKey(registeredAmmo) : null;
+                if (alreadyInList(entries, Identifier.parse("tacz:ammo/" + caliber))) continue;
+                if (alreadyInList(entries, Identifier.parse("tacz:" + caliber))) continue;
+                Identifier idAmmo = Identifier.parse("tacz:ammo/" + caliber);
+                Identifier idBare = Identifier.parse("tacz:" + caliber);
+                Item registeredAmmo = BuiltInRegistries.ITEM.getValue(idAmmo);
+                if (registeredAmmo == null || registeredAmmo == Items.AIR) registeredAmmo = BuiltInRegistries.ITEM.getValue(idBare);
+                Identifier idToUse = (registeredAmmo != null && registeredAmmo != Items.AIR) ? BuiltInRegistries.ITEM.getKey(registeredAmmo) : null;
                 if (idToUse != null) {
                     AirdropCatalog.Entry e = new AirdropCatalog.Entry(idToUse, ammoPoints(idAmmo), 1);
                     if (e.isValid()) entries.add(e);
                     continue;
                 }
-                ResourceLocation id = idAmmo;
+                Identifier id = idAmmo;
                 if (ammoBoxItem == null || !iAmmoBoxClass.isInstance(ammoBoxItem)) continue;
                 final Item ab = ammoBoxItem;
-                final ResourceLocation aid = id;
+                final Identifier aid = id;
                 final int roundsPerBox = getAmmoStackSize(aid);
                 Supplier<ItemStack> creator = () -> {
                     try {
                         ItemStack stack = new ItemStack(ab, 1);
-                        iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, ResourceLocation.class).invoke(ab, stack, aid);
+                        iAmmoBoxClass.getMethod("setAmmoId", ItemStack.class, Identifier.class).invoke(ab, stack, aid);
                         iAmmoBoxClass.getMethod("setAmmoCount", ItemStack.class, int.class).invoke(ab, stack, roundsPerBox);
                         return stack;
                     } catch (Exception e) { return ItemStack.EMPTY; }
@@ -1159,9 +1148,9 @@ public final class TaczAirdropIntegration {
             }
             for (String gunName : TACZ_GUN_PATHS) {
                 if (!wantGuns) break;
-                ResourceLocation id = ResourceLocation.parse("tacz:gun/" + gunName);
+                Identifier id = Identifier.parse("tacz:gun/" + gunName);
                 if (alreadyInList(entries, id)) continue;
-                Item registeredGun = BuiltInRegistries.ITEM.get(id);
+                Item registeredGun = BuiltInRegistries.ITEM.getValue(id);
                 if (registeredGun != null && registeredGun != Items.AIR) {
                     AirdropCatalog.Entry e = new AirdropCatalog.Entry(id, gunPoints(gunName), 1);
                     if (e.isValid()) entries.add(e);
@@ -1169,11 +1158,11 @@ public final class TaczAirdropIntegration {
                 }
                 if (gunItem == null || !iGunClass.isInstance(gunItem)) continue;
                 final Item gi = gunItem;
-                final ResourceLocation gid = id;
+                final Identifier gid = id;
                 Supplier<ItemStack> creator = () -> {
                     try {
                         ItemStack stack = new ItemStack(gi, 1);
-                        iGunClass.getMethod("setGunId", ItemStack.class, ResourceLocation.class).invoke(gi, stack, gid);
+                        iGunClass.getMethod("setGunId", ItemStack.class, Identifier.class).invoke(gi, stack, gid);
                         return stack;
                     } catch (Exception ex) { return ItemStack.EMPTY; }
                 };
@@ -1188,7 +1177,7 @@ public final class TaczAirdropIntegration {
     public static List<Item> getTaczAmmoItems() {
         return BuiltInRegistries.ITEM.stream()
             .filter(item -> {
-                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                Identifier id = BuiltInRegistries.ITEM.getKey(item);
                 if (id == null || !isTaczNamespace(id.getNamespace()) || item == Items.AIR) return false;
                 if ("ammo".equals(id.getPath())) return false; // tag placeholder
                 String path = id.getPath();
@@ -1206,7 +1195,7 @@ public final class TaczAirdropIntegration {
     public static ItemStack randomTaczAmmoStack(RandomSource random) {
         if (TAC_I_AMMO_CALIBERS.isEmpty()) return ItemStack.EMPTY;
         String caliber = TAC_I_AMMO_CALIBERS.get(random.nextInt(TAC_I_AMMO_CALIBERS.size()));
-        ResourceLocation ammoId = ResourceLocation.parse("tacz:ammo/" + caliber);
+        Identifier ammoId = Identifier.parse("tacz:ammo/" + caliber);
         ItemStack stack = createAmmoDisplayStack(ammoId);
         if (stack.isEmpty() || !hasAmmoIdTag(stack))
             stack = createAmmoStackForCrateRawNbt(ammoId);

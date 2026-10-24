@@ -1,11 +1,14 @@
 package net.mcreator.radiotowers.integration;
 
+import com.mojang.serialization.Codec;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,24 +27,37 @@ public class AirdropCooldownSavedData extends SavedData {
     public AirdropCooldownSavedData() {
     }
 
-    public static AirdropCooldownSavedData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    public static final Codec<AirdropCooldownSavedData> CODEC = CompoundTag.CODEC.xmap(
+        AirdropCooldownSavedData::fromTag, data -> data.toTag());
+    public static final SavedDataType<AirdropCooldownSavedData> TYPE = new SavedDataType<>(
+        DATA_NAME,
+        context -> {
+            CompoundTag legacy = LegacySavedDataFiles.readLegacy(context, DATA_NAME);
+            AirdropCooldownSavedData data = legacy != null ? fromTag(legacy) : new AirdropCooldownSavedData();
+            if (legacy != null) data.setDirty();
+            return data;
+        },
+        context -> CODEC,
+        DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+
+    public static AirdropCooldownSavedData fromTag(CompoundTag tag) {
         AirdropCooldownSavedData data = new AirdropCooldownSavedData();
-        ListTag list = tag.getList("players", Tag.TAG_COMPOUND);
+        ListTag list = tag.getListOrEmpty("players");
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag c = list.getCompound(i);
-            if (c.hasUUID("player") && c.contains("end")) {
-                data.cooldownEndGameTimeByPlayer.put(c.getUUID("player"), c.getLong("end"));
-            }
+            CompoundTag c = list.getCompoundOrEmpty(i);
+            c.read("player", UUIDUtil.CODEC).ifPresent(id -> {
+                if (c.contains("end")) data.cooldownEndGameTimeByPlayer.put(id, c.getLongOr("end", 0L));
+            });
         }
         return data;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    public CompoundTag toTag() {
+        CompoundTag tag = new CompoundTag();
         ListTag list = new ListTag();
         for (Map.Entry<UUID, Long> e : cooldownEndGameTimeByPlayer.entrySet()) {
             CompoundTag c = new CompoundTag();
-            c.putUUID("player", e.getKey());
+            c.store("player", UUIDUtil.CODEC, e.getKey());
             c.putLong("end", e.getValue());
             list.add(c);
         }
@@ -58,7 +74,7 @@ public class AirdropCooldownSavedData extends SavedData {
         }
         ServerLevel storage = level.getServer().getLevel(Level.OVERWORLD);
         if (storage == null) storage = level;
-        return storage.getDataStorage().computeIfAbsent(new SavedData.Factory<>(AirdropCooldownSavedData::new, AirdropCooldownSavedData::load), DATA_NAME);
+        return storage.getDataStorage().computeIfAbsent(TYPE);
     }
 
     /** Game time when cooldown ends, or 0 if none / expired (expired entries are removed). */

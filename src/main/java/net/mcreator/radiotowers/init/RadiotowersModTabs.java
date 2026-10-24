@@ -19,7 +19,7 @@ import net.minecraft.core.registries.Registries;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.airdrop.TaczAirdropIntegration;
 
-@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID)
 public class RadiotowersModTabs {
 	public static final DeferredRegister<CreativeModeTab> REGISTRY = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, RadiotowersMod.MODID);
 	public static final DeferredHolder<CreativeModeTab, CreativeModeTab> RADIOTOWERS = REGISTRY.register("radiotowers",

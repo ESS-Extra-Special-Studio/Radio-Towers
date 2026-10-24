@@ -34,8 +34,8 @@ public class EntitySetPosMixin {
         if (!(self.level() instanceof ServerLevel level)) return;
         if (!(self instanceof Monster)) return;
         // Only touch wave-spawned mobs; otherwise we override every Monster in the dimension and rubberband normal mobs
-        if (!self.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            && !self.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        if (!self.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            && !self.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             && !WaveMobAggroHandler.isWaveSpawnedMob(self)) return;
         if (radiotowers$inSetPosOverride.get()) return;
         if (y <= RADIOTOWERS$SKY_Y) return;
