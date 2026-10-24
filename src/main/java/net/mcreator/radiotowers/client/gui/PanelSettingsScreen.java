@@ -8,7 +8,7 @@ import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
 import net.mcreator.radiotowers.network.CallAirdropMessage;
 import net.mcreator.radiotowers.network.DeactivatePanelMessage;
 import net.mcreator.radiotowers.network.RequestAirdropStatePacket;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -232,7 +232,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
 
     private void openInternet() {
         activeButton = 2;
-        if (minecraft != null) minecraft.setScreen(new InternetStationScreen(this, panelPos));
+        if (minecraft != null) minecraft.gui.setScreen(new InternetStationScreen(this, panelPos));
     }
 
     @Override
@@ -291,11 +291,11 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderWorldDim(guiGraphics);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         EscText.drawInRect(guiGraphics, font, title, EscPanel.titleBar(content, style),
             0xE0E0E0, EscFonts.DEFAULT, false, 0.5f);

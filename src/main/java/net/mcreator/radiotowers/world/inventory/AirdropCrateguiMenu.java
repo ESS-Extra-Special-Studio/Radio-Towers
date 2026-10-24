@@ -1,10 +1,8 @@
 package net.mcreator.radiotowers.world.inventory;
 
-import net.neoforged.neoforge.items.SlotItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
+import net.neoforged.neoforge.transfer.item.ResourceHandlerSlot;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
@@ -39,7 +37,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 	public final Player entity;
 	public int x, y, z;
 	private ContainerLevelAccess access = ContainerLevelAccess.NULL;
-	private IItemHandler internal;
+	private final ItemStacksResourceHandler fallback = new ItemStacksResourceHandler(27);
 	private final Map<Integer, Slot> customSlots = new HashMap<>();
 	private boolean bound = false;
 	private Supplier<Boolean> boundItemMatcher = null;
@@ -50,7 +48,6 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 		super(RadiotowersModMenus.AIRDROP_CRATEGUI.get(), id);
 		this.entity = inv.player;
 		this.world = inv.player.level();
-		this.internal = new ItemStackHandler(27);
 		BlockPos pos = null;
 		if (extraData != null) {
 			pos = extraData.readBlockPos();
@@ -70,146 +67,37 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 			} else { // might be bound to block
 				boundBlockEntity = this.world.getBlockEntity(pos);
 				if (boundBlockEntity instanceof net.mcreator.radiotowers.block.entity.AirdropCrateBlockEntity crate) {
-					this.internal = new net.neoforged.neoforge.items.wrapper.InvWrapper(crate);
 					this.bound = true;
 				}
 			}
 		}
-		this.customSlots.put(0, this.addSlot(new SlotItemHandler(internal, 0, 8, 23) {
-			private final int slot = 0;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(1, this.addSlot(new SlotItemHandler(internal, 1, 26, 23) {
-			private final int slot = 1;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(2, this.addSlot(new SlotItemHandler(internal, 2, 44, 23) {
-			private final int slot = 2;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(3, this.addSlot(new SlotItemHandler(internal, 3, 62, 23) {
-			private final int slot = 3;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(4, this.addSlot(new SlotItemHandler(internal, 4, 80, 23) {
-			private final int slot = 4;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(5, this.addSlot(new SlotItemHandler(internal, 5, 98, 23) {
-			private final int slot = 5;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(6, this.addSlot(new SlotItemHandler(internal, 6, 116, 23) {
-			private final int slot = 6;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(7, this.addSlot(new SlotItemHandler(internal, 7, 134, 23) {
-			private final int slot = 7;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(8, this.addSlot(new SlotItemHandler(internal, 8, 152, 23) {
-			private final int slot = 8;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(9, this.addSlot(new SlotItemHandler(internal, 9, 8, 41) {
-			private final int slot = 9;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(10, this.addSlot(new SlotItemHandler(internal, 10, 26, 41) {
-			private final int slot = 10;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(11, this.addSlot(new SlotItemHandler(internal, 11, 44, 41) {
-			private final int slot = 11;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(12, this.addSlot(new SlotItemHandler(internal, 12, 62, 41) {
-			private final int slot = 12;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(13, this.addSlot(new SlotItemHandler(internal, 13, 80, 41) {
-			private final int slot = 13;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(14, this.addSlot(new SlotItemHandler(internal, 14, 98, 41) {
-			private final int slot = 14;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(15, this.addSlot(new SlotItemHandler(internal, 15, 116, 41) {
-			private final int slot = 15;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(16, this.addSlot(new SlotItemHandler(internal, 16, 134, 41) {
-			private final int slot = 16;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(17, this.addSlot(new SlotItemHandler(internal, 17, 152, 41) {
-			private final int slot = 17;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(18, this.addSlot(new SlotItemHandler(internal, 18, 8, 59) {
-			private final int slot = 18;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(19, this.addSlot(new SlotItemHandler(internal, 19, 26, 59) {
-			private final int slot = 19;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(20, this.addSlot(new SlotItemHandler(internal, 20, 44, 59) {
-			private final int slot = 20;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(21, this.addSlot(new SlotItemHandler(internal, 21, 62, 59) {
-			private final int slot = 21;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(22, this.addSlot(new SlotItemHandler(internal, 22, 80, 59) {
-			private final int slot = 22;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(23, this.addSlot(new SlotItemHandler(internal, 23, 98, 59) {
-			private final int slot = 23;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(24, this.addSlot(new SlotItemHandler(internal, 24, 116, 59) {
-			private final int slot = 24;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(25, this.addSlot(new SlotItemHandler(internal, 25, 134, 59) {
-			private final int slot = 25;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
-		this.customSlots.put(26, this.addSlot(new SlotItemHandler(internal, 26, 152, 59) {
-			private final int slot = 26;
-			private int x = AirdropCrateguiMenu.this.x;
-			private int y = AirdropCrateguiMenu.this.y;
-		}));
+		this.customSlots.put(0, this.addSlot(this.crateSlot(0, 8, 23)));
+		this.customSlots.put(1, this.addSlot(this.crateSlot(1, 26, 23)));
+		this.customSlots.put(2, this.addSlot(this.crateSlot(2, 44, 23)));
+		this.customSlots.put(3, this.addSlot(this.crateSlot(3, 62, 23)));
+		this.customSlots.put(4, this.addSlot(this.crateSlot(4, 80, 23)));
+		this.customSlots.put(5, this.addSlot(this.crateSlot(5, 98, 23)));
+		this.customSlots.put(6, this.addSlot(this.crateSlot(6, 116, 23)));
+		this.customSlots.put(7, this.addSlot(this.crateSlot(7, 134, 23)));
+		this.customSlots.put(8, this.addSlot(this.crateSlot(8, 152, 23)));
+		this.customSlots.put(9, this.addSlot(this.crateSlot(9, 8, 41)));
+		this.customSlots.put(10, this.addSlot(this.crateSlot(10, 26, 41)));
+		this.customSlots.put(11, this.addSlot(this.crateSlot(11, 44, 41)));
+		this.customSlots.put(12, this.addSlot(this.crateSlot(12, 62, 41)));
+		this.customSlots.put(13, this.addSlot(this.crateSlot(13, 80, 41)));
+		this.customSlots.put(14, this.addSlot(this.crateSlot(14, 98, 41)));
+		this.customSlots.put(15, this.addSlot(this.crateSlot(15, 116, 41)));
+		this.customSlots.put(16, this.addSlot(this.crateSlot(16, 134, 41)));
+		this.customSlots.put(17, this.addSlot(this.crateSlot(17, 152, 41)));
+		this.customSlots.put(18, this.addSlot(this.crateSlot(18, 8, 59)));
+		this.customSlots.put(19, this.addSlot(this.crateSlot(19, 26, 59)));
+		this.customSlots.put(20, this.addSlot(this.crateSlot(20, 44, 59)));
+		this.customSlots.put(21, this.addSlot(this.crateSlot(21, 62, 59)));
+		this.customSlots.put(22, this.addSlot(this.crateSlot(22, 80, 59)));
+		this.customSlots.put(23, this.addSlot(this.crateSlot(23, 98, 59)));
+		this.customSlots.put(24, this.addSlot(this.crateSlot(24, 116, 59)));
+		this.customSlots.put(25, this.addSlot(this.crateSlot(25, 134, 59)));
+		this.customSlots.put(26, this.addSlot(this.crateSlot(26, 152, 59)));
 		for (int si = 0; si < 3; ++si)
 			for (int sj = 0; sj < 9; ++sj)
 				this.addSlot(new Slot(inv, sj + (si + 1) * 9, 0 + 8 + sj * 18, 0 + 84 + si * 18));
@@ -340,21 +228,26 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 		return flag;
 	}
 
+	private Slot crateSlot(int index, int sx, int sy) {
+		if (this.bound && this.boundBlockEntity instanceof net.minecraft.world.Container container) {
+			return new Slot(container, index, sx, sy);
+		}
+		return new ResourceHandlerSlot(this.fallback, this.fallback::set, index, sx, sy);
+	}
+
 	@Override
 	public void removed(Player playerIn) {
 		super.removed(playerIn);
 		if (!bound && playerIn instanceof ServerPlayer serverPlayer) {
 			if (!serverPlayer.isAlive() || serverPlayer.hasDisconnected()) {
-				for (int j = 0; j < internal.getSlots(); ++j) {
-					playerIn.drop(internal.getStackInSlot(j), false);
-					if (internal instanceof IItemHandlerModifiable ihm)
-						ihm.setStackInSlot(j, ItemStack.EMPTY);
+				for (int j = 0; j < fallback.size(); ++j) {
+					playerIn.drop(fallback.getResource(j).toStack(fallback.getAmountAsInt(j)), false, net.minecraft.util.Prediction.SERVER_ONLY);
+					fallback.set(j, ItemResource.EMPTY, 0);
 				}
 			} else {
-				for (int i = 0; i < internal.getSlots(); ++i) {
-					playerIn.getInventory().placeItemBackInInventory(internal.getStackInSlot(i));
-					if (internal instanceof IItemHandlerModifiable ihm)
-						ihm.setStackInSlot(i, ItemStack.EMPTY);
+				for (int i = 0; i < fallback.size(); ++i) {
+					playerIn.getInventory().placeItemBackInInventory(fallback.getResource(i).toStack(fallback.getAmountAsInt(i)), net.minecraft.util.Prediction.SERVER_ONLY);
+					fallback.set(i, ItemResource.EMPTY, 0);
 				}
 			}
 		}

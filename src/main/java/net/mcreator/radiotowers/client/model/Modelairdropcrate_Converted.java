@@ -1,9 +1,7 @@
 package net.mcreator.radiotowers.client.model;
 
-import org.apache.http.impl.conn.Wire;
-
-import net.minecraft.world.entity.Entity;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.animation.KeyframeAnimation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -14,16 +12,16 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.EntityModel;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.mcreator.radiotowers.client.model.animations.airdropcrate_ConvertedAnimation;
+import net.mcreator.radiotowers.client.renderer.AirdropentityRenderState;
 
 // Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
-public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T> {
+public class Modelairdropcrate_Converted extends EntityModel<AirdropentityRenderState> {
 	// This layer location should be baked with EntityRendererProvider.Context in
 	// the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("radiotowers", "modelairdropcrate_converted"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Identifier.fromNamespaceAndPath("radiotowers", "modelairdropcrate_converted"), "main");
 	public final ModelPart airdrop;
 	public final ModelPart parachute;
 	public final ModelPart Glider;
@@ -33,8 +31,11 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 	public final ModelPart LeftHook;
 	public final ModelPart RightWire;
 	public final ModelPart RightHook;
+	private final KeyframeAnimation openglider;
+	private final KeyframeAnimation falling;
 
 	public Modelairdropcrate_Converted(ModelPart root) {
+		super(root);
 		this.airdrop = root.getChild("airdrop");
 		this.parachute = this.airdrop.getChild("parachute");
 		this.Glider = this.parachute.getChild("Glider");
@@ -44,6 +45,8 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 		this.LeftHook = this.LeftWire.getChild("LeftHook");
 		this.RightWire = this.Crate.getChild("RightWire");
 		this.RightHook = this.RightWire.getChild("RightHook");
+		this.openglider = airdropcrate_ConvertedAnimation.openglider.bake(root);
+		this.falling = airdropcrate_ConvertedAnimation.falling.bake(root);
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -199,11 +202,9 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 	}
 
 	@Override
-	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-	}
-
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		airdrop.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+	public void setupAnim(AirdropentityRenderState state) {
+		super.setupAnim(state);
+		this.openglider.apply(state.animationState0, state.ageInTicks, 1f);
+		this.falling.apply(state.animationState1, state.ageInTicks, 1f);
 	}
 }

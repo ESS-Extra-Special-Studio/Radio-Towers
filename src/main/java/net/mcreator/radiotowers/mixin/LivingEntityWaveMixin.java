@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,9 +20,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Entity.class)
 public class LivingEntityWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final Identifier PLANE_TYPE_ID = Identifier.parse("radiotowers:planeentity");
 
-    @ModifyVariable(method = "setInvulnerable(Z)V", at = @At("HEAD"), argsOnly = true, remap = true)
+    @ModifyVariable(method = "setPermanentlyInvulnerable(Z)V", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceInvulnOffDuringWave(boolean invulnerable) {
         Entity self = (Entity) (Object) this;
         if (!invulnerable) return false;
@@ -35,8 +35,8 @@ public class LivingEntityWaveMixin {
     }
 
     private static boolean isWaveMob(Entity e) {
-        return e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        return e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             || WaveMobAggroHandler.isWaveSpawnedMob(e);
     }
 }

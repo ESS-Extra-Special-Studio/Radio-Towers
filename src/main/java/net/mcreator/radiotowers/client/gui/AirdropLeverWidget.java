@@ -3,11 +3,13 @@ package net.mcreator.radiotowers.client.gui;
 import net.mcreator.radiotowers.client.AirdropWaveHudData;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.BooleanSupplier;
 
@@ -16,8 +18,8 @@ import java.util.function.BooleanSupplier;
  */
 public class AirdropLeverWidget extends AbstractWidget {
 
-    private static final ResourceLocation TEX_OFF = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_off.png");
-    private static final ResourceLocation TEX_ON = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_on.png");
+    private static final Identifier TEX_OFF = Identifier.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_off.png");
+    private static final Identifier TEX_ON = Identifier.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_on.png");
 
     private final Runnable onActivate;
     /** Extra gate (e.g. catalog needs 10+ points); standard airdrop uses {@code () -> true}. */
@@ -47,12 +49,12 @@ public class AirdropLeverWidget extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onClick(MouseButtonEvent event, boolean doubleClick) {
         if (canActivateLever()) onActivate.run();
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         int x = getX();
         int y = getY();
         int w = getWidth();
@@ -60,8 +62,8 @@ public class AirdropLeverWidget extends AbstractWidget {
         long cdEnd = AirdropWaveHudData.getCooldownEndGameTime();
         boolean on = AirdropWaveHudData.isWaveInProgress()
             || (cdEnd > 0 && Minecraft.getInstance().level != null && Minecraft.getInstance().level.getGameTime() < cdEnd);
-        ResourceLocation tex = on ? TEX_ON : TEX_OFF;
-        guiGraphics.blit(tex, x, y, 0, 0, w, h, w, h);
+        Identifier tex = on ? TEX_ON : TEX_OFF;
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0.0F, 0.0F, w, h, w, h);
         if (AirdropWaveHudData.isWaveInProgress() && AirdropWaveHudData.getTotalWaves() > 0) {
             int secRem = AirdropWaveHudData.getSecondsRemaining();
             int min = secRem / 60;
@@ -70,7 +72,7 @@ public class AirdropLeverWidget extends AbstractWidget {
             String zombiesStr = z >= 0 ? (z + " zombies") : "?";
             String status = String.format("Wave %d/%d | %s | %d:%02d",
                 AirdropWaveHudData.getCurrentWave(), AirdropWaveHudData.getTotalWaves(), zombiesStr, min, sec);
-            guiGraphics.drawString(Minecraft.getInstance().font, status, x, y + h + 2, 0xDDDD00, false);
+            guiGraphics.text(Minecraft.getInstance().font, status, x, y + h + 2, 0xDDDD00, false);
         } else if (!canActivateLever() && cdEnd > 0
                 && !(AirdropConfig.getStandardAirdropCooldownTicks() == 0
                     && AirdropConfig.getWaveDeliveryCooldownTicks() == 0)) {
@@ -82,7 +84,7 @@ public class AirdropLeverWidget extends AbstractWidget {
                     int m = s / 60;
                     s = s % 60;
                     String time = String.format("Use again in %d:%02d", m, s);
-                    guiGraphics.drawString(Minecraft.getInstance().font, time, x, y + h + 2, 0xCC8800, false);
+                    guiGraphics.text(Minecraft.getInstance().font, time, x, y + h + 2, 0xCC8800, false);
                 }
             }
         }

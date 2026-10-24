@@ -3,7 +3,7 @@ package net.mcreator.radiotowers.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -15,7 +15,7 @@ import net.mcreator.radiotowers.SafeClientCalls;
  */
 public class AirdropModeUnlockPacket implements CustomPacketPayload {
     public static final Type<AirdropModeUnlockPacket> TYPE =
-        new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "airdrop_mode_unlock"));
+        new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "airdrop_mode_unlock"));
     public static final StreamCodec<FriendlyByteBuf, AirdropModeUnlockPacket> STREAM_CODEC =
         StreamCodec.of((buf, msg) -> AirdropModeUnlockPacket.encode(msg, buf), AirdropModeUnlockPacket::new);
 

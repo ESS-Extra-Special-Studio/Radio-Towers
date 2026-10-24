@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -85,8 +86,8 @@ public class ZombieAttractionHandler {
 
     private static boolean isZombieType(Mob entity) {
         EntityType<?> type = entity.getType();
-        return type == EntityType.ZOMBIE || type == EntityType.ZOMBIE_VILLAGER || type == EntityType.HUSK
-            || type == EntityType.DROWNED || type == EntityType.ZOMBIFIED_PIGLIN
+        return type == EntityTypes.ZOMBIE || type == EntityTypes.ZOMBIE_VILLAGER || type == EntityTypes.HUSK
+            || type == EntityTypes.DROWNED || type == EntityTypes.ZOMBIFIED_PIGLIN
             || type.getDescriptionId().toLowerCase(java.util.Locale.ROOT).contains("zombie");
     }
 

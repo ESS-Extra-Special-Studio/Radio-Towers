@@ -3,7 +3,7 @@ package net.mcreator.radiotowers.airdrop;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -30,30 +30,30 @@ import java.util.regex.Pattern;
 public final class AirdropCatalog {
 
     public static final class Entry {
-        private final ResourceLocation itemId;
+        private final Identifier itemId;
         private final int difficultyPoints;
         /** When > 1, one "unit" in the GUI represents this many items (e.g. 64 for ammo stacks). */
         private final int defaultStackSize;
         /** When non-null, createStack() and isValid() use this instead of itemId (for TaCZ ammo_box/gun with NBT). */
         private final Supplier<ItemStack> customStackCreator;
 
-        public Entry(ResourceLocation itemId, int difficultyPoints) {
+        public Entry(Identifier itemId, int difficultyPoints) {
             this(itemId, difficultyPoints, 1, null);
         }
 
-        public Entry(ResourceLocation itemId, int difficultyPoints, int defaultStackSize) {
+        public Entry(Identifier itemId, int difficultyPoints, int defaultStackSize) {
             this(itemId, difficultyPoints, defaultStackSize, null);
         }
 
         /** Entry that uses a custom stack (e.g. TaCZ ammo_box with setAmmoId, gun with setGunId). itemId is used for dedup and display key. */
-        public Entry(ResourceLocation itemId, int difficultyPoints, int defaultStackSize, Supplier<ItemStack> customStackCreator) {
+        public Entry(Identifier itemId, int difficultyPoints, int defaultStackSize, Supplier<ItemStack> customStackCreator) {
             this.itemId = itemId;
             this.difficultyPoints = difficultyPoints;
             this.defaultStackSize = defaultStackSize <= 0 ? 1 : Math.min(99, defaultStackSize);
             this.customStackCreator = customStackCreator;
         }
 
-        public ResourceLocation getItemId() { return itemId; }
+        public Identifier getItemId() { return itemId; }
         public int getDifficultyPoints() { return difficultyPoints; }
         /** Number of items per ordered unit (1 = single item, 64 = full stack for ammo). */
         public int getDefaultStackSize() { return defaultStackSize; }
@@ -80,7 +80,7 @@ public final class AirdropCatalog {
                     return ItemStack.EMPTY;
                 }
             }
-            Item item = BuiltInRegistries.ITEM.get(itemId);
+            Item item = BuiltInRegistries.ITEM.getOptional(itemId).orElse(null);
             return item != null && item != Items.AIR
                 ? new ItemStack(item, defaultStackSize)
                 : ItemStack.EMPTY;
@@ -96,7 +96,7 @@ public final class AirdropCatalog {
                     return false;
                 }
             }
-            Item item = BuiltInRegistries.ITEM.get(itemId);
+            Item item = BuiltInRegistries.ITEM.getOptional(itemId).orElse(null);
             return item != null && item != Items.AIR;
         }
     }
@@ -124,33 +124,33 @@ public final class AirdropCatalog {
     );
 
     /** Per-item difficulty overrides (rare = higher). Used when building from tags. */
-    private static final Map<ResourceLocation, Integer> ITEM_DIFFICULTY = new HashMap<>();
+    private static final Map<Identifier, Integer> ITEM_DIFFICULTY = new HashMap<>();
     /** Per-tag default difficulty when item not in ITEM_DIFFICULTY. */
     private static final Map<String, Integer> TAG_DIFFICULTY = new HashMap<>();
     static {
         // Rare / endgame
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:netherite_ingot"), 50);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:totem_of_undying"), 25);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:enchanted_golden_apple"), 15);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:netherite_ingot"), 50);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:totem_of_undying"), 25);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:enchanted_golden_apple"), 15);
         // Gems (re-evaluated so rare isn't cheap)
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:diamond"), 10);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:emerald"), 10);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:prismarine_crystals"), 10);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:amethyst_shard"), 5);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:lapis_lazuli"), 5);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:nether_quartz"), 6);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:diamond"), 10);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:emerald"), 10);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:prismarine_crystals"), 10);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:amethyst_shard"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:lapis_lazuli"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:nether_quartz"), 6);
         // Ingots
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:gold_ingot"), 5);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:iron_ingot"), 3);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:copper_ingot"), 2);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:gold_ingot"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:iron_ingot"), 3);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:copper_ingot"), 2);
         // Food
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:golden_apple"), 5);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:bread"), 2);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:cookie"), 2);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:apple"), 3);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:fishing_rod"), 5);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:jukebox"), 25);
-        ITEM_DIFFICULTY.put(ResourceLocation.parse("minecraft:flint_and_steel"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:golden_apple"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:bread"), 2);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:cookie"), 2);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:apple"), 3);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:fishing_rod"), 5);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:jukebox"), 25);
+        ITEM_DIFFICULTY.put(Identifier.parse("minecraft:flint_and_steel"), 5);
         TAG_DIFFICULTY.put("forge:gems", 6);
         TAG_DIFFICULTY.put("forge:gems/diamond", 10);
         TAG_DIFFICULTY.put("forge:ingots", 3);
@@ -196,14 +196,13 @@ public final class AirdropCatalog {
         try {
             for (String tagId : whitelist) {
                 try {
-                    ResourceLocation rl = ResourceLocation.parse(tagId);
+                    Identifier rl = Identifier.parse(tagId);
                     TagKey<Item> key = TagKey.create(Registries.ITEM, rl);
-                    var named = BuiltInRegistries.ITEM.getTag(key);
-                    if (named.isEmpty()) continue;
+                    var named = BuiltInRegistries.ITEM.getTagOrEmpty(key);
                     int tagPoints = TAG_DIFFICULTY.getOrDefault(tagId, defaultDifficulty);
-                    for (var holder : named.get()) {
+                    for (var holder : named) {
                         Item item = holder.value();
-                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                        Identifier id = BuiltInRegistries.ITEM.getKey(item);
                         if (id == null || item == Items.AIR || blacklist.matches(id)) continue;
                         if (!shouldIncludeFromTag(tagId, id)) continue;
                         int points = ITEM_DIFFICULTY.getOrDefault(id, tagPoints);
@@ -245,7 +244,7 @@ public final class AirdropCatalog {
         }
 
         int taczInRegistry = 0;
-        for (ResourceLocation id : BuiltInRegistries.ITEM.keySet()) {
+        for (Identifier id : BuiltInRegistries.ITEM.keySet()) {
             if (id != null && id.getNamespace().toLowerCase(java.util.Locale.ROOT).contains("tacz")) {
                 taczInRegistry++;
             }
@@ -301,7 +300,7 @@ public final class AirdropCatalog {
                     continue;
                 }
                 if (!rawId.contains(":")) continue;
-                ResourceLocation id = ResourceLocation.parse(rawId);
+                Identifier id = Identifier.parse(rawId);
                 if (blacklist.matches(id)) continue;
                 // Unknown ids follow the registry-item path; this does not register TaCZ content.
                 Entry e = new Entry(id, points);
@@ -336,7 +335,7 @@ public final class AirdropCatalog {
     }
 
     /** Only include normal log items from minecraft:logs (no stripped, no wood, no planks). */
-    private static boolean shouldIncludeFromTag(String tagId, ResourceLocation itemId) {
+    private static boolean shouldIncludeFromTag(String tagId, Identifier itemId) {
         if ("minecraft:logs".equals(tagId)) {
             String path = itemId.getPath();
             return path.endsWith("_log") && !path.contains("stripped");
@@ -347,7 +346,7 @@ public final class AirdropCatalog {
         return true;
     }
 
-    private static void addEntryUnique(List<Entry> list, ResourceLocation id, int points) {
+    private static void addEntryUnique(List<Entry> list, Identifier id, int points) {
         if ("tacz".equals(id.getNamespace()) && "ammo".equals(id.getPath())) return; // tacz:ammo is a tag, not a real item
         for (Entry e : list)
             if (e.getItemId().equals(id)) return;
@@ -390,14 +389,14 @@ public final class AirdropCatalog {
     }
 
     private static void addUniqueIfNotBlacklisted(List<Entry> list, BlacklistMatcher blacklist, String id, int points) {
-        ResourceLocation rl = ResourceLocation.parse(id);
+        Identifier rl = Identifier.parse(id);
         if (blacklist.matches(rl)) return;
         addEntryUnique(list, rl, points);
     }
 
     /** Blacklist that supports exact ids, TaCZ aliases (gun/m1911 vs m1911), last-segment names, and globs. */
     static final class BlacklistMatcher {
-        private final Set<ResourceLocation> exact = new HashSet<>();
+        private final Set<Identifier> exact = new HashSet<>();
         private final Set<String> contentKeys = new HashSet<>();
         private final Set<String> lastSegments = new HashSet<>();
         private final List<Pattern> patterns = new ArrayList<>();
@@ -417,7 +416,7 @@ public final class AirdropCatalog {
                 return;
             }
             try {
-                ResourceLocation rl = ResourceLocation.parse(raw);
+                Identifier rl = Identifier.parse(raw);
                 exact.add(rl);
                 contentKeys.add(contentKey(rl));
                 String path = rl.getPath();
@@ -425,20 +424,20 @@ public final class AirdropCatalog {
                 lastSegments.add(last);
                 String ns = rl.getNamespace();
                 if (path.startsWith("gun/") || path.startsWith("ammo/")) {
-                    exact.add(ResourceLocation.fromNamespaceAndPath(ns, last));
-                    contentKeys.add(contentKey(ResourceLocation.fromNamespaceAndPath(ns, last)));
+                    exact.add(Identifier.fromNamespaceAndPath(ns, last));
+                    contentKeys.add(contentKey(Identifier.fromNamespaceAndPath(ns, last)));
                 } else if (!path.contains("/")) {
-                    exact.add(ResourceLocation.fromNamespaceAndPath(ns, "gun/" + path));
-                    exact.add(ResourceLocation.fromNamespaceAndPath(ns, "ammo/" + path));
-                    contentKeys.add(contentKey(ResourceLocation.fromNamespaceAndPath(ns, "gun/" + path)));
-                    contentKeys.add(contentKey(ResourceLocation.fromNamespaceAndPath(ns, "ammo/" + path)));
+                    exact.add(Identifier.fromNamespaceAndPath(ns, "gun/" + path));
+                    exact.add(Identifier.fromNamespaceAndPath(ns, "ammo/" + path));
+                    contentKeys.add(contentKey(Identifier.fromNamespaceAndPath(ns, "gun/" + path)));
+                    contentKeys.add(contentKey(Identifier.fromNamespaceAndPath(ns, "ammo/" + path)));
                 }
             } catch (Exception ignored) {
                 lastSegments.add(raw.toLowerCase(java.util.Locale.ROOT));
             }
         }
 
-        boolean matches(ResourceLocation id) {
+        boolean matches(Identifier id) {
             if (id == null) return false;
             if (exact.contains(id)) return true;
             if (contentKeys.contains(contentKey(id))) return true;
@@ -464,11 +463,11 @@ public final class AirdropCatalog {
                     var tag = net.mcreator.radiotowers.ItemCustomNbt.copy(stack);
                     if (tag != null) {
                         if (tag.contains("GunId")) {
-                            ResourceLocation gunId = ResourceLocation.tryParse(tag.getString("GunId"));
+                            Identifier gunId = Identifier.tryParse(tag.getStringOr("GunId", ""));
                             if (matches(gunId)) return true;
                         }
                         if (tag.contains("AmmoId")) {
-                            ResourceLocation ammoId = ResourceLocation.tryParse(tag.getString("AmmoId"));
+                            Identifier ammoId = Identifier.tryParse(tag.getStringOr("AmmoId", ""));
                             if (matches(ammoId)) return true;
                         }
                     }
@@ -491,7 +490,7 @@ public final class AirdropCatalog {
             return (i >= 0 ? path.substring(i + 1) : path).toLowerCase(java.util.Locale.ROOT);
         }
 
-        private static String contentKey(ResourceLocation id) {
+        private static String contentKey(Identifier id) {
             String ns = id.getNamespace().toLowerCase(java.util.Locale.ROOT);
             String path = id.getPath().toLowerCase(java.util.Locale.ROOT);
             if (path.startsWith("gun/")) path = path.substring(4);
@@ -502,7 +501,7 @@ public final class AirdropCatalog {
     }
 
     /** True if this catalog row is the same item as {@code query}, including TaCZ id aliases. */
-    public static boolean catalogIdMatches(ResourceLocation query, Entry e) {
+    public static boolean catalogIdMatches(Identifier query, Entry e) {
         if (query == null || e == null) return false;
         if (query.equals(e.getItemId())) return true;
         BlacklistMatcher m = new BlacklistMatcher();
@@ -529,7 +528,7 @@ public final class AirdropCatalog {
     }
 
     /** Add a single entry (for addons). */
-    public static void addEntry(ResourceLocation itemId, int difficultyPoints) {
+    public static void addEntry(Identifier itemId, int difficultyPoints) {
         ENTRIES.add(new Entry(itemId, difficultyPoints));
     }
 

@@ -23,7 +23,7 @@ public class EntityInvulnWaveMixin {
     @Unique
     private static final ThreadLocal<Boolean> radiotowers$inForceOff = ThreadLocal.withInitial(() -> false);
 
-    @Inject(method = "setInvulnerable", at = @At("RETURN"), remap = true)
+    @Inject(method = "setPermanentlyInvulnerable", at = @At("RETURN"), remap = true)
     private void radiotowers$forceInvulnOffAfterSet(boolean invulnerable, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
         if (radiotowers$inForceOff.get()) return;
@@ -34,15 +34,15 @@ public class EntityInvulnWaveMixin {
         if (!self.isInvulnerable()) return;
         radiotowers$inForceOff.set(true);
         try {
-            self.setInvulnerable(false);
+            self.setPermanentlyInvulnerable(false);
         } finally {
             radiotowers$inForceOff.set(false);
         }
     }
 
     private static boolean isWaveMob(Entity e) {
-        return e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        return e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             || WaveMobAggroHandler.isWaveSpawnedMob(e);
     }
 }

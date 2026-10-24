@@ -39,7 +39,7 @@ public final class WaveMobRemovalLogger {
     private static boolean isZombieFamily(Entity e) {
         if (!(e instanceof LivingEntity le)) return false;
         var t = le.getType();
-        return t == net.minecraft.world.entity.EntityType.ZOMBIE || t == net.minecraft.world.entity.EntityType.DROWNED;
+        return t == net.minecraft.world.entity.EntityTypes.ZOMBIE || t == net.minecraft.world.entity.EntityTypes.DROWNED;
     }
 
     private static PendingAirdropStorage.Pending getPending(Level lvl, Entity e) {
@@ -87,9 +87,9 @@ public final class WaveMobRemovalLogger {
         }
 
         boolean hasWaveTag =
-            e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
+            e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
                 || (e instanceof Mob mob && WaveMobAggroHandler.isWaveSpawnedMob(mob));
 
         RadiotowersMod.LOGGER.warn(
@@ -122,9 +122,9 @@ public final class WaveMobRemovalLogger {
             net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()),
             e.blockPosition(),
             true,
-            e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-                || e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
+            e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+                || e.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
                 || WaveMobAggroHandler.isWaveSpawnedMob(e)
         );
     }

@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.fml.ModList;
@@ -22,7 +22,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
  * Server calls Dead Air's API to deactivate the panel at the given pos (if Dead Air is loaded).
  */
 public class DeactivatePanelMessage implements CustomPacketPayload {
-    public static final Type<DeactivatePanelMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "deactivate_panel"));
+    public static final Type<DeactivatePanelMessage> TYPE = new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "deactivate_panel"));
     public static final StreamCodec<FriendlyByteBuf, DeactivatePanelMessage> STREAM_CODEC = StreamCodec.of((buf, msg) -> DeactivatePanelMessage.encode(msg, buf), DeactivatePanelMessage::new);
 
     @Override
@@ -51,7 +51,7 @@ public class DeactivatePanelMessage implements CustomPacketPayload {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             var sender = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.level();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air")) return;
             try {

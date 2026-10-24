@@ -33,17 +33,17 @@ public class DrownedKillCountsHandler {
 
         // In nuclear baseline mode we disabled all wave tags/mixins.
         if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) {
-            boolean isZombieFamily = dead.getType() == net.minecraft.world.entity.EntityType.ZOMBIE
-                || dead.getType() == net.minecraft.world.entity.EntityType.DROWNED;
+            boolean isZombieFamily = dead.getType() == net.minecraft.world.entity.EntityTypes.ZOMBIE
+                || dead.getType() == net.minecraft.world.entity.EntityTypes.DROWNED;
             if (!isZombieFamily) return;
 
             // Only count actual wave mobs; otherwise leftover ambient/vanilla zombies can decrement
             // our killedCountThisWave and trigger early wave completion / wrong airdrop credits.
             boolean looksLikeWaveMob =
                 WaveMobAggroHandler.isWaveSpawnedMob(dead)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                    || dead.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG);
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                    || dead.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false);
             if (!looksLikeWaveMob) return;
 
             if (!DEATH_COUNTED_ENTITY_IDS.add(dead.getId())) return;
@@ -58,9 +58,9 @@ public class DrownedKillCountsHandler {
 
         boolean waveMob =
             WaveMobAggroHandler.isWaveSpawnedMob(dead)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-                || dead.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG);
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+                || dead.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false);
         if (!waveMob) return;
 
         // Count death once per entity id.

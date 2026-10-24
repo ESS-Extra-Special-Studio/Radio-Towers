@@ -1,12 +1,13 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
@@ -56,7 +57,7 @@ public class LevelAddEntityMixin {
         }
     }
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final Identifier PLANE_TYPE_ID = Identifier.parse("radiotowers:planeentity");
 
     private static boolean setWaveMobPositionBeforeAdd(ServerLevel level, Entity entity) {
         if (!ENABLE_PRE_ADD_REPLACEMENT) return false;
@@ -64,8 +65,8 @@ public class LevelAddEntityMixin {
         if (RADIOTOWERS_ADDING_REPLACEMENT.get()) return false;
         if (!(entity instanceof Mob mob) || !(entity instanceof Monster)) return false;
         if (PLANE_TYPE_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()))) return false;
-        if (entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) return false;
-        if (entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) return false;
+        if (entity.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)) return false;
+        if (entity.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)) return false;
 
         PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, entity.blockPosition(), WAVE_MOB_RANGE);
         if (pending == null && WaveMobAggroHandler.entityYLooksLikeSkyHighApiSpawn(level, entity))
@@ -86,12 +87,12 @@ public class LevelAddEntityMixin {
         if (nextSpawnCount > pending.maxZombiesPerWave) return false;
         int index = pending.spawnCountThisWave;
         Vec3 pos = WaveMobAggroHandler.getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        Zombie vanilla = EntityTypes.ZOMBIE.create(level, net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
         if (vanilla == null) return false;
         vanilla.setPos(pos.x, pos.y, pos.z);
         vanilla.setDeltaMovement(Vec3.ZERO);
         vanilla.fallDistance = 0;
-        vanilla.setInvulnerable(false);
+        vanilla.setPermanentlyInvulnerable(false);
         vanilla.setNoAi(false);
         WaveMobFieldForce.forceOff(vanilla);
         vanilla.getPersistentData().putBoolean(WaveSpawnTag.REPLACEMENT_TAG, true);

@@ -42,13 +42,13 @@ public final class AirdropLobbyClient {
         CallAirdropScreen parent = pendingParent;
         OrderSnapshot order = pendingOrder != null ? pendingOrder : new OrderSnapshot(0, List.of(), List.of());
         BlockPos pos = panelPos != null ? panelPos : pendingPanelPos;
-        mc.setScreen(new AirdropLobbyScreen(parent, pos, lobbyId, order));
+        mc.gui.setScreen(new AirdropLobbyScreen(parent, pos, lobbyId, order));
     }
 
     public static void applySync(LobbyPackets.SyncLobby sync) {
         lastSync = sync;
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        if (mc != null && mc.gui.screen() instanceof AirdropLobbyScreen screen) {
             screen.onSync(sync);
         }
     }
@@ -56,7 +56,7 @@ public final class AirdropLobbyClient {
     public static void applyCountdown(LobbyPackets.Countdown countdown) {
         countdownSeconds = countdown.secondsRemaining();
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        if (mc != null && mc.gui.screen() instanceof AirdropLobbyScreen screen) {
             screen.onCountdown(countdown.secondsRemaining());
         }
     }
@@ -65,9 +65,9 @@ public final class AirdropLobbyClient {
     public static void applyClosed(LobbyPackets.Closed closed) {
         UUID closedId = closed != null ? closed.lobbyId() : null;
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        if (mc != null && mc.gui.screen() instanceof AirdropLobbyScreen screen) {
             if (closedId == null || closedId.equals(screen.lobbyId())) {
-                mc.setScreen(screen.getParent());
+                mc.gui.setScreen(screen.getParent());
             }
         }
         clear();

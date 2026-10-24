@@ -1,10 +1,10 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
 import net.mcreator.radiotowers.integration.WaveSpawnTag;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ServerLevel.class)
 public class LevelTagWaveSpawnMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final Identifier PLANE_TYPE_ID = Identifier.parse("radiotowers:planeentity");
 
     /** Match {@link net.mcreator.radiotowers.events.WaveMobAggroHandler#WAVE_MOB_RANGE} so API spawns far from tower still get tagged. */
     private static final int TAG_HORIZONTAL_RANGE = 384;
@@ -32,7 +32,7 @@ public class LevelTagWaveSpawnMixin {
         if (!(entity instanceof Monster)) return;
         // Only tag zombie-family mobs for wave accounting; never tag ambient creepers/skeletons/etc.
         if (!(entity instanceof Zombie)) return;
-        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         if (PLANE_TYPE_ID.equals(typeId)) return; // never tag the airdrop plane
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         // Only tag spawns near an active wave anchor — never tag random overworld mobs during a pending airdrop.

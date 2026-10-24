@@ -41,8 +41,8 @@ public class MobNoAiWaveMixin {
     }
 
     private static boolean isWaveMob(Mob e) {
-        return e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        return e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             || WaveMobAggroHandler.isWaveSpawnedMob(e);
     }
 }

@@ -2,8 +2,8 @@ package net.mcreator.radiotowers.entity;
 
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.projectile.ThrownPotion;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.AbstractThrownPotion;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -15,8 +15,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.world.phys.Vec3;
 
 import net.mcreator.radiotowers.procedures.PlaneentityOnInitialEntitySpawnProcedure;
@@ -85,14 +83,14 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public boolean hurt(DamageSource damagesource, float amount) {
+	public boolean hurtServer(net.minecraft.server.level.ServerLevel level, DamageSource damagesource, float amount) {
 		if (damagesource.is(DamageTypes.IN_FIRE))
 			return false;
 		if (damagesource.getDirectEntity() instanceof AbstractArrow)
 			return false;
 		if (damagesource.getDirectEntity() instanceof Player)
 			return false;
-		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
+		if (damagesource.getDirectEntity() instanceof AbstractThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
 			return false;
 		if (damagesource.is(DamageTypes.FALL))
 			return false;
@@ -112,7 +110,7 @@ public class PlaneentityEntity extends Monster {
 			return false;
 		if (damagesource.is(DamageTypes.WITHER) || damagesource.is(DamageTypes.WITHER_SKULL))
 			return false;
-		return super.hurt(damagesource, amount);
+		return super.hurtServer(level, damagesource, amount);
 	}
 
 	@Override
@@ -121,35 +119,31 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public void addAdditionalSaveData(CompoundTag compound) {
-		super.addAdditionalSaveData(compound);
-		compound.putBoolean("CrashedWreck", isCrashedWreck());
-		ListTag ids = new ListTag();
-		for (String s : airdropItemIds) ids.add(net.minecraft.nbt.StringTag.valueOf(s));
-		compound.put("AirdropItemIds", ids);
-		ListTag qty = new ListTag();
-		for (Integer i : airdropQuantities) qty.add(net.minecraft.nbt.IntTag.valueOf(i));
-		compound.put("AirdropQuantities", qty);
-		compound.putInt("AirdropDifficulty", airdropDifficulty);
+	public void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput output) {
+		super.addAdditionalSaveData(output);
+		output.putBoolean("CrashedWreck", isCrashedWreck());
+		var ids = output.list("AirdropItemIds", com.mojang.serialization.Codec.STRING);
+		for (String s : airdropItemIds) ids.add(s);
+		var qty = output.list("AirdropQuantities", com.mojang.serialization.Codec.INT);
+		for (Integer i : airdropQuantities) qty.add(i);
+		output.putInt("AirdropDifficulty", airdropDifficulty);
 	}
 
 	@Override
-	public void readAdditionalSaveData(CompoundTag compound) {
-		super.readAdditionalSaveData(compound);
-		if (compound.getBoolean("CrashedWreck")) {
+	public void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput input) {
+		super.readAdditionalSaveData(input);
+		if (input.getBooleanOr("CrashedWreck", false)) {
 			markAsCrashedWreck();
 		}
 		airdropItemIds.clear();
-		ListTag ids = compound.getList("AirdropItemIds", 8);
-		for (int i = 0; i < ids.size(); i++) airdropItemIds.add(ids.get(i).getAsString());
+		for (String s : input.listOrEmpty("AirdropItemIds", com.mojang.serialization.Codec.STRING)) airdropItemIds.add(s);
 		airdropQuantities.clear();
-		ListTag qty = compound.getList("AirdropQuantities", 3);
-		for (int i = 0; i < qty.size(); i++) airdropQuantities.add(((net.minecraft.nbt.NumericTag) qty.get(i)).getAsInt());
-		if (compound.contains("AirdropDifficulty", 3)) airdropDifficulty = compound.getInt("AirdropDifficulty");
+		for (Integer i : input.listOrEmpty("AirdropQuantities", com.mojang.serialization.Codec.INT)) airdropQuantities.add(i);
+		input.getInt("AirdropDifficulty").ifPresent(v -> airdropDifficulty = v);
 	}
 
 	@Override
-	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata) {
+	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, EntitySpawnReason reason, @Nullable SpawnGroupData livingdata) {
 		SpawnGroupData retval = super.finalizeSpawn(world, difficulty, reason, livingdata);
 		if (isCrashedWreck()) {
 			markAsCrashedWreck();

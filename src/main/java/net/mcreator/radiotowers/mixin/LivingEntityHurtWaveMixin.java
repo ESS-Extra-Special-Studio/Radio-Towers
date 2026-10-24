@@ -20,20 +20,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public class LivingEntityHurtWaveMixin {
 
-    @Inject(method = "hurt", at = @At("HEAD"), remap = true)
-    private void radiotowers$forceDamageableBeforeHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurtServer", at = @At("HEAD"), remap = true)
+    private void radiotowers$forceDamageableBeforeHurt(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!(self instanceof Monster)) return;
-        if (self.level() == null || self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return;
+        if (level.isClientSide()) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         if (!isWaveMob(self)) return;
-        self.setInvulnerable(false);
+        self.setPermanentlyInvulnerable(false);
         if (self instanceof Mob mob) mob.setNoAi(false);
     }
 
     private static boolean isWaveMob(LivingEntity e) {
-        return e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        return e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             || WaveMobAggroHandler.isWaveSpawnedMob(e);
     }
 }

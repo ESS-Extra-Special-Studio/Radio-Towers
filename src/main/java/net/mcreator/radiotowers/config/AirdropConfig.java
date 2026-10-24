@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 import java.util.Collections;
@@ -322,13 +322,13 @@ public class AirdropConfig {
      * Loot table id for standard (non-catalog) airdrop crates.
      * Invalid config values fall back to {@link #DEFAULT_STANDARD_LOOT_TABLE}.
      */
-    public static ResourceLocation getStandardAirdropLootTable() {
+    public static Identifier getStandardAirdropLootTable() {
         String raw = STANDARD_AIRDROP_LOOT_TABLE.get();
         if (raw == null || raw.isBlank()) {
-            return ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+            return Identifier.parse(DEFAULT_STANDARD_LOOT_TABLE);
         }
-        ResourceLocation parsed = ResourceLocation.tryParse(raw.trim());
-        return parsed != null ? parsed : ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+        Identifier parsed = Identifier.tryParse(raw.trim());
+        return parsed != null ? parsed : Identifier.parse(DEFAULT_STANDARD_LOOT_TABLE);
     }
 
     /** Whether catalog airdrops should use ESL (preferred) or Berezka waves when a backend is present. */
@@ -339,7 +339,7 @@ public class AirdropConfig {
     /** True if this entity type is excluded from defense-wave aggro / capture. */
     public static boolean isWaveAggroExcluded(net.minecraft.world.entity.EntityType<?> type) {
         if (type == null) return false;
-        net.minecraft.resources.ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        net.minecraft.resources.Identifier id = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (id == null) return false;
         List<? extends String> list = WAVES_AGGRO_EXCLUDE_ENTITY_IDS.get();
         if (list == null || list.isEmpty()) return false;
