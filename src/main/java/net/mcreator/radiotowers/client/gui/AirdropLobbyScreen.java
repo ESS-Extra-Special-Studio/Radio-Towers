@@ -340,7 +340,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         drawHeader(guiGraphics);
@@ -500,10 +500,10 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     private record Banner(BannerTone tone, String text, int rgb) {}
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (onlineList != null && onlineList.mouseScrolled(mouseX, mouseY, delta)) return true;
-        if (memberList != null && memberList.mouseScrolled(mouseX, mouseY, delta)) return true;
-        return super.mouseScrolled(mouseX, mouseY, delta);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (onlineList != null && onlineList.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        if (memberList != null && memberList.mouseScrolled(mouseX, mouseY, scrollY)) return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override

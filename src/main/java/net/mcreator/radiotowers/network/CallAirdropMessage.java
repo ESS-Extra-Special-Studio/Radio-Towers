@@ -6,7 +6,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -68,8 +68,7 @@ public class CallAirdropMessage {
         for (int q : msg.quantities) buf.writeVarInt(q);
     }
 
-    public static void handle(CallAirdropMessage msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(CallAirdropMessage msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();
@@ -98,13 +97,11 @@ public class CallAirdropMessage {
             if (hasWaveBackend) {
                 if (PendingAirdropStorage.hasPendingForPlayer(level, sender.getUUID())) {
                     // Wave already running: do NOT change its loot order (keep what was selected when this wave started)
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                        new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
+                    RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())), PacketDistributor.PLAYER.with(sender));
                     return;
                 }
                 if (AirdropCooldown.isOnCooldown(level, sender.getUUID())) {
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                        new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
+                    RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())), PacketDistributor.PLAYER.with(sender));
                     return;
                 }
                 AirdropDifficultyTier.Tier tier = AirdropDifficultyTier.getTier(msg.totalDifficulty);
@@ -135,18 +132,15 @@ public class CallAirdropMessage {
                     // Alarm at the tower panel the player used (same X/Z as wave anchor; Y is the actual block on the structure).
                     level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
                 }
-                RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                    new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
+                RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())), PacketDistributor.PLAYER.with(sender));
             } else {
                 if (AirdropCooldown.isOnCooldown(level, sender.getUUID())) {
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                        new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
+                    RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())), PacketDistributor.PLAYER.with(sender));
                     return;
                 }
                 RadioPanelOnBlockRightClickedProcedure.execute(level, msg.pos.getX(), msg.pos.getY(), msg.pos.getZ(), msg.itemIds, msg.quantities, msg.totalDifficulty);
                 AirdropCooldown.setCooldownAfterStandardAirdrop(level, sender.getUUID());
-                RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                    new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
+                RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())), PacketDistributor.PLAYER.with(sender));
             }
         });
         ctx.setPacketHandled(true);

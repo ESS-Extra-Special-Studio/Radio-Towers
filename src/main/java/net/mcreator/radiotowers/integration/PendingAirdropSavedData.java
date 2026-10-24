@@ -96,6 +96,6 @@ public class PendingAirdropSavedData extends SavedData {
     }
 
     public static PendingAirdropSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(PendingAirdropSavedData::load, PendingAirdropSavedData::new, DATA_NAME);
+        return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(PendingAirdropSavedData::new, PendingAirdropSavedData::load, null), DATA_NAME);
     }
 }

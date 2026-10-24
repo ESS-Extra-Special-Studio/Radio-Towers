@@ -1,7 +1,6 @@
 package net.mcreator.radiotowers.entity;
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.network.packets.SpawnEntity;
 
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
@@ -32,7 +31,7 @@ import net.mcreator.radiotowers.init.RadiotowersModEntities;
 
 import javax.annotation.Nullable;
 
-public class PlaneentityEntity extends Monster {
+public class PlaneentityEntity extends Monster implements net.minecraftforge.entity.IEntityAdditionalSpawnData {
 	/** Synced wreck pose for Dead Air EB crash sites (and future grounded wrecks). */
 	public static final EntityDataAccessor<Boolean> DATA_CRASHED = SynchedEntityData.defineId(PlaneentityEntity.class,
 		EntityDataSerializers.BOOLEAN);
@@ -58,7 +57,7 @@ public class PlaneentityEntity extends Monster {
 	public void setAirdropDifficulty(int difficulty) { this.airdropDifficulty = Math.max(0, difficulty); }
 	public int getAirdropDifficulty() { return airdropDifficulty; }
 
-	public PlaneentityEntity(PlayMessages.SpawnEntity packet, Level world) {
+	public PlaneentityEntity(SpawnEntity packet, Level world) {
 		this(RadiotowersModEntities.PLANEENTITY.get(), world);
 	}
 
@@ -91,7 +90,15 @@ public class PlaneentityEntity extends Monster {
 
 	@Override
 	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
+		return net.minecraftforge.common.ForgeHooks.getEntitySpawnPacket(this);
+	}
+
+	@Override
+	public void writeSpawnData(net.minecraft.network.FriendlyByteBuf buffer) {
+	}
+
+	@Override
+	public void readSpawnData(net.minecraft.network.FriendlyByteBuf additionalData) {
 	}
 
 	@Override
@@ -136,7 +143,7 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 

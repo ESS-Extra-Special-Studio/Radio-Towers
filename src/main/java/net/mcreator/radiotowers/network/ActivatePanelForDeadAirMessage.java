@@ -2,7 +2,7 @@ package net.mcreator.radiotowers.network;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -35,8 +35,7 @@ public class ActivatePanelForDeadAirMessage {
         buf.writeBlockPos(msg.pos);
     }
 
-    public static void handle(ActivatePanelForDeadAirMessage msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(ActivatePanelForDeadAirMessage msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();

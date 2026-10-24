@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -36,9 +36,9 @@ public class RadiotowersModVariables {
 				SavedData mapdata = MapVariables.get(player.level());
 				SavedData worlddata = WorldVariables.get(player.level());
 				if (mapdata != null)
-					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(0, mapdata));
+					RadiotowersMod.PACKET_HANDLER.send(new SavedDataSyncMessage(0, mapdata), PacketDistributor.PLAYER.with(player));
 				if (worlddata != null)
-					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(1, worlddata));
+					RadiotowersMod.PACKET_HANDLER.send(new SavedDataSyncMessage(1, worlddata), PacketDistributor.PLAYER.with(player));
 			}
 		}
 
@@ -47,7 +47,7 @@ public class RadiotowersModVariables {
 			if (event.getEntity() instanceof ServerPlayer player) {
 				SavedData worlddata = WorldVariables.get(player.level());
 				if (worlddata != null)
-					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(1, worlddata));
+					RadiotowersMod.PACKET_HANDLER.send(new SavedDataSyncMessage(1, worlddata), PacketDistributor.PLAYER.with(player));
 			}
 		}
 
@@ -56,12 +56,12 @@ public class RadiotowersModVariables {
 			if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
 				WorldVariables worldVariables = WorldVariables.get(level);
 				if (worldVariables._syncDirty) {
-					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.DIMENSION.with(level::dimension), new SavedDataSyncMessage(1, worldVariables));
+					RadiotowersMod.PACKET_HANDLER.send(new SavedDataSyncMessage(1, worldVariables), PacketDistributor.DIMENSION.with(level.dimension()));
 					worldVariables._syncDirty = false;
 				}
 				MapVariables mapVariables = MapVariables.get(level);
 				if (mapVariables._syncDirty) {
-					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.ALL.noArg(), new SavedDataSyncMessage(0, mapVariables));
+					RadiotowersMod.PACKET_HANDLER.send(new SavedDataSyncMessage(0, mapVariables), PacketDistributor.ALL.noArg());
 					mapVariables._syncDirty = false;
 				}
 			}
@@ -95,7 +95,7 @@ public class RadiotowersModVariables {
 
 		public static WorldVariables get(LevelAccessor world) {
 			if (world instanceof ServerLevel level) {
-				return level.getDataStorage().computeIfAbsent(e -> WorldVariables.load(e), WorldVariables::new, DATA_NAME);
+				return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(WorldVariables::new, WorldVariables::load, null), DATA_NAME);
 			} else {
 				return clientSide;
 			}
@@ -143,7 +143,7 @@ public class RadiotowersModVariables {
 
 		public static MapVariables get(LevelAccessor world) {
 			if (world instanceof ServerLevelAccessor serverLevelAcc) {
-				return serverLevelAcc.getLevel().getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(e -> MapVariables.load(e), MapVariables::new, DATA_NAME);
+				return serverLevelAcc.getLevel().getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(new SavedData.Factory<>(MapVariables::new, MapVariables::load, null), DATA_NAME);
 			} else {
 				return clientSide;
 			}
@@ -180,8 +180,7 @@ public class RadiotowersModVariables {
 				buffer.writeNbt(message.data.save(new CompoundTag()));
 		}
 
-		public static void handleData(final SavedDataSyncMessage message, final Supplier<NetworkEvent.Context> contextSupplier) {
-			NetworkEvent.Context context = contextSupplier.get();
+		public static void handleData(final SavedDataSyncMessage message, final CustomPayloadEvent.Context context) {
 			context.enqueueWork(() -> {
 				if (!context.getDirection().getReceptionSide().isServer() && message.data != null) {
 					if (message.dataType == 0)

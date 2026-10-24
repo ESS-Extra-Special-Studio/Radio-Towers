@@ -105,7 +105,7 @@ public class AirdropToggleCommands {
         } else {
             src.sendSuccess(() -> Component.literal("Opened Call Airdrop at panel " + pos.toShortString()), false);
         }
-        RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new OpenCallAirdropPacket(pos));
+        RadiotowersMod.PACKET_HANDLER.send(new OpenCallAirdropPacket(pos), PacketDistributor.PLAYER.with(player));
         return 1;
     }
 

@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -50,8 +50,7 @@ public class WaveStatePacket {
         buf.writeBoolean(msg.nmsSuppressActive);
     }
 
-    public static void handle(WaveStatePacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(WaveStatePacket msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.getDirection().getReceptionSide().isClient()) {
                 SafeClientCalls.applyWaveStatePacket(msg.currentWave, msg.totalWaves, msg.zombiesRemaining, msg.secondsRemaining, msg.nmsSuppressActive);

@@ -1,5 +1,6 @@
 package net.mcreator.radiotowers.client.gui;
 
+import net.minecraftforge.network.PacketDistributor;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,7 +50,7 @@ public class InternetStationScreen extends EscScreen {
     }
 
     private void choose(String stationId) {
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, stationId));
+        RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, stationId), PacketDistributor.SERVER.noArg());
         if (stationParent != null) {
             stationParent.onInternetStreamChosen(stationId);
         }
@@ -58,7 +59,7 @@ public class InternetStationScreen extends EscScreen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         super.render(guiGraphics, mouseX, mouseY, partialTick);

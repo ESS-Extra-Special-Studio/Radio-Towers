@@ -33,7 +33,7 @@ public class RadiotowersModMenus {
 		default void sendMenuStateUpdate(Player player, int elementType, String name, Object elementState, boolean needClientUpdate) {
 			getMenuState().put(elementType + ":" + name, elementState);
 			if (player instanceof ServerPlayer serverPlayer) {
-				RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MenuStateUpdateMessage(elementType, name, elementState));
+				RadiotowersMod.PACKET_HANDLER.send(new MenuStateUpdateMessage(elementType, name, elementState), PacketDistributor.PLAYER.with(serverPlayer));
 			} else if (player.level().isClientSide) {
 				SafeClientCalls.onClientSendMenuStateUpdate(this, elementType, name, elementState, needClientUpdate);
 			}

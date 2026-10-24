@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -35,8 +35,7 @@ public class AirdropStatePacket {
         buf.writeVarLong(msg.cooldownEndGameTime);
     }
 
-    public static void handle(AirdropStatePacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(AirdropStatePacket msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (ctx.getDirection().getReceptionSide().isClient()) {
                 SafeClientCalls.applyAirdropStatePacket(msg.waveInProgress, msg.cooldownEndGameTime);

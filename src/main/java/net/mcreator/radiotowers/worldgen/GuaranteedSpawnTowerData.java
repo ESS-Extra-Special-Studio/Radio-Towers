@@ -33,8 +33,7 @@ public class GuaranteedSpawnTowerData extends SavedData {
 
     public static GuaranteedSpawnTowerData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(
-            GuaranteedSpawnTowerData::load,
-            GuaranteedSpawnTowerData::new,
+            new SavedData.Factory<>(GuaranteedSpawnTowerData::new, GuaranteedSpawnTowerData::load, null),
             DATA_NAME
         );
     }

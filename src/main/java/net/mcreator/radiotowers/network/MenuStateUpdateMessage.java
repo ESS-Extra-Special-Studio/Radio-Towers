@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -51,10 +51,9 @@ public class MenuStateUpdateMessage {
 		}
 	}
 
-	public static void handler(MenuStateUpdateMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
+	public static void handler(MenuStateUpdateMessage message, CustomPayloadEvent.Context context) {
 		if (message.name.length() > 256 || message.elementState instanceof String string && string.length() > 8192)
 			return;
-		NetworkEvent.Context context = contextSupplier.get();
 		context.enqueueWork(() -> {
 			if (context.getSender().containerMenu instanceof RadiotowersModMenus.MenuAccessor menu) {
 				menu.getMenuState().put(message.elementType + ":" + message.name, message.elementState);

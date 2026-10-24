@@ -1,7 +1,5 @@
 package net.mcreator.radiotowers.block;
 
-import net.minecraftforge.network.NetworkHooks;
-
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -95,7 +93,7 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 				player.sendSystemMessage(Component.literal("[RadioTowers] This airdrop crate is for lobby members only."));
 				return InteractionResult.FAIL;
 			}
-			NetworkHooks.openScreen(player, new MenuProvider() {
+			player.openMenu(new MenuProvider() {
 				@Override
 				public Component getDisplayName() {
 					return Component.translatable("block.radiotowers.airdrop_crate");

@@ -93,8 +93,7 @@ public final class AirdropLobbyService {
                 ? level.getServer().getPlayerList().getPlayer(uuid) : null;
             if (player != null) {
                 long end = AirdropCooldown.getCooldownEndGameTime(level, uuid);
-                RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
-                    new AirdropStatePacket(false, end));
+                RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(false, end), PacketDistributor.PLAYER.with(player));
             }
         }
     }
@@ -349,8 +348,7 @@ public final class AirdropLobbyService {
             for (UUID uuid : party) {
                 ServerPlayer p = level.getServer().getPlayerList().getPlayer(uuid);
                 if (p != null) {
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
-                        new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, uuid)));
+                    RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, uuid)), PacketDistributor.PLAYER.with(p));
                 }
             }
             return;
@@ -365,8 +363,7 @@ public final class AirdropLobbyService {
             AirdropCooldown.setCooldownAfterStandardAirdrop(level, uuid);
             ServerPlayer p = level.getServer().getPlayerList().getPlayer(uuid);
             if (p != null) {
-                RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
-                    new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, uuid)));
+                RadiotowersMod.PACKET_HANDLER.send(new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, uuid)), PacketDistributor.PLAYER.with(p));
             }
         }
     }

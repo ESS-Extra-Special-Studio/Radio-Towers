@@ -279,9 +279,11 @@ public final class ZombieWavesAPILoader {
             // Command args match API.startZombieWave: difficulty, enemysToSpawn, spawn_range, time_between_waves (NOT wave duration).
             int zombiesPerWave = AirdropDifficultyTier.getZombiesPerWaveForTier(waveDifficulty);
             String cmd = String.format("wave start %d %d %d %d", waveDifficulty, zombiesPerWave, spawnRange, timeBetweenWaves);
-            var source = player.createCommandSourceStack().withLevel(level).withPosition(Vec3.atCenterOf(groundPos));
-            int result = server.getCommands().performPrefixedCommand(source, cmd);
-            return result > 0;
+            int[] result = {0};
+            var source = player.createCommandSourceStack().withLevel(level).withPosition(Vec3.atCenterOf(groundPos))
+                .withCallback((success, value) -> result[0] = value);
+            server.getCommands().performPrefixedCommand(source, cmd);
+            return result[0] > 0;
         } catch (Throwable t) {
             RadiotowersMod.LOGGER.warn("[Zombie Waves] Command wave start threw: {} (cause: {})", t.getMessage(), t.getCause() != null ? t.getCause().getMessage() : "none", t);
             return false;
@@ -369,8 +371,7 @@ public final class ZombieWavesAPILoader {
         ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
         if (player != null) {
             long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(level, p.playerWhoStarted);
-            RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
-                new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
+            RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd), PacketDistributor.PLAYER.with(player));
             player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.radiotowers.airdrop.failed"));
         }
     }
@@ -488,8 +489,7 @@ public final class ZombieWavesAPILoader {
         } else {
             ACTIVE_DEFENSE_SESSION_BY_DIM.remove(dim);
         }
-        RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.DIMENSION.with(level::dimension),
-            new DefenseSessionSyncPacket(dim.location(), active));
+        RadiotowersMod.PACKET_HANDLER.send(new DefenseSessionSyncPacket(dim.location(), active), PacketDistributor.DIMENSION.with(level.dimension()));
     }
 
     /** Server -> one player: current defense session flag (call on login so client mirror matches). */
@@ -497,8 +497,7 @@ public final class ZombieWavesAPILoader {
         if (player == null) return;
         ServerLevel level = player.serverLevel();
         boolean active = ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
-        RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
-            new DefenseSessionSyncPacket(level.dimension().location(), active));
+        RadiotowersMod.PACKET_HANDLER.send(new DefenseSessionSyncPacket(level.dimension().location(), active), PacketDistributor.PLAYER.with(player));
     }
 
     /**
@@ -555,7 +554,7 @@ public final class ZombieWavesAPILoader {
             for (java.util.UUID memberId : p.effectiveMembers()) {
                 ServerPlayer m = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
                 if (m != null) {
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> m), packet);
+                    RadiotowersMod.PACKET_HANDLER.send(packet, PacketDistributor.PLAYER.with(m));
                 }
             }
         });

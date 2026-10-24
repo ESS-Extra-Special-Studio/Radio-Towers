@@ -8,7 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.integration.DefenseSessionClientMirror;
@@ -39,8 +39,7 @@ public class DefenseSessionSyncPacket {
         buf.writeBoolean(msg.active);
     }
 
-    public static void handle(DefenseSessionSyncPacket msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(DefenseSessionSyncPacket msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isClient()) return;
             ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, msg.dimensionId);

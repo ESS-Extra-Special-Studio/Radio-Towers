@@ -1,7 +1,6 @@
 package net.mcreator.radiotowers.entity;
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.network.packets.SpawnEntity;
 
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
@@ -32,7 +31,7 @@ import net.mcreator.radiotowers.init.RadiotowersModEntities;
 
 import javax.annotation.Nullable;
 
-public class AirdropentityEntity extends Monster {
+public class AirdropentityEntity extends Monster implements net.minecraftforge.entity.IEntityAdditionalSpawnData {
 	public static final EntityDataAccessor<Boolean> DATA_IsOpening = SynchedEntityData.defineId(AirdropentityEntity.class, EntityDataSerializers.BOOLEAN);
 	public final AnimationState animationState0 = new AnimationState();
 	public final AnimationState animationState1 = new AnimationState();
@@ -73,7 +72,7 @@ public class AirdropentityEntity extends Monster {
 	public void setAirdropDifficulty(int difficulty) { this.airdropDifficulty = Math.max(0, difficulty); }
 	public int getAirdropDifficulty() { return airdropDifficulty; }
 
-	public AirdropentityEntity(PlayMessages.SpawnEntity packet, Level world) {
+	public AirdropentityEntity(SpawnEntity packet, Level world) {
 		this(RadiotowersModEntities.AIRDROPENTITY.get(), world);
 	}
 
@@ -87,7 +86,15 @@ public class AirdropentityEntity extends Monster {
 
 	@Override
 	public Packet<ClientGamePacketListener> getAddEntityPacket() {
-		return NetworkHooks.getEntitySpawningPacket(this);
+		return net.minecraftforge.common.ForgeHooks.getEntitySpawnPacket(this);
+	}
+
+	@Override
+	public void writeSpawnData(net.minecraft.network.FriendlyByteBuf buffer) {
+	}
+
+	@Override
+	public void readSpawnData(net.minecraft.network.FriendlyByteBuf additionalData) {
 	}
 
 	@Override
@@ -142,7 +149,7 @@ public class AirdropentityEntity extends Monster {
 	}
 
 	@Override
-	public boolean ignoreExplosion() {
+	public boolean ignoreExplosion(net.minecraft.world.level.Explosion explosion) {
 		return true;
 	}
 

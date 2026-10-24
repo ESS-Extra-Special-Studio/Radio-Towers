@@ -1,5 +1,6 @@
 package net.mcreator.radiotowers.client.gui;
 
+import net.minecraftforge.network.PacketDistributor;
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -79,7 +80,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         hintLine1 = new EscRect(bodyRect.x() + 12, hintsTop, bodyRect.width() - 24, 22);
         hintLine2 = new EscRect(bodyRect.x() + 12, hintLine1.bottom() + 2, bodyRect.width() - 24, 22);
 
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new RequestAirdropStatePacket(panelPos));
+        RadiotowersMod.PACKET_HANDLER.send(new RequestAirdropStatePacket(panelPos), PacketDistributor.SERVER.noArg());
         refreshDefaultStationsCache();
         fetchCurrentStationFromDeadAir();
 
@@ -199,7 +200,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         }
         int nextIndex = (defaultCycleIndex + 1) % defaultStationsCache.size();
         StationOption opt = defaultStationsCache.get(nextIndex);
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, opt.stationId));
+        RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, opt.stationId), PacketDistributor.SERVER.noArg());
         currentStationId = opt.stationId;
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 0;
@@ -219,7 +220,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         }
         int nextIndex = (dynamicCycleIndex + 1) % dynamicStations.size();
         StationOption opt = dynamicStations.get(nextIndex);
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, opt.stationId));
+        RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, opt.stationId), PacketDistributor.SERVER.noArg());
         currentStationId = opt.stationId;
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 1;
@@ -243,8 +244,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     }
 
     private void onCallStandardAirdrop() {
-        RadiotowersMod.PACKET_HANDLER.sendToServer(
-            new CallAirdropMessage(panelPos, 0, Collections.emptyList(), Collections.emptyList()));
+        RadiotowersMod.PACKET_HANDLER.send(new CallAirdropMessage(panelPos, 0, Collections.emptyList(), Collections.emptyList()), PacketDistributor.SERVER.noArg());
         // Stay open so the lever shows cooldown if the server rejects or after success (Esc to close).
     }
 
@@ -254,7 +254,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         lastToggleSentAt = now;
         if (currentStationId != null && !currentStationId.isEmpty()) {
             lastStationIdBeforeTurnOff = currentStationId;
-            RadiotowersMod.PACKET_HANDLER.sendToServer(new DeactivatePanelMessage(panelPos));
+            RadiotowersMod.PACKET_HANDLER.send(new DeactivatePanelMessage(panelPos), PacketDistributor.SERVER.noArg());
             currentStationId = null;
             activeButton = -1;
             lastDynamicName = null;
@@ -263,7 +263,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 ? lastStationIdBeforeTurnOff
                 : (defaultStationsCache.isEmpty() ? "dead_air:bedrock_radio" : defaultStationsCache.get(
                     Math.min(defaultCycleIndex, defaultStationsCache.size() - 1)).stationId);
-            RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, stationToRestore));
+            RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, stationToRestore), PacketDistributor.SERVER.noArg());
             currentStationId = stationToRestore;
             int idx = findDefaultIndex(stationToRestore);
             if (idx >= 0) {
@@ -291,7 +291,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         super.render(guiGraphics, mouseX, mouseY, partialTick);

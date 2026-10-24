@@ -7,7 +7,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.network.PacketDistributor;
 import net.mcreator.radiotowers.RadiotowersMod;
 
@@ -40,8 +40,7 @@ public class BasePanelActionMessage {
         buf.writeVarInt(msg.action);
     }
 
-    public static void handle(BasePanelActionMessage msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(BasePanelActionMessage msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             ServerPlayer sender = ctx.getSender();
@@ -59,8 +58,7 @@ public class BasePanelActionMessage {
                 if (info instanceof Object[] arr && arr.length >= 2) {
                     String line = arr[0] instanceof String s ? s : String.valueOf(arr[0]);
                     boolean isThis = arr[1] instanceof Boolean b && b;
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
-                        new BaseStatusPacket(line, isThis));
+                    RadiotowersMod.PACKET_HANDLER.send(new BaseStatusPacket(line, isThis), PacketDistributor.PLAYER.with(sender));
                 }
             } catch (Throwable t) {
                 RadiotowersMod.LOGGER.error("Could not call Dead Air base API at {}: {}", msg.pos, t.getMessage(), t);

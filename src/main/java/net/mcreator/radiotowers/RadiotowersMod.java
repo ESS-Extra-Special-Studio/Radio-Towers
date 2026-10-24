@@ -3,9 +3,11 @@ package net.mcreator.radiotowers;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import net.minecraftforge.network.simple.SimpleChannel;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.Channel;
+import net.minecraftforge.network.ChannelBuilder;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.network.SimpleChannel;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.util.thread.SidedThreadGroups;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -41,7 +43,6 @@ import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
 import net.mcreator.radiotowers.integration.ZombieWavesMixinContext;
 import net.mcreator.radiotowers.init.*;
 
-import java.util.function.Supplier;
 import java.util.function.Function;
 import java.util.function.BiConsumer;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -109,12 +110,21 @@ public class RadiotowersMod {
 
 	// Start of user code block mod methods
 	// End of user code block mod methods
-	private static final String PROTOCOL_VERSION = "1";
-	public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(new ResourceLocation(MODID, MODID), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
+	private static final int PROTOCOL_VERSION = 1;
+	public static final SimpleChannel PACKET_HANDLER = ChannelBuilder
+			.named(new ResourceLocation(MODID, MODID))
+			.networkProtocolVersion(PROTOCOL_VERSION)
+			.clientAcceptedVersions(Channel.VersionTest.exact(PROTOCOL_VERSION))
+			.serverAcceptedVersions(Channel.VersionTest.exact(PROTOCOL_VERSION))
+			.simpleChannel();
 	private static int messageID = 0;
 
-	public static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, Supplier<NetworkEvent.Context>> messageConsumer) {
-		PACKET_HANDLER.registerMessage(messageID, messageType, encoder, decoder, messageConsumer);
+	public static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, CustomPayloadEvent.Context> messageConsumer) {
+		PACKET_HANDLER.messageBuilder(messageType, messageID)
+				.encoder(encoder)
+				.decoder(decoder)
+				.consumerNetworkThread(messageConsumer)
+				.add();
 		messageID++;
 	}
 
@@ -155,8 +165,8 @@ public class RadiotowersMod {
 			AirdropCooldownSavedData.get(sp.serverLevel()).clearPlayer(sp.getUUID());
 		}
 		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.serverLevel(), sp.getUUID());
-		PACKET_HANDLER.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
-				new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
+		PACKET_HANDLER.send(new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd),
+				PacketDistributor.PLAYER.with(sp));
 		// Place spawn tower into already-loaded chunks only (never force-gen).
 		net.mcreator.radiotowers.worldgen.GuaranteedSpawnTower.scheduleForPlayer(sp);
 		// Chunks (and straggler mobs) often finish loading after level load; sweep again when the player is in-world.

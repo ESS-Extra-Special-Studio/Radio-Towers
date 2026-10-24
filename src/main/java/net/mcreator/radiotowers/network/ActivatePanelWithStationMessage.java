@@ -3,7 +3,7 @@ package net.mcreator.radiotowers.network;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.event.network.CustomPayloadEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -41,8 +41,7 @@ public class ActivatePanelWithStationMessage {
         buf.writeUtf(msg.stationId);
     }
 
-    public static void handle(ActivatePanelWithStationMessage msg, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
+    public static void handle(ActivatePanelWithStationMessage msg, CustomPayloadEvent.Context ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();

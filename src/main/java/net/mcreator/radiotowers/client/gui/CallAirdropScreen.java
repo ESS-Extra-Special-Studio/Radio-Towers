@@ -1,5 +1,6 @@
 package net.mcreator.radiotowers.client.gui;
 
+import net.minecraftforge.network.PacketDistributor;
 import net.mcreator.radiotowers.airdrop.AirdropCatalog;
 import net.mcreator.radiotowers.airdrop.TaczAirdropIntegration;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -304,7 +305,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         recomputeLayoutRegions(content);
 
         // Always request wave state + Boss/Endless unlock flags (soft-dep Dead Air on server).
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new RequestAirdropStatePacket(panelPos));
+        RadiotowersMod.PACKET_HANDLER.send(new RequestAirdropStatePacket(panelPos), PacketDistributor.SERVER.noArg());
 
         turnOffButton = null;
         lobbyButton = null;
@@ -457,7 +458,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         }
         int nextIndex = (defaultCycleIndex + 1) % defaultStationsCache.size();
         StationOption opt = defaultStationsCache.get(nextIndex);
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, opt.stationId));
+        RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, opt.stationId), PacketDistributor.SERVER.noArg());
         currentStationId = opt.stationId;
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 0;
@@ -477,7 +478,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         }
         int nextIndex = (dynamicCycleIndex + 1) % dynamicStations.size();
         StationOption opt = dynamicStations.get(nextIndex);
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, opt.stationId));
+        RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, opt.stationId), PacketDistributor.SERVER.noArg());
         currentStationId = opt.stationId;
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 1;
@@ -518,7 +519,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 quantities.add(qty * entry.getDefaultStackSize());
             }
         }
-        RadiotowersMod.PACKET_HANDLER.sendToServer(new CallAirdropMessage(panelPos, total, itemIds, quantities));
+        RadiotowersMod.PACKET_HANDLER.send(new CallAirdropMessage(panelPos, total, itemIds, quantities), PacketDistributor.SERVER.noArg());
         // Clear selection so the next airdrop (if user clicks START again) only has new choices, not previous + new
         orderQuantities.clear();
         boolean hasWaveApi = ModList.get().isLoaded("berezkas_zombie_waves_api") || ModList.get().isLoaded("berezka_zombie_waves_api");
@@ -555,7 +556,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
         if (currentStationId != null && !currentStationId.isEmpty()) {
             lastStationIdBeforeTurnOff = currentStationId;
-            RadiotowersMod.PACKET_HANDLER.sendToServer(new DeactivatePanelMessage(panelPos));
+            RadiotowersMod.PACKET_HANDLER.send(new DeactivatePanelMessage(panelPos), PacketDistributor.SERVER.noArg());
             currentStationId = null;
             activeButton = -1;
             lastDynamicName = null;
@@ -564,7 +565,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 ? lastStationIdBeforeTurnOff
                 : (defaultStationsCache.isEmpty() ? "dead_air:bedrock_radio" : defaultStationsCache.get(
                     Math.min(defaultCycleIndex, defaultStationsCache.size() - 1)).stationId);
-            RadiotowersMod.PACKET_HANDLER.sendToServer(new ActivatePanelWithStationMessage(panelPos, stationToRestore));
+            RadiotowersMod.PACKET_HANDLER.send(new ActivatePanelWithStationMessage(panelPos, stationToRestore), PacketDistributor.SERVER.noArg());
             currentStationId = stationToRestore;
             int idx = findDefaultIndex(stationToRestore);
             if (idx >= 0) {
@@ -636,29 +637,25 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     private void buildBaseTabLayout() {
         if (bodyContentRect == null) return;
-        RadiotowersMod.PACKET_HANDLER.sendToServer(
-            new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
-                net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY));
+        RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY), PacketDistributor.SERVER.noArg());
         EscRect body = bodyContentRect;
         int btnW = Math.min(180, body.width() - 32);
         int y = 24;
         addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.claim_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
-            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
-                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
-                    net.mcreator.radiotowers.network.BasePanelActionMessage.SET)));
+            b -> RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.SET), PacketDistributor.SERVER.noArg()));
         y += 28;
         addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.unset_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
-            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
-                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
-                    net.mcreator.radiotowers.network.BasePanelActionMessage.UNSET)));
+            b -> RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.UNSET), PacketDistributor.SERVER.noArg()));
         y += 28;
         addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.refresh_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
-            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
-                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
-                    net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY)));
+            b -> RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY), PacketDistributor.SERVER.noArg()));
     }
 
     /** Called from {@link net.mcreator.radiotowers.network.BaseStatusPacket} on the client. */
@@ -712,7 +709,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
 
@@ -943,9 +940,9 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollAmount) {
-        if (!isAirdropTab()) return super.mouseScrolled(mouseX, mouseY, scrollAmount);
-        if (listAreaRect == null) return super.mouseScrolled(mouseX, mouseY, scrollAmount);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (!isAirdropTab()) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        if (listAreaRect == null) return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
         int listBottom = getListBottom();
         int listPanelLeft = listPanelLeft();
         int listTop = listTop();
@@ -954,10 +951,10 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         if (overList) {
             int visibleRows = getListVisibleRows();
             int maxScroll = Math.max(0, filteredIndices.size() - visibleRows);
-            scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - (int) scrollAmount));
+            scrollOffset = (int) Math.max(0, Math.min(maxScroll, scrollOffset - (int) scrollY));
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollAmount);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     public boolean isPauseScreen() { return false; }

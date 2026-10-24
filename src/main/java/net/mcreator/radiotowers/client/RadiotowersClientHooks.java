@@ -1,5 +1,6 @@
 package net.mcreator.radiotowers.client;
 
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.fml.ModList;
@@ -88,7 +89,7 @@ public final class RadiotowersClientHooks {
 		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor && needClientUpdate) {
 			accessor.updateMenuState(elementType, name, elementState);
 		}
-		RadiotowersMod.PACKET_HANDLER.sendToServer(new MenuStateUpdateMessage(elementType, name, elementState));
+		RadiotowersMod.PACKET_HANDLER.send(new MenuStateUpdateMessage(elementType, name, elementState), PacketDistributor.SERVER.noArg());
 	}
 
 	public static void applyMenuStateUpdateFromServer(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState) {

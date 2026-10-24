@@ -144,8 +144,7 @@ public final class EslWaveIntegration {
                 ServerPlayer p = ctx.triggeringPlayer();
                 if (p != null && p.isAlive()) {
                     long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(level, p.getUUID());
-                    RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
-                        new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
+                    RadiotowersMod.PACKET_HANDLER.send(new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd), PacketDistributor.PLAYER.with(p));
                     p.sendSystemMessage(Component.translatable("message.radiotowers.airdrop.failed"));
                 }
             });
@@ -192,7 +191,7 @@ public final class EslWaveIntegration {
                     ServerPlayer m = level.getServer() != null
                         ? level.getServer().getPlayerList().getPlayer(memberId) : null;
                     if (m != null) {
-                        RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> m), packet);
+                        RadiotowersMod.PACKET_HANDLER.send(packet, PacketDistributor.PLAYER.with(m));
                     }
                 }
             });

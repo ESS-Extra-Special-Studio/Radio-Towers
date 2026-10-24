@@ -362,7 +362,7 @@ public final class GuaranteedSpawnTower {
                     BlockPos p = origin.offset(dx, dy, dz);
                     BlockState state = level.getBlockState(p);
                     if (isVegetation(state) || state.is(BlockTags.REPLACEABLE) || state.is(Blocks.SNOW)
-                        || state.is(Blocks.GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.FERN)
+                        || state.is(Blocks.SHORT_GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.FERN)
                         || state.is(Blocks.LARGE_FERN) || state.is(Blocks.DEAD_BUSH)) {
                         level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
                     }

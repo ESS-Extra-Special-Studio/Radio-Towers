@@ -58,7 +58,7 @@ public class AirdropCooldownSavedData extends SavedData {
         }
         ServerLevel storage = level.getServer().getLevel(Level.OVERWORLD);
         if (storage == null) storage = level;
-        return storage.getDataStorage().computeIfAbsent(AirdropCooldownSavedData::load, AirdropCooldownSavedData::new, DATA_NAME);
+        return storage.getDataStorage().computeIfAbsent(new SavedData.Factory<>(AirdropCooldownSavedData::new, AirdropCooldownSavedData::load, null), DATA_NAME);
     }
 
     /** Game time when cooldown ends, or 0 if none / expired (expired entries are removed). */
