@@ -80,7 +80,7 @@ public final class AirdropCatalog {
                     return ItemStack.EMPTY;
                 }
             }
-            Item item = BuiltInRegistries.ITEM.get(itemId);
+            Item item = BuiltInRegistries.ITEM.getValue(itemId);
             return item != null && item != Items.AIR
                 ? new ItemStack(item, defaultStackSize)
                 : ItemStack.EMPTY;
@@ -96,7 +96,7 @@ public final class AirdropCatalog {
                     return false;
                 }
             }
-            Item item = BuiltInRegistries.ITEM.get(itemId);
+            Item item = BuiltInRegistries.ITEM.getValue(itemId);
             return item != null && item != Items.AIR;
         }
     }
@@ -198,10 +198,9 @@ public final class AirdropCatalog {
                 try {
                     ResourceLocation rl = ResourceLocation.parse(tagId);
                     TagKey<Item> key = TagKey.create(Registries.ITEM, rl);
-                    var named = BuiltInRegistries.ITEM.getTag(key);
-                    if (named.isEmpty()) continue;
+                    var named = BuiltInRegistries.ITEM.getTagOrEmpty(key);
                     int tagPoints = TAG_DIFFICULTY.getOrDefault(tagId, defaultDifficulty);
-                    for (var holder : named.get()) {
+                    for (var holder : named) {
                         Item item = holder.value();
                         ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
                         if (id == null || item == Items.AIR || blacklist.matches(id)) continue;
@@ -464,11 +463,11 @@ public final class AirdropCatalog {
                     var tag = net.mcreator.radiotowers.ItemCustomNbt.copy(stack);
                     if (tag != null) {
                         if (tag.contains("GunId")) {
-                            ResourceLocation gunId = ResourceLocation.tryParse(tag.getString("GunId"));
+                            ResourceLocation gunId = ResourceLocation.tryParse(tag.getStringOr("GunId", ""));
                             if (matches(gunId)) return true;
                         }
                         if (tag.contains("AmmoId")) {
-                            ResourceLocation ammoId = ResourceLocation.tryParse(tag.getString("AmmoId"));
+                            ResourceLocation ammoId = ResourceLocation.tryParse(tag.getStringOr("AmmoId", ""));
                             if (matches(ammoId)) return true;
                         }
                     }

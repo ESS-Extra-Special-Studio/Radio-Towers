@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
 
@@ -32,10 +32,6 @@ sourceSets {
 
 neoForge {
     version = project.neo_version
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
     runs {
         client {
             client()
@@ -59,9 +55,9 @@ neoForge {
 }
 
 dependencies {
-    implementation "uk.co.extraspecialstudio:extraspeciallib:${esl_version}"
-    implementation "uk.co.extraspecialstudio:extraspecialcore:${esc_version}"
-    implementation "uk.co.extraspecialstudio:esn:${esn_version}"
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESL - 1.21.10 NeoForge/build/libs/extraspeciallib-1.2.0+1.21.10-neoforge.jar')
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESC - 1.21.10 NeoForge/build/libs/extraspecialcore-2.1.0+1.21.10-neoforge.jar')
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESN - 1.21.10 NeoForge/build/libs/esn-1.0.2+1.21.10-neoforge.jar')
 }
 
 afterEvaluate {
@@ -119,8 +115,6 @@ tasks.register('copyToNeoForgeTestPack') {
         }
     }
 }
-
-tasks.named('build').configure { finalizedBy 'copyToNeoForgeTestPack' }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

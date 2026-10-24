@@ -134,16 +134,16 @@ public class RadiotowersMod {
 		// Testing: when both cooldown configs are 0, clear any persisted cooldown from older sessions.
 		if (net.mcreator.radiotowers.config.AirdropConfig.getStandardAirdropCooldownTicks() == 0
 				&& net.mcreator.radiotowers.config.AirdropConfig.getWaveDeliveryCooldownTicks() == 0) {
-			AirdropCooldownSavedData.get(sp.serverLevel()).clearPlayer(sp.getUUID());
+			AirdropCooldownSavedData.get(sp.level()).clearPlayer(sp.getUUID());
 		}
-		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.serverLevel(), sp.getUUID());
+		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.level(), sp.getUUID());
 		RadiotowersNetwork.sendToPlayer(sp,
 				new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
 		// Place spawn tower into already-loaded chunks only (never force-gen).
 		net.mcreator.radiotowers.worldgen.GuaranteedSpawnTower.scheduleForPlayer(sp);
 		// Chunks (and straggler mobs) often finish loading after level load; sweep again when the player is in-world.
-		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.serverLevel())) {
-			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.serverLevel());
+		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.level())) {
+			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.level());
 		}
 	}
 

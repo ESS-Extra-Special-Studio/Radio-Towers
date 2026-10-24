@@ -57,7 +57,7 @@ public class ActivatePanelWithStationMessage implements CustomPacketPayload {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             var sender = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.level();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air") || msg.stationId == null || msg.stationId.isEmpty()) return;
             ResourceLocation id = ResourceLocation.tryParse(msg.stationId);

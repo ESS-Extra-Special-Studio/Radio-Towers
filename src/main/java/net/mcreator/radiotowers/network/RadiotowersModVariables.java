@@ -10,14 +10,18 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
+import com.mojang.serialization.Codec;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
+import net.mcreator.radiotowers.integration.LegacySavedDataFiles;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.nbt.CompoundTag;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 
@@ -66,19 +70,16 @@ public class RadiotowersModVariables {
 		public static final String DATA_NAME = "radiotowers_worldvars";
 		boolean _syncDirty = false;
 
-		public static WorldVariables load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
-			WorldVariables data = new WorldVariables();
-			data.read(tag);
-			return data;
-		}
+		public static final Codec<WorldVariables> CODEC = CompoundTag.CODEC.xmap(tag -> new WorldVariables(), WorldVariables::toTag);
 
 		public void read(CompoundTag nbt) {
 		}
 
-		@Override
-		public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
-			return nbt;
+		public CompoundTag toTag() {
+			return new CompoundTag();
 		}
+		public static final SavedDataType<WorldVariables> TYPE = new SavedDataType<>(
+			DATA_NAME, WorldVariables::new, CODEC, DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
 
 		public void markSyncDirty() {
 			this.setDirty();
@@ -89,7 +90,7 @@ public class RadiotowersModVariables {
 
 		public static WorldVariables get(LevelAccessor world) {
 			if (world instanceof ServerLevel level) {
-				return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(WorldVariables::new, WorldVariables::load), DATA_NAME);
+				return level.getDataStorage().computeIfAbsent(TYPE);
 			} else {
 				return clientSide;
 			}
@@ -106,26 +107,38 @@ public class RadiotowersModVariables {
 		public double PlaneSpawnHeightUpRangeMax = 15.0;
 		public double PlaneSpawnHeightDownRangeMax = 15.0;
 
-		public static MapVariables load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+		public static final Codec<MapVariables> CODEC = CompoundTag.CODEC.xmap(MapVariables::fromTag, MapVariables::toTag);
+		public static final SavedDataType<MapVariables> TYPE = new SavedDataType<>(
+			DATA_NAME,
+			context -> {
+				CompoundTag legacy = LegacySavedDataFiles.readLegacy(context.level(), DATA_NAME);
+				MapVariables data = legacy != null ? fromTag(legacy) : new MapVariables();
+				if (legacy != null) data.setDirty();
+				return data;
+			},
+			context -> CODEC,
+			DataFixTypes.SAVED_DATA_COMMAND_STORAGE);
+
+		public static MapVariables fromTag(CompoundTag tag) {
 			MapVariables data = new MapVariables();
 			data.read(tag);
 			return data;
 		}
 
-		public void read(CompoundTag nbt) {
-			PlaneSpawnRange = nbt.getDouble("PlaneSpawnRange");
-			PlaneSpawnHeight = nbt.getDouble("PlaneSpawnHeight");
-			PlaneSpawnHeightUpRangeMax = nbt.getDouble("PlaneSpawnHeightUpRangeMax");
-			PlaneSpawnHeightDownRangeMax = nbt.getDouble("PlaneSpawnHeightDownRangeMax");
-		}
-
-		@Override
-		public CompoundTag save(CompoundTag nbt, net.minecraft.core.HolderLookup.Provider registries) {
+		public CompoundTag toTag() {
+			CompoundTag nbt = new CompoundTag();
 			nbt.putDouble("PlaneSpawnRange", PlaneSpawnRange);
 			nbt.putDouble("PlaneSpawnHeight", PlaneSpawnHeight);
 			nbt.putDouble("PlaneSpawnHeightUpRangeMax", PlaneSpawnHeightUpRangeMax);
 			nbt.putDouble("PlaneSpawnHeightDownRangeMax", PlaneSpawnHeightDownRangeMax);
 			return nbt;
+		}
+
+		public void read(CompoundTag nbt) {
+			PlaneSpawnRange = nbt.getDoubleOr("PlaneSpawnRange", PlaneSpawnRange);
+			PlaneSpawnHeight = nbt.getDoubleOr("PlaneSpawnHeight", PlaneSpawnHeight);
+			PlaneSpawnHeightUpRangeMax = nbt.getDoubleOr("PlaneSpawnHeightUpRangeMax", PlaneSpawnHeightUpRangeMax);
+			PlaneSpawnHeightDownRangeMax = nbt.getDoubleOr("PlaneSpawnHeightDownRangeMax", PlaneSpawnHeightDownRangeMax);
 		}
 
 		public void markSyncDirty() {
@@ -137,7 +150,7 @@ public class RadiotowersModVariables {
 
 		public static MapVariables get(LevelAccessor world) {
 			if (world instanceof ServerLevelAccessor serverLevelAcc) {
-				return serverLevelAcc.getLevel().getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(new SavedData.Factory<>(MapVariables::new, MapVariables::load), DATA_NAME);
+				return serverLevelAcc.getLevel().getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(TYPE);
 			} else {
 				return clientSide;
 			}
@@ -180,16 +193,16 @@ public class RadiotowersModVariables {
 		public static void buffer(SavedDataSyncMessage message, FriendlyByteBuf buffer) {
 			buffer.writeInt(message.dataType);
 			if (message.data != null)
-				buffer.writeNbt(message.data.save(new CompoundTag(), net.minecraft.core.RegistryAccess.EMPTY));
+				buffer.writeNbt(message.data instanceof MapVariables map ? map.toTag() : ((WorldVariables) message.data).toTag());
 		}
 
 		public static void handleData(final SavedDataSyncMessage message, final IPayloadContext context) {
 			context.enqueueWork(() -> {
 				if (message.data != null) {
 					if (message.dataType == 0)
-						MapVariables.clientSide.read(message.data.save(new CompoundTag(), net.minecraft.core.RegistryAccess.EMPTY));
+						MapVariables.clientSide.read(((MapVariables) message.data).toTag());
 					else
-						WorldVariables.clientSide.read(message.data.save(new CompoundTag(), net.minecraft.core.RegistryAccess.EMPTY));
+						WorldVariables.clientSide.read(((WorldVariables) message.data).toTag());
 				}
 			});
 		}

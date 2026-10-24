@@ -1,9 +1,7 @@
 package net.mcreator.radiotowers.client.model;
 
-import org.apache.http.impl.conn.Wire;
-
-import net.minecraft.world.entity.Entity;
 import net.minecraft.resources.ResourceLocation;
+import net.mcreator.radiotowers.client.renderer.AirdropRenderState;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -20,7 +18,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 // Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
-public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T> {
+public class Modelairdropcrate_Converted extends EntityModel<AirdropRenderState> {
 	// This layer location should be baked with EntityRendererProvider.Context in
 	// the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("radiotowers", "modelairdropcrate_converted"), "main");
@@ -35,6 +33,7 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 	public final ModelPart RightHook;
 
 	public Modelairdropcrate_Converted(ModelPart root) {
+		super(root);
 		this.airdrop = root.getChild("airdrop");
 		this.parachute = this.airdrop.getChild("parachute");
 		this.Glider = this.parachute.getChild("Glider");
@@ -199,11 +198,7 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 	}
 
 	@Override
-	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+	public void setupAnim(AirdropRenderState state) {
 	}
 
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		airdrop.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
-	}
 }

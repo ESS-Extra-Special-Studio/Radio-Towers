@@ -8,7 +8,7 @@ import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.mcreator.radiotowers.RadiotowersMod;
 
-@EventBusSubscriber(modid = RadiotowersMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = RadiotowersMod.MODID, value = Dist.CLIENT)
 public class AirdropWaveOverlayRegistration {
 
     @SubscribeEvent

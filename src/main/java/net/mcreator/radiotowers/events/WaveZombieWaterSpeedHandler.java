@@ -27,10 +27,10 @@ public class WaveZombieWaterSpeedHandler {
         if (event.getEntity() == null || event.getEntity().level().isClientSide()) return;
         if (!(event.getEntity().level() instanceof ServerLevel)) return;
         if (!(event.getEntity() instanceof Zombie zombie)) return;
-        if (!zombie.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            && !zombie.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG))
+        if (!zombie.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            && !zombie.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false))
             return;
         if (!zombie.isInWater()) return;
-        zombie.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, SPEED_DURATION_TICKS, SPEED_AMPLIFIER));
+        zombie.addEffect(new MobEffectInstance(MobEffects.SPEED, SPEED_DURATION_TICKS, SPEED_AMPLIFIER));
     }
 }

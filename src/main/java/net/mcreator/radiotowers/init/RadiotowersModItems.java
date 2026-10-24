@@ -6,10 +6,9 @@ package net.mcreator.radiotowers.init;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.common.DeferredSpawnEggItem;
-
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.BlockItem;
 
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -27,8 +26,8 @@ public class RadiotowersModItems {
 		RADIO_PANEL = block(RadiotowersModBlocks.RADIO_PANEL);
 		AIRDROP_CRATE = block(RadiotowersModBlocks.AIRDROP_CRATE);
 		TRASHBLOCK = block(RadiotowersModBlocks.TRASHBLOCK);
-		AIRDROPENTITY_SPAWN_EGG = REGISTRY.register("airdropentity_spawn_egg", () -> new DeferredSpawnEggItem(RadiotowersModEntities.AIRDROPENTITY, -1, -1, new Item.Properties()));
-		PLANEENTITY_SPAWN_EGG = REGISTRY.register("planeentity_spawn_egg", () -> new DeferredSpawnEggItem(RadiotowersModEntities.PLANEENTITY, -1, -1, new Item.Properties()));
+		AIRDROPENTITY_SPAWN_EGG = REGISTRY.register("airdropentity_spawn_egg", () -> new SpawnEggItem(new Item.Properties().spawnEgg(RadiotowersModEntities.AIRDROPENTITY.get())));
+		PLANEENTITY_SPAWN_EGG = REGISTRY.register("planeentity_spawn_egg", () -> new SpawnEggItem(new Item.Properties().spawnEgg(RadiotowersModEntities.PLANEENTITY.get())));
 	}
 
 	// Start of user code block custom items

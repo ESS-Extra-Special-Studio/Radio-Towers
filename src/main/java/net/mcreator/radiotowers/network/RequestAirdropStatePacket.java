@@ -55,8 +55,8 @@ public class RequestAirdropStatePacket implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             ServerPlayer player = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
-            if (player == null || player.serverLevel() == null) return;
-            var serverLevel = player.serverLevel();
+            if (player == null || player.level() == null) return;
+            var serverLevel = player.level();
             long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(serverLevel, player.getUUID());
             // Always sync Boss / Endless unlock flags (soft-dep Dead Air; both false without DA).
             RadiotowersNetwork.sendToPlayer(player,

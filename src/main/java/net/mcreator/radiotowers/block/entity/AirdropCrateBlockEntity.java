@@ -1,6 +1,10 @@
 package net.mcreator.radiotowers.block.entity;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.Containers;
+import com.mojang.serialization.Codec;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.item.ItemStack;
@@ -51,44 +55,48 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	}
 
 	@Override
-	protected void loadAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.loadAdditional(compound, registries);
-		this.filledFromOrder = compound.getBoolean("FilledFromOrder");
-		this.structureLoot = compound.getBoolean("StructureLoot");
+	protected void loadAdditional(ValueInput input) {
+		super.loadAdditional(input);
+		this.filledFromOrder = input.getBooleanOr("FilledFromOrder", false);
+		this.structureLoot = input.getBooleanOr("StructureLoot", false);
 		allowedOpeners.clear();
-		if (compound.contains("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_LIST)) {
-			net.minecraft.nbt.ListTag list = compound.getList("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_STRING);
-			for (int i = 0; i < list.size(); i++) {
-				try {
-					allowedOpeners.add(java.util.UUID.fromString(list.get(i).getAsString()));
-				} catch (Exception ignored) {}
-			}
-		}
-		if (!this.tryLoadLootTable(compound))
+		input.listOrEmpty("AllowedOpenerStrings", Codec.STRING).stream().forEach(s -> {
+			try {
+				allowedOpeners.add(java.util.UUID.fromString(s));
+			} catch (Exception ignored) {}
+		});
+		if (!this.tryLoadLootTable(input))
 			this.stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
-		ContainerHelper.loadAllItems(compound, this.stacks, registries);
-		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", net.minecraft.nbt.Tag.TAG_STRING)) {
-			ResourceLocation table = ResourceLocation.tryParse(compound.getString("LootTable"));
-			if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
-				this.structureLoot = true;
+		ContainerHelper.loadAllItems(input, this.stacks);
+		if (!this.filledFromOrder && !this.structureLoot) {
+			input.getString("LootTable").ifPresent(raw -> {
+				ResourceLocation table = ResourceLocation.tryParse(raw);
+				if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
+					this.structureLoot = true;
+			});
 		}
 	}
 
 	@Override
-	protected void saveAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.saveAdditional(compound, registries);
-		compound.putBoolean("FilledFromOrder", this.filledFromOrder);
-		compound.putBoolean("StructureLoot", this.structureLoot);
+	protected void saveAdditional(ValueOutput output) {
+		super.saveAdditional(output);
+		output.putBoolean("FilledFromOrder", this.filledFromOrder);
+		output.putBoolean("StructureLoot", this.structureLoot);
 		if (!allowedOpeners.isEmpty()) {
-			net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
-			for (java.util.UUID u : allowedOpeners) {
-				list.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
-			}
-			compound.put("AllowedOpenerStrings", list);
+			var list = output.list("AllowedOpenerStrings", Codec.STRING);
+			for (java.util.UUID u : allowedOpeners) list.add(u.toString());
 		}
-		if (!this.trySaveLootTable(compound)) {
-			ContainerHelper.saveAllItems(compound, this.stacks, registries);
+		if (!this.trySaveLootTable(output)) {
+			ContainerHelper.saveAllItems(output, this.stacks);
 		}
+	}
+
+	@Override
+	public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+		if (this.level != null) {
+			Containers.dropContents(this.level, pos, this);
+		}
+		super.preRemoveSideEffects(pos, state);
 	}
 
 	@Override

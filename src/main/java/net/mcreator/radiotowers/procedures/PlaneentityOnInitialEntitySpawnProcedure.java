@@ -4,7 +4,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.Mth;
@@ -76,9 +76,9 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		}
 		if (world instanceof Level _level) {
 			if (!_level.isClientSide()) {
-				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
+				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.getValue(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
 			} else {
-				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
+				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.getValue(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
 			}
 		}
 		RadiotowersMod.queueServerWork(65, () -> {
@@ -113,7 +113,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					dropX = x + Math.cos(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 					dropZ = z + Math.sin(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 				}
-				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED);
+				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), EntitySpawnReason.MOB_SUMMONED);
 				if (entityToSpawn != null) {
 					entityToSpawn.setYRot(entity.getYRot());
 					entityToSpawn.setYBodyRot(entity.getYRot());

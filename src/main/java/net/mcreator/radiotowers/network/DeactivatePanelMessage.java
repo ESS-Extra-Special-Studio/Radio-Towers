@@ -51,7 +51,7 @@ public class DeactivatePanelMessage implements CustomPacketPayload {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             var sender = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.level();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air")) return;
             try {

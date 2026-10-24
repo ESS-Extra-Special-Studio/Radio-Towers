@@ -64,8 +64,8 @@ public class LevelAddEntityMixin {
         if (RADIOTOWERS_ADDING_REPLACEMENT.get()) return false;
         if (!(entity instanceof Mob mob) || !(entity instanceof Monster)) return false;
         if (PLANE_TYPE_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()))) return false;
-        if (entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) return false;
-        if (entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) return false;
+        if (entity.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)) return false;
+        if (entity.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false)) return false;
 
         PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, entity.blockPosition(), WAVE_MOB_RANGE);
         if (pending == null && WaveMobAggroHandler.entityYLooksLikeSkyHighApiSpawn(level, entity))
@@ -86,7 +86,7 @@ public class LevelAddEntityMixin {
         if (nextSpawnCount > pending.maxZombiesPerWave) return false;
         int index = pending.spawnCountThisWave;
         Vec3 pos = WaveMobAggroHandler.getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        Zombie vanilla = EntityType.ZOMBIE.create(level, net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
         if (vanilla == null) return false;
         vanilla.setPos(pos.x, pos.y, pos.z);
         vanilla.setDeltaMovement(Vec3.ZERO);

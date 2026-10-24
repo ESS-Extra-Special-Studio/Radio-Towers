@@ -7,11 +7,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 
 import net.mcreator.radiotowers.world.inventory.AirdropCrateguiMenu;
 import net.mcreator.radiotowers.init.RadiotowersModScreens;
-
-import com.mojang.blaze3d.systems.RenderSystem;
 
 public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateguiMenu> implements RadiotowersModScreens.ScreenAccessor {
 	private final Level world;
@@ -47,20 +47,16 @@ public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateg
 
 	@Override
 	protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-		RenderSystem.setShaderColor(1, 1, 1, 1);
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		guiGraphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
-		RenderSystem.disableBlend();
+		guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, this.leftPos, this.topPos, 0f, 0f, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
 	}
 
 	@Override
-	public boolean keyPressed(int key, int b, int c) {
-		if (key == 256) {
+	public boolean keyPressed(KeyEvent event) {
+		if (event.key() == 256) {
 			this.minecraft.player.closeContainer();
 			return true;
 		}
-		return super.keyPressed(key, b, c);
+		return super.keyPressed(event);
 	}
 
 	@Override

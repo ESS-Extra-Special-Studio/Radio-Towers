@@ -2,7 +2,11 @@ package net.mcreator.radiotowers.entity;
 
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.projectile.ThrownPotion;
+import net.minecraft.world.entity.projectile.AbstractThrownPotion;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import com.mojang.serialization.Codec;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Monster;
@@ -17,8 +21,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 
 import net.mcreator.radiotowers.procedures.AirdropentityOnInitialEntitySpawnProcedure;
 
@@ -93,14 +95,14 @@ public class AirdropentityEntity extends Monster {
 	}
 
 	@Override
-	public boolean hurt(DamageSource damagesource, float amount) {
+	public boolean hurtServer(ServerLevel level, DamageSource damagesource, float amount) {
 		if (damagesource.is(DamageTypes.IN_FIRE))
 			return false;
 		if (damagesource.getDirectEntity() instanceof AbstractArrow)
 			return false;
 		if (damagesource.getDirectEntity() instanceof Player)
 			return false;
-		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
+		if (damagesource.getDirectEntity() instanceof AbstractThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
 			return false;
 		if (damagesource.is(DamageTypes.FALL))
 			return false;
@@ -120,7 +122,7 @@ public class AirdropentityEntity extends Monster {
 			return false;
 		if (damagesource.is(DamageTypes.WITHER) || damagesource.is(DamageTypes.WITHER_SKULL))
 			return false;
-		return super.hurt(damagesource, amount);
+		return super.hurtServer(level, damagesource, amount);
 	}
 
 	@Override
@@ -129,55 +131,42 @@ public class AirdropentityEntity extends Monster {
 	}
 
 	@Override
-	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata) {
+	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, EntitySpawnReason reason, @Nullable SpawnGroupData livingdata) {
 		SpawnGroupData retval = super.finalizeSpawn(world, difficulty, reason, livingdata);
 		AirdropentityOnInitialEntitySpawnProcedure.execute(this);
 		return retval;
 	}
 
 	@Override
-	public void addAdditionalSaveData(CompoundTag compound) {
-		super.addAdditionalSaveData(compound);
-		compound.putBoolean("DataIsOpening", this.entityData.get(DATA_IsOpening));
-		ListTag ids = new ListTag();
-		for (String s : airdropItemIds) ids.add(net.minecraft.nbt.StringTag.valueOf(s));
-		compound.put("AirdropItemIds", ids);
-		ListTag qty = new ListTag();
-		for (Integer i : airdropQuantities) qty.add(net.minecraft.nbt.IntTag.valueOf(i));
-		compound.put("AirdropQuantities", qty);
-		compound.putInt("AirdropDifficulty", airdropDifficulty);
-		compound.putBoolean("MembersOnlyCrate", membersOnlyCrate);
-		ListTag members = new ListTag();
-		for (java.util.UUID u : lobbyMembers) members.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
-		compound.put("LobbyMembers", members);
+	public void addAdditionalSaveData(ValueOutput output) {
+		super.addAdditionalSaveData(output);
+		output.putBoolean("DataIsOpening", this.entityData.get(DATA_IsOpening));
+		var ids = output.list("AirdropItemIds", Codec.STRING);
+		for (String s : airdropItemIds) ids.add(s);
+		var qty = output.list("AirdropQuantities", Codec.INT);
+		for (Integer i : airdropQuantities) qty.add(i);
+		output.putInt("AirdropDifficulty", airdropDifficulty);
+		output.putBoolean("MembersOnlyCrate", membersOnlyCrate);
+		var members = output.list("LobbyMembers", Codec.STRING);
+		for (java.util.UUID u : lobbyMembers) members.add(u.toString());
 	}
 
 	@Override
-	public void readAdditionalSaveData(CompoundTag compound) {
-		super.readAdditionalSaveData(compound);
-		if (compound.contains("DataIsOpening"))
-			this.entityData.set(DATA_IsOpening, compound.getBoolean("DataIsOpening"));
+	public void readAdditionalSaveData(ValueInput input) {
+		super.readAdditionalSaveData(input);
+		this.entityData.set(DATA_IsOpening, input.getBooleanOr("DataIsOpening", true));
 		airdropItemIds.clear();
-		if (compound.contains("AirdropItemIds", 9)) {
-			ListTag ids = compound.getList("AirdropItemIds", 8);
-			for (int i = 0; i < ids.size(); i++) airdropItemIds.add(ids.get(i).getAsString());
-		}
+		input.listOrEmpty("AirdropItemIds", Codec.STRING).stream().forEach(airdropItemIds::add);
 		airdropQuantities.clear();
-		if (compound.contains("AirdropQuantities", 9)) {
-			ListTag qty = compound.getList("AirdropQuantities", 3);
-			for (int i = 0; i < qty.size(); i++) airdropQuantities.add(((net.minecraft.nbt.NumericTag) qty.get(i)).getAsInt());
-		}
-		if (compound.contains("AirdropDifficulty", 3)) airdropDifficulty = compound.getInt("AirdropDifficulty");
-		membersOnlyCrate = compound.getBoolean("MembersOnlyCrate");
+		input.listOrEmpty("AirdropQuantities", Codec.INT).stream().forEach(airdropQuantities::add);
+		airdropDifficulty = input.getIntOr("AirdropDifficulty", 0);
+		membersOnlyCrate = input.getBooleanOr("MembersOnlyCrate", false);
 		lobbyMembers.clear();
-		if (compound.contains("LobbyMembers", 9)) {
-			ListTag members = compound.getList("LobbyMembers", 8);
-			for (int i = 0; i < members.size(); i++) {
-				try {
-					lobbyMembers.add(java.util.UUID.fromString(members.get(i).getAsString()));
-				} catch (Exception ignored) {}
-			}
-		}
+		input.listOrEmpty("LobbyMembers", Codec.STRING).stream().forEach(s -> {
+			try {
+				lobbyMembers.add(java.util.UUID.fromString(s));
+			} catch (Exception ignored) {}
+		});
 	}
 
 	@Override

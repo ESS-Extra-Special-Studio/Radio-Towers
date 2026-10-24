@@ -6,6 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -47,7 +49,7 @@ public class AirdropLeverWidget extends AbstractWidget {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
+    public void onClick(MouseButtonEvent event, boolean doubled) {
         if (canActivateLever()) onActivate.run();
     }
 
@@ -61,7 +63,7 @@ public class AirdropLeverWidget extends AbstractWidget {
         boolean on = AirdropWaveHudData.isWaveInProgress()
             || (cdEnd > 0 && Minecraft.getInstance().level != null && Minecraft.getInstance().level.getGameTime() < cdEnd);
         ResourceLocation tex = on ? TEX_ON : TEX_OFF;
-        guiGraphics.blit(tex, x, y, 0, 0, w, h, w, h);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, tex, x, y, 0f, 0f, w, h, w, h);
         if (AirdropWaveHudData.isWaveInProgress() && AirdropWaveHudData.getTotalWaves() > 0) {
             int secRem = AirdropWaveHudData.getSecondsRemaining();
             int min = secRem / 60;

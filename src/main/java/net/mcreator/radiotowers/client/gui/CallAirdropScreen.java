@@ -16,6 +16,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -823,7 +824,10 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
         if (button == 0) {
             if (tabAirdropRect != null && tabAirdropRect.contains(mouseX, mouseY)) {
                 selectTab(ModeTab.AIRDROP);
@@ -838,8 +842,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 return true;
             }
         }
-        if (!isAirdropTab()) return super.mouseClicked(mouseX, mouseY, button);
-        if (listAreaRect == null) return super.mouseClicked(mouseX, mouseY, button);
+        if (!isAirdropTab()) return super.mouseClicked(event, doubled);
+        if (listAreaRect == null) return super.mouseClicked(event, doubled);
         int visibleRows = getListVisibleRows();
         int listBottom = getListBottom();
         int trackHeight = listAreaRect.height();
@@ -858,7 +862,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         }
         if (mouseX >= listLeft && mouseX <= listLeft + listWidth && mouseY >= listTop && mouseY < listBottom) {
             int row = (int) ((mouseY - listTop) / ROW_HEIGHT);
-            if (row >= visibleRows) return super.mouseClicked(mouseX, mouseY, button);
+            if (row >= visibleRows) return super.mouseClicked(event, doubled);
             int idx = scrollOffset + row;
             if (idx >= 0 && idx < listSize) {
                 int catalogIdx = filteredIndices.get(idx);
@@ -872,7 +876,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override

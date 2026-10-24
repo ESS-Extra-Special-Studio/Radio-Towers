@@ -84,7 +84,7 @@ public class CallAirdropMessage implements CustomPacketPayload {
         ctx.enqueueWork(() -> {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             var sender = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
-            if (sender == null || sender.serverLevel() == null) return;
+            if (sender == null || sender.level() == null) return;
             boolean standardAirdrop = (msg.totalDifficulty == 0 && (msg.itemIds == null || msg.itemIds.isEmpty()));
             if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
                 sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));
@@ -100,7 +100,7 @@ public class CallAirdropMessage implements CustomPacketPayload {
                     "[RadioTowers] Guests are in your airdrop lobby - use Lobby → Go (everyone must be ready)."));
                 return;
             }
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.level();
             // Wave integration priority: ESL > Berezka > immediate
             boolean hasWaveBackend = !standardAirdrop
                     && net.mcreator.radiotowers.config.AirdropConfig.shouldUseZombieWavesForAirdrop()
@@ -178,7 +178,7 @@ public class CallAirdropMessage implements CustomPacketPayload {
     private static int surfaceAirYFromHeightmap(ServerLevel level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
         int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        return Math.max(level.getMinY(), Math.min(h, level.getMaxY() - 1));
     }
 
     /**

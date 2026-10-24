@@ -2,7 +2,7 @@ package net.mcreator.radiotowers.integration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.Level;
 
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -367,7 +367,7 @@ public final class PendingAirdropStorage {
         Pending p = take(level, waveStartPos);
         if (p == null) return;
         clearAllDeliveryOrders();
-        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, p.panelPos, MobSpawnType.MOB_SUMMONED);
+        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, p.panelPos, EntitySpawnReason.MOB_SUMMONED);
         if (planeEntity != null) {
             planeEntity.setYRot(level.getRandom().nextFloat() * 360F);
             if (planeEntity instanceof PlaneentityEntity pe) {
