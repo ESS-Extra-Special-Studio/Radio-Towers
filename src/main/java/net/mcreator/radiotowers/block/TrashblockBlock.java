@@ -10,26 +10,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.core.BlockPos;
 
 public class TrashblockBlock extends Block {
 	public TrashblockBlock() {
 		super(BlockBehaviour.Properties.of()
-				.sound(new DeferredSoundType(1.0f, 1.0f, () -> BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.metal.break")), () -> BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:trash_walking")),
-						() -> BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.metal.place")), () -> BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.metal.hit")),
-						() -> BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("block.metal.fall"))))
-				.strength(1f, 10f).noCollission().friction(0.5f).speedFactor(0.4f).jumpFactor(1.1f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+				.sound(new DeferredSoundType(1.0f, 1.0f, () -> BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse("block.metal.break")).orElse(null), () -> BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse("radiotowers:trash_walking")).orElse(null),
+						() -> BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse("block.metal.place")).orElse(null), () -> BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse("block.metal.hit")).orElse(null),
+						() -> BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse("block.metal.fall")).orElse(null)))
+				.strength(1f, 10f).noCollision().friction(0.5f).speedFactor(0.4f).jumpFactor(1.1f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 	}
 
 	@Override
-	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+	protected boolean propagatesSkylightDown(BlockState state) {
 		return true;
-	}
-
-	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
-		return 0;
 	}
 
 	@Override

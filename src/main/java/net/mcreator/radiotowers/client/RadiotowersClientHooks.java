@@ -23,7 +23,7 @@ public final class RadiotowersClientHooks {
 	}
 
 	public static void openRadioPanel(BlockPos pos) {
-		if (Minecraft.getInstance().screen != null) {
+		if (Minecraft.getInstance().gui.screen() != null) {
 			return;
 		}
 		boolean berezka = ZombieWavesAPILoader.isZombieWavesAPILoaded();
@@ -32,15 +32,15 @@ public final class RadiotowersClientHooks {
 		boolean deadAir = ModList.get().isLoaded(DEAD_AIR_MODID);
 		RadiotowersMod.LOGGER.warn("[RadioPanel] openRadioPanel: berezka={} esl={} wavesApi={} deadAir={}", berezka, esl, wavesApi, deadAir);
 		if (wavesApi) {
-			Minecraft.getInstance().setScreen(new CallAirdropScreen(pos));
+			Minecraft.getInstance().gui.setScreen(new CallAirdropScreen(pos));
 		} else if (deadAir) {
 			// Dead Air without waves: station settings + standard (loot-table) lever.
-			Minecraft.getInstance().setScreen(new PanelSettingsScreen(pos));
+			Minecraft.getInstance().gui.setScreen(new PanelSettingsScreen(pos));
 		} else {
 			// RadioTowers alone (no Dead Air, no waves API): still open the catalog airdrop UI.
 			// Previously this path auto-sent CallAirdropMessage(empty) → loot-table crate with
 			// random forge-tag junk and no player selection — broken "standalone airdrop" support.
-			Minecraft.getInstance().setScreen(new CallAirdropScreen(pos));
+			Minecraft.getInstance().gui.setScreen(new CallAirdropScreen(pos));
 		}
 	}
 
@@ -79,14 +79,14 @@ public final class RadiotowersClientHooks {
 	}
 
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {
-		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor && needClientUpdate) {
+		if (Minecraft.getInstance().gui.screen() instanceof RadiotowersModScreens.ScreenAccessor accessor && needClientUpdate) {
 			accessor.updateMenuState(elementType, name, elementState);
 		}
 		RadiotowersNetwork.sendToServer(new MenuStateUpdateMessage(elementType, name, elementState));
 	}
 
 	public static void applyMenuStateUpdateFromServer(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState) {
-		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor) {
+		if (Minecraft.getInstance().gui.screen() instanceof RadiotowersModScreens.ScreenAccessor accessor) {
 			accessor.updateMenuState(elementType, name, elementState);
 		}
 	}

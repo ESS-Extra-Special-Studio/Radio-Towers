@@ -57,7 +57,7 @@ public class WaveEndDetector {
                     int taggedAlive = WaveMobAggroHandler.countAliveWaveMobsInLevelByTag(level);
                     RadiotowersMod.LOGGER.warn(
                         "[WaveDebug] dim={} pos={} spawn={}/{} killed={}/{} trackedAlive={} taggedAlive={} waveAgeTicks={}",
-                        level.dimension().location(),
+                        level.dimension().identifier(),
                         waveStartPos,
                         p.spawnCountThisWave,
                         p.maxZombiesPerWave,

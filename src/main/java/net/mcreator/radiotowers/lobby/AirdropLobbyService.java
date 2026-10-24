@@ -119,7 +119,7 @@ public final class AirdropLobbyService {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
             return;
         }
-        ServerPlayer target = findOnlineByName(host.getServer(), targetName.trim());
+        ServerPlayer target = findOnlineByName(host.level().getServer(), targetName.trim());
         if (target == null) {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
             return;
@@ -130,7 +130,7 @@ public final class AirdropLobbyService {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.target_busy"));
             return;
         }
-        if (!lobby.invite(target.getUUID(), target.getGameProfile().getName())) {
+        if (!lobby.invite(target.getUUID(), target.getGameProfile().name())) {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_failed"));
             return;
         }
@@ -198,7 +198,7 @@ public final class AirdropLobbyService {
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
         if (!lobby.kick(target)) return;
-        ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
+        ServerPlayer victim = host.level().getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
             victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.kicked"));
         }
@@ -211,7 +211,7 @@ public final class AirdropLobbyService {
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
         if (!lobby.cancelInvite(target)) return;
-        ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
+        ServerPlayer victim = host.level().getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
             victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_cancelled"));
         }
@@ -267,7 +267,7 @@ public final class AirdropLobbyService {
             new ArrayList<>(msg.itemIds() != null ? msg.itemIds() : List.of()),
             new ArrayList<>(msg.quantities() != null ? msg.quantities() : List.of())));
         int seconds = AirdropConfig.getLobbyCountdownSeconds();
-        COUNTDOWN_END.put(lobby.id(), host.serverLevel().getGameTime() + seconds * 20L);
+        COUNTDOWN_END.put(lobby.id(), host.level().getGameTime() + seconds * 20L);
         broadcastCountdown(lobby, seconds);
         syncToLobby(lobby);
     }
@@ -292,7 +292,7 @@ public final class AirdropLobbyService {
         }
         if (!standardAirdrop && !AirdropDifficultyTier.canStart(totalDifficulty)) return;
 
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = sender.level();
         UUID owner = orderOwner != null ? orderOwner : sender.getUUID();
         Set<UUID> party = new LinkedHashSet<>();
         party.add(owner);
@@ -383,7 +383,7 @@ public final class AirdropLobbyService {
     private static int surfaceY(ServerLevel level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
         int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        return Math.max(level.getMinY(), Math.min(h, level.getMaxY() - 1));
     }
 
     @SubscribeEvent
@@ -449,7 +449,7 @@ public final class AirdropLobbyService {
             UUID id = lobby.id();
             // Mid-countdown: start for remaining online members instead of wasting the party.
             if (PENDING_GO.containsKey(id) && COUNTDOWN_END.containsKey(id)) {
-                finishCountdown(player.getServer(), id);
+                finishCountdown(player.level().getServer(), id);
             } else {
                 EslLobbyManager.cancel(lobby);
             }
@@ -483,7 +483,7 @@ public final class AirdropLobbyService {
     }
 
     private static EslLobby ensureLobby(ServerPlayer host, BlockPos panelPos) {
-        EslLobby existing = findLobbyAt(host.serverLevel(), panelPos);
+        EslLobby existing = findLobbyAt(host.level(), panelPos);
         if (existing != null) {
             if (!existing.hostUuid().equals(host.getUUID())) {
                 host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
@@ -499,8 +499,8 @@ public final class AirdropLobbyService {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.already_in_lobby"));
             return null;
         }
-        EslLobby lobby = EslLobbyManager.create(host.serverLevel(), panelPos.immutable(),
-            host.getUUID(), host.getGameProfile().getName(), AirdropConfig.getLobbyMaxPlayers());
+        EslLobby lobby = EslLobbyManager.create(host.level(), panelPos.immutable(),
+            host.getUUID(), host.getGameProfile().name(), AirdropConfig.getLobbyMaxPlayers());
         lobby.setInviteTimeoutTicks((int) AirdropConfig.getLobbyInviteTimeoutTicks());
         return lobby;
     }
@@ -614,31 +614,31 @@ public final class AirdropLobbyService {
     private static void sendInviteChat(ServerPlayer host, ServerPlayer target, EslLobby lobby) {
         String id = lobby.id().toString();
         MutableComponent msg = Component.translatable("message.radiotowers.lobby.invite",
-                host.getGameProfile().getName())
+                host.getGameProfile().name())
             .append(Component.literal(" "))
             .append(Component.translatable("message.radiotowers.lobby.invite_tp_warn")
                 .withStyle(ChatFormatting.YELLOW))
             .append(Component.literal(" "));
         MutableComponent accept = Component.literal("[Accept]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.GREEN).withBold(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby accept " + id))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                .withClickEvent(new ClickEvent.RunCommand("/radiotowers lobby accept " + id))
+                .withHoverEvent(new HoverEvent.ShowText(
                     Component.translatable("message.radiotowers.lobby.accept_hover"))));
         MutableComponent decline = Component.literal("[Decline]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.RED).withBold(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby decline " + id))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                .withClickEvent(new ClickEvent.RunCommand("/radiotowers lobby decline " + id))
+                .withHoverEvent(new HoverEvent.ShowText(
                     Component.translatable("message.radiotowers.lobby.decline_hover"))));
         target.sendSystemMessage(msg.append(accept).append(Component.literal(" ")).append(decline));
         host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_sent",
-            target.getGameProfile().getName()));
+            target.getGameProfile().name()));
     }
 
     private static void sendReadyHint(ServerPlayer player) {
         MutableComponent ready = Component.literal("[Ready]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withBold(true)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby ready"))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                .withClickEvent(new ClickEvent.RunCommand("/radiotowers lobby ready"))
+                .withHoverEvent(new HoverEvent.ShowText(
                     Component.translatable("message.radiotowers.lobby.ready_hover"))));
         player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_hint")
             .append(Component.literal(" ")).append(ready)
@@ -647,17 +647,17 @@ public final class AirdropLobbyService {
     }
 
     public static void teleportNearPanel(ServerPlayer player, BlockPos panel) {
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         int x = panel.getX();
         int z = panel.getZ() + 2;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        y = Math.max(level.getMinBuildHeight() + 1, Math.min(y, level.getMaxBuildHeight() - 2));
+        y = Math.max(level.getMinY() + 1, Math.min(y, level.getMaxY() - 2));
         BlockPos dest = new BlockPos(x, y, z);
         if (!level.getBlockState(dest).isAir() || !level.getBlockState(dest.above()).isAir()) {
             dest = panel.above();
         }
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
-            player.getYRot(), player.getXRot());
+            java.util.Set.of(), player.getYRot(), player.getXRot(), false);
     }
 
     @Nullable
@@ -665,10 +665,10 @@ public final class AirdropLobbyService {
         if (server == null || name == null) return null;
         String needle = name.toLowerCase(Locale.ROOT);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (p.getGameProfile().getName().equalsIgnoreCase(name)) return p;
+            if (p.getGameProfile().name().equalsIgnoreCase(name)) return p;
         }
         for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-            if (p.getGameProfile().getName().toLowerCase(Locale.ROOT).startsWith(needle)) return p;
+            if (p.getGameProfile().name().toLowerCase(Locale.ROOT).startsWith(needle)) return p;
         }
         return null;
     }

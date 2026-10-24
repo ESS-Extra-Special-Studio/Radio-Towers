@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
@@ -94,7 +95,7 @@ public final class EslWaveIntegration {
 
             for (int w = 0; w < numWaves; w++) {
                 EslWaveDefinition wave = EslWaveDefinition.builder()
-                    .spawn(EslSpawnEntry.of(EntityType.ZOMBIE, maxZombiesPerWave)
+                    .spawn(EslSpawnEntry.of(EntityTypes.ZOMBIE, maxZombiesPerWave)
                         .radius(8, 30)
                         .spawnDelay(3) // stagger spawns slightly
                         .onSpawn(mob -> {

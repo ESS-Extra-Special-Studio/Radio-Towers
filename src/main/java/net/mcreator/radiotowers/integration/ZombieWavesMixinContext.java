@@ -53,7 +53,7 @@ public final class ZombieWavesMixinContext {
     }
 
     public static String describeContext() {
-        return "pending=" + (pendingLevel != null ? pendingLevel.dimension().location().toString() : "null")
-            + " current=" + (currentLevel != null ? currentLevel.dimension().location().toString() : "null");
+        return "pending=" + (pendingLevel != null ? pendingLevel.dimension().identifier().toString() : "null")
+            + " current=" + (currentLevel != null ? currentLevel.dimension().identifier().toString() : "null");
     }
 }

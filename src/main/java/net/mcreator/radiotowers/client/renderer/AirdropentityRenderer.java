@@ -1,49 +1,34 @@
 package net.mcreator.radiotowers.client.renderer;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.resources.Identifier;
 
-import net.mcreator.radiotowers.entity.AirdropentityEntity;
-import net.mcreator.radiotowers.client.model.animations.airdropcrate_ConvertedAnimation;
 import net.mcreator.radiotowers.client.model.Modelairdropcrate_Converted;
+import net.mcreator.radiotowers.entity.AirdropentityEntity;
 
-public class AirdropentityRenderer extends MobRenderer<AirdropentityEntity, Modelairdropcrate_Converted<AirdropentityEntity>> {
+public class AirdropentityRenderer extends MobRenderer<AirdropentityEntity, AirdropentityRenderState, Modelairdropcrate_Converted> {
+
+	private static final Identifier TEXTURE = Identifier.parse("radiotowers:textures/entities/airdrop_crate2.png");
+
 	public AirdropentityRenderer(EntityRendererProvider.Context context) {
-		super(context, new AnimatedModel(context.bakeLayer(Modelairdropcrate_Converted.LAYER_LOCATION)), 1f);
+		super(context, new Modelairdropcrate_Converted(context.bakeLayer(Modelairdropcrate_Converted.LAYER_LOCATION)), 1f);
 	}
 
 	@Override
-	public ResourceLocation getTextureLocation(AirdropentityEntity entity) {
-		return ResourceLocation.parse("radiotowers:textures/entities/airdrop_crate2.png");
+	public Identifier getTextureLocation(AirdropentityRenderState state) {
+		return TEXTURE;
 	}
 
-	private static final class AnimatedModel extends Modelairdropcrate_Converted<AirdropentityEntity> {
-		private final ModelPart root;
-		private final HierarchicalModel animator = new HierarchicalModel<AirdropentityEntity>() {
-			@Override
-			public ModelPart root() {
-				return root;
-			}
+	@Override
+	public AirdropentityRenderState createRenderState() {
+		return new AirdropentityRenderState();
+	}
 
-			@Override
-			public void setupAnim(AirdropentityEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-				this.root().getAllParts().forEach(ModelPart::resetPose);
-				this.animate(entity.animationState0, airdropcrate_ConvertedAnimation.openglider, ageInTicks, 1f);
-				this.animate(entity.animationState1, airdropcrate_ConvertedAnimation.falling, ageInTicks, 1f);
-			}
-		};
-
-		public AnimatedModel(ModelPart root) {
-			super(root);
-			this.root = root;
-		}
-
-		@Override
-		public void setupAnim(AirdropentityEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-			animator.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
-		}
+	@Override
+	public void extractRenderState(AirdropentityEntity entity, AirdropentityRenderState state, float partialTicks) {
+		super.extractRenderState(entity, state, partialTicks);
+		state.animationState0.copyFrom(entity.animationState0);
+		state.animationState1.copyFrom(entity.animationState1);
 	}
 }

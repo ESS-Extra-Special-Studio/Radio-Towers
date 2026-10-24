@@ -11,7 +11,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.mcreator.radiotowers.client.gui.AirdropCrateguiScreen;
 import net.mcreator.radiotowers.RadiotowersMod;
 
-@EventBusSubscriber(modid = RadiotowersMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = RadiotowersMod.MODID, value = Dist.CLIENT)
 public class RadiotowersModScreens {
 	@SubscribeEvent
 	public static void registerScreens(RegisterMenuScreensEvent event) {

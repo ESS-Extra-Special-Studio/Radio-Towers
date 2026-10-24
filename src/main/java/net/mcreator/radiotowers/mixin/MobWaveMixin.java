@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Mob.class)
 public class MobWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final Identifier PLANE_TYPE_ID = Identifier.parse("radiotowers:planeentity");
 
     @ModifyVariable(method = "setNoAi", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceNoAiOffDuringWave(boolean noAi) {
@@ -34,8 +34,8 @@ public class MobWaveMixin {
     }
 
     private static boolean isWaveMob(Mob e) {
-        return e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
+        return e.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || e.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
             || WaveMobAggroHandler.isWaveSpawnedMob(e);
     }
 }

@@ -13,7 +13,7 @@ import net.mcreator.radiotowers.client.model.Modelplane;
 import net.mcreator.radiotowers.client.model.Modelplanecrashed;
 import net.mcreator.radiotowers.client.model.Modelairdropcrate_Converted;
 
-@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID, value = Dist.CLIENT)
 public class RadiotowersModModels {
 	@SubscribeEvent
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {

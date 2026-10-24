@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev' version '2.0.148'
     id 'idea'
 }
 
@@ -19,7 +19,7 @@ tasks.named('jar', Jar).configure {
     }
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 sourceSets {
     berezkaStub {
@@ -31,10 +31,10 @@ sourceSets {
 }
 
 neoForge {
-    version = project.neo_version
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
+    enable {
+        version = project.neo_version
+        // Vineflower emits a protected override of public Named.contents() and javac rejects the Minecraft sources.
+        disableRecompilation = true
     }
     runs {
         client {
@@ -59,9 +59,9 @@ neoForge {
 }
 
 dependencies {
-    implementation "uk.co.extraspecialstudio:extraspeciallib:${esl_version}"
-    implementation "uk.co.extraspecialstudio:extraspecialcore:${esc_version}"
-    implementation "uk.co.extraspecialstudio:esn:${esn_version}"
+    compileOnly files('C:/Users/Ksivi/IdeaProjects/ESL - 26.2 NeoForge/build/libs/extraspeciallib-1.2.0+26.2-neoforge.jar')
+    compileOnly files('C:/Users/Ksivi/IdeaProjects/ESC - 26.2 NeoForge/build/libs/extraspecialcore-2.1.0+26.2-neoforge.jar')
+    compileOnly files('C:/Users/Ksivi/IdeaProjects/ESN - 26.2 NeoForge/build/libs/esn-1.0.2+26.2-neoforge.jar')
 }
 
 afterEvaluate {
@@ -119,8 +119,6 @@ tasks.register('copyToNeoForgeTestPack') {
         }
     }
 }
-
-tasks.named('build').configure { finalizedBy 'copyToNeoForgeTestPack' }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
