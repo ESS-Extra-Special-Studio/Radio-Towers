@@ -383,7 +383,7 @@ public final class AirdropLobbyService {
     private static int surfaceY(ServerLevel level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
         int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        return Math.max(level.getMinY(), Math.min(h, level.getMaxY() - 1));
     }
 
     @SubscribeEvent
@@ -651,13 +651,13 @@ public final class AirdropLobbyService {
         int x = panel.getX();
         int z = panel.getZ() + 2;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        y = Math.max(level.getMinBuildHeight() + 1, Math.min(y, level.getMaxBuildHeight() - 2));
+        y = Math.max(level.getMinY() + 1, Math.min(y, level.getMaxY() - 2));
         BlockPos dest = new BlockPos(x, y, z);
         if (!level.getBlockState(dest).isAir() || !level.getBlockState(dest.above()).isAir()) {
             dest = panel.above();
         }
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
-            player.getYRot(), player.getXRot());
+            java.util.Set.of(), player.getYRot(), player.getXRot(), false);
     }
 
     @Nullable

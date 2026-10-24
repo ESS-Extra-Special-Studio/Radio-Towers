@@ -102,7 +102,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 							if (TaczAirdropIntegration.isTaczContentId(id) && (path.startsWith("ammo/") || path.startsWith("gun/"))) {
 								// Never use registry lookup for tacz content IDs (no such registry key); skip to avoid iron ammo box
 							} else {
-								var item = BuiltInRegistries.ITEM.get(id);
+								var item = BuiltInRegistries.ITEM.getValue(id);
 								if (item != null && item != Items.AIR) {
 									stack = new ItemStack(item);
 								} else {
@@ -177,7 +177,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		int bx = Mth.floor(x);
 		int bz = Mth.floor(z);
 		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+		int minY = world.getMinY();
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			BlockState st = world.getBlockState(p);
@@ -246,7 +246,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		int bx = Mth.floor(x);
 		int bz = Mth.floor(z);
 		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+		int minY = world.getMinY();
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			if (world.getBlockState(p).blocksMotion())

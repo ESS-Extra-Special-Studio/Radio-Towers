@@ -7,6 +7,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -126,9 +127,9 @@ public class WaveMobAggroHandler {
 
     /** Top solid Y to start {@link #findGroundY} from at this column (heightmap; works on high terrain, unlike old Y<=80 cap). */
     private static int columnTopSolidForGroundScan(ServerLevel level, int x, int z) {
-        int minY = level.getMinBuildHeight();
+        int minY = level.getMinY();
         int airAbove = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(minY, Math.min(airAbove - 1, level.getMaxBuildHeight() - 1));
+        return Math.max(minY, Math.min(airAbove - 1, level.getMaxY() - 1));
     }
 
     /** Feet Y clearly above this column's outdoor surface — typical bogus API sky spawn (not a mountain surface). */
@@ -409,7 +410,7 @@ public class WaveMobAggroHandler {
         if (REPLACE_WAVE_MOBS_WITH_VANILLA && likelyBrokenApiSpawn) {
             int index = pending.spawnCountThisWave - 1;
             Vec3 pos = getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-            Zombie vanilla = EntityType.ZOMBIE.create(level);
+            Zombie vanilla = EntityType.ZOMBIE.create(level, EntitySpawnReason.MOB_SUMMONED);
             if (vanilla != null) {
                 vanilla.setPos(pos.x, pos.y, pos.z);
                 vanilla.setDeltaMovement(Vec3.ZERO);
@@ -559,8 +560,8 @@ public class WaveMobAggroHandler {
     private static void processWaveMobs(ServerLevel level) {
         PendingAirdropStorage.forEachPendingIn(level, (waveStartPos, pending) -> {
             AABB box = new AABB(
-                waveStartPos.getX() - WAVE_MOB_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_MOB_RANGE,
-                waveStartPos.getX() + WAVE_MOB_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_MOB_RANGE);
+                waveStartPos.getX() - WAVE_MOB_RANGE, level.getMinY(), waveStartPos.getZ() - WAVE_MOB_RANGE,
+                waveStartPos.getX() + WAVE_MOB_RANGE, level.getMaxY(), waveStartPos.getZ() + WAVE_MOB_RANGE);
             int[] counts = new int[3];
             long now = level.getGameTime();
             for (Monster mob : level.getEntitiesOfClass(Monster.class, box)) {
@@ -750,7 +751,7 @@ public class WaveMobAggroHandler {
         SKY_POSITION_ALREADY_FIXED.remove(oldId);
         LAST_NO_LINE_OF_SIGHT_RESPAWN_AT.remove(oldId);
         mob.discard();
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        Zombie vanilla = EntityType.ZOMBIE.create(level, EntitySpawnReason.MOB_SUMMONED);
         if (vanilla != null) {
             vanilla.setPos(x, y, z);
             vanilla.setDeltaMovement(Vec3.ZERO);
@@ -846,8 +847,8 @@ public class WaveMobAggroHandler {
     public static void applyAgroToPreExistingMobs(ServerLevel level, BlockPos waveStartPos, PendingAirdropStorage.Pending pending) {
         if (level == null || waveStartPos == null || pending == null) return;
         AABB box = new AABB(
-            waveStartPos.getX() - PREEXISTING_AGRO_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - PREEXISTING_AGRO_RANGE,
-            waveStartPos.getX() + PREEXISTING_AGRO_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + PREEXISTING_AGRO_RANGE);
+            waveStartPos.getX() - PREEXISTING_AGRO_RANGE, level.getMinY(), waveStartPos.getZ() - PREEXISTING_AGRO_RANGE,
+            waveStartPos.getX() + PREEXISTING_AGRO_RANGE, level.getMaxY(), waveStartPos.getZ() + PREEXISTING_AGRO_RANGE);
         for (Monster mob : level.getEntitiesOfClass(Monster.class, box)) {
             if (!mob.isAlive() || mob.isRemoved()) continue;
             if (AirdropConfig.isWaveAggroExcluded(mob.getType())) continue;
@@ -969,8 +970,8 @@ public class WaveMobAggroHandler {
      * Skips leaves and logs so ring spawns land on terrain under trees instead of treetops.
      */
     private static int findGroundY(ServerLevel level, int x, int z, int maxStartY) {
-        int minY = level.getMinBuildHeight();
-        for (int y = Math.min(maxStartY, level.getMaxBuildHeight() - 1); y >= minY; y--) {
+        int minY = level.getMinY();
+        for (int y = Math.min(maxStartY, level.getMaxY() - 1); y >= minY; y--) {
             BlockState st = level.getBlockState(new BlockPos(x, y, z));
             if (!st.blocksMotion()) continue;
             if (isBadWaveSpawnSupport(st)) continue;
@@ -989,7 +990,7 @@ public class WaveMobAggroHandler {
      * Returns groundY+1 if that block is already air; otherwise scans up to STANDING_SEARCH_UP.
      */
     private static double findStandingY(ServerLevel level, int x, int z, int groundY) {
-        int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxBuildHeight() - 1);
+        int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxY() - 1);
         for (int y = groundY + 1; y <= maxY; y++) {
             if (level.getBlockState(new BlockPos(x, y, z)).isAir())
                 return y;
@@ -999,8 +1000,8 @@ public class WaveMobAggroHandler {
 
     /** Same as findStandingY but requires the block above (y+1) to be air and the block below feet (y-1) to not be fluid (no spawn in/on water or lava). */
     private static double findStandingYWithHeadroom(ServerLevel level, int x, int z, int groundY) {
-        int minY = level.getMinBuildHeight();
-        int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxBuildHeight() - 2);
+        int minY = level.getMinY();
+        int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxY() - 2);
         for (int y = groundY + 1; y <= maxY; y++) {
             if (y - 1 < minY) continue;
             if (level.getBlockState(new BlockPos(x, y, z)).isAir()
@@ -1013,7 +1014,7 @@ public class WaveMobAggroHandler {
 
     /** True if the block at (x, y, z) or the block below is fluid (water/lava) — used to reject spawns in/over water. */
     private static boolean isFeetOrBelowFluid(ServerLevel level, int x, int y, int z) {
-        if (y <= level.getMinBuildHeight()) return true;
+        if (y <= level.getMinY()) return true;
         return !level.getBlockState(new BlockPos(x, y, z)).getFluidState().isEmpty()
             || !level.getBlockState(new BlockPos(x, y - 1, z)).getFluidState().isEmpty();
     }
@@ -1039,8 +1040,8 @@ public class WaveMobAggroHandler {
             int groundY = findGroundY(level, useX, useZ, maxGroundY);
             double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
             int feetY = (int) Math.floor(surfaceY);
-            if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-                for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
+            if (feetY > level.getMinY() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
+                for (int y = feetY - 1; y >= level.getMinY(); y--) {
                     if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
                         surfaceY = y + 1.0;
                         break;
@@ -1048,13 +1049,13 @@ public class WaveMobAggroHandler {
                 }
             }
             feetY = (int) Math.floor(surfaceY);
-            if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+            if ((groundY <= level.getMinY() && surfaceY <= level.getMinY() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
                 level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
                 int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
                 surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
                 feetY = (int) Math.floor(surfaceY);
             }
-            if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ))
+            if (feetY > level.getMinY() && isFeetOrBelowFluid(level, useX, feetY, useZ))
                 continue; // in water, try next angle
             return new Vec3(useX + 0.5, surfaceY, useZ + 0.5);
         }
@@ -1140,22 +1141,22 @@ public class WaveMobAggroHandler {
         int groundY = findGroundY(level, useX, useZ, maxGroundY);
         double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
         int feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-            for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
+        if (feetY > level.getMinY() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
+            for (int y = feetY - 1; y >= level.getMinY(); y--) {
                 if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
                     surfaceY = y + 1.0;
                     break;
                 }
             }
         }
-        if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+        if ((groundY <= level.getMinY() && surfaceY <= level.getMinY() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
             if (skipBadSpots) return false;
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
         }
         feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
+        if (feetY > level.getMinY() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
             if (skipBadSpots) return false;
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
@@ -1172,7 +1173,7 @@ public class WaveMobAggroHandler {
 
     /** True if block at feet or feet+1 is fluid, or no solid below (hole). */
     private static boolean isInHoleOrWater(ServerLevel level, int x, int feetY, int z) {
-        if (feetY <= level.getMinBuildHeight()) return true;
+        if (feetY <= level.getMinY()) return true;
         if (level.getBlockState(new BlockPos(x, feetY, z)).getFluidState().isEmpty()
             && level.getBlockState(new BlockPos(x, feetY + 1, z)).getFluidState().isEmpty()
             && level.getBlockState(new BlockPos(x, feetY - 1, z)).blocksMotion())
@@ -1200,22 +1201,22 @@ public class WaveMobAggroHandler {
         int groundY = findGroundY(level, useX, useZ, maxGroundY);
         double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
         int feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-            for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
+        if (feetY > level.getMinY() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
+            for (int y = feetY - 1; y >= level.getMinY(); y--) {
                 if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
                     surfaceY = y + 1.0;
                     break;
                 }
             }
         }
-        if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+        if ((groundY <= level.getMinY() && surfaceY <= level.getMinY() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
         }
         // Never place in/on water or lava: use tower ground Y but keep ring X/Z
         feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
+        if (feetY > level.getMinY() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);

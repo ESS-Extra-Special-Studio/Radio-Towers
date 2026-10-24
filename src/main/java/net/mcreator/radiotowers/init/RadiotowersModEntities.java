@@ -11,6 +11,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
@@ -29,7 +30,7 @@ public class RadiotowersModEntities {
 			EntityType.Builder.<PlaneentityEntity>of(PlaneentityEntity::new, MobCategory.MONSTER).fireImmune().sized(0.6f, 1.8f).clientTrackingRange(64).updateInterval(3));
 
 	private static <T extends Entity> DeferredHolder<EntityType<?>, EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
-		return REGISTRY.register(registryname, () -> entityTypeBuilder.build(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, registryname).toString()));
+		return REGISTRY.register(registryname, () -> entityTypeBuilder.build(ResourceKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, registryname))));
 	}
 
 	@SubscribeEvent

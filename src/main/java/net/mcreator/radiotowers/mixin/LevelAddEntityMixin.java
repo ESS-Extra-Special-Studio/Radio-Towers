@@ -3,6 +3,7 @@ package net.mcreator.radiotowers.mixin;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
@@ -86,7 +87,7 @@ public class LevelAddEntityMixin {
         if (nextSpawnCount > pending.maxZombiesPerWave) return false;
         int index = pending.spawnCountThisWave;
         Vec3 pos = WaveMobAggroHandler.getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        Zombie vanilla = EntityType.ZOMBIE.create(level, EntitySpawnReason.MOB_SUMMONED);
         if (vanilla == null) return false;
         vanilla.setPos(pos.x, pos.y, pos.z);
         vanilla.setDeltaMovement(Vec3.ZERO);

@@ -1,7 +1,8 @@
 package net.mcreator.radiotowers.client.model;
 
-import net.minecraft.world.entity.Entity;
 import net.minecraft.resources.ResourceLocation;
+import net.mcreator.radiotowers.client.model.animations.planeAnimation;
+import net.mcreator.radiotowers.client.renderer.PlaneentityRenderer;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -12,13 +13,10 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.EntityModel;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.PoseStack;
-
 // Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
-public class Modelplane<T extends Entity> extends EntityModel<T> {
+public class Modelplane extends EntityModel<PlaneentityRenderer.PlaneRenderState> {
 	// This layer location should be baked with EntityRendererProvider.Context in
 	// the entity renderer and passed into this model's constructor
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("radiotowers", "modelplane"), "main");
@@ -26,6 +24,7 @@ public class Modelplane<T extends Entity> extends EntityModel<T> {
 	public final ModelPart bone2;
 
 	public Modelplane(ModelPart root) {
+		super(root.getChild("bone"));
 		this.bone = root.getChild("bone");
 		this.bone2 = this.bone.getChild("bone2");
 	}
@@ -59,11 +58,10 @@ public class Modelplane<T extends Entity> extends EntityModel<T> {
 	}
 
 	@Override
-	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-	}
-
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+	public void setupAnim(PlaneentityRenderer.PlaneRenderState state) {
+		super.setupAnim(state);
+		if (!state.crashed) {
+			this.animate(state.flyAnimationState, planeAnimation.flyIn, state.ageInTicks, 1.2f);
+		}
 	}
 }

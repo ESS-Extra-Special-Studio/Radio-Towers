@@ -178,7 +178,7 @@ public class CallAirdropMessage implements CustomPacketPayload {
     private static int surfaceAirYFromHeightmap(ServerLevel level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
         int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        return Math.max(level.getMinY(), Math.min(h, level.getMaxY() - 1));
     }
 
     /**

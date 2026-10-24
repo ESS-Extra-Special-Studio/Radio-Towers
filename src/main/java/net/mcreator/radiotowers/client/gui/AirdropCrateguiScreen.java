@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
 
 import net.mcreator.radiotowers.world.inventory.AirdropCrateguiMenu;
 import net.mcreator.radiotowers.init.RadiotowersModScreens;
@@ -50,7 +51,7 @@ public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateg
 		RenderSystem.setShaderColor(1, 1, 1, 1);
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		guiGraphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
+		guiGraphics.blit(RenderType.GUI_TEXTURED, texture, this.leftPos, this.topPos, 0f, 0f, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
 		RenderSystem.disableBlend();
 	}
 
