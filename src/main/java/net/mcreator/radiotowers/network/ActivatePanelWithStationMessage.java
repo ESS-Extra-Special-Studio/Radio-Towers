@@ -47,10 +47,10 @@ public class ActivatePanelWithStationMessage {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.getLevel();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air") || msg.stationId == null || msg.stationId.isEmpty()) return;
-            ResourceLocation id = ResourceLocation.tryParse(msg.stationId);
+            ResourceLocation id = msg.stationId != null && ResourceLocation.isValidResourceLocation(msg.stationId) ? new ResourceLocation(msg.stationId) : null;
             if (id == null) return;
             try {
                 // Load via context CL so Dead Air's package resolves (RadioTowers module CL can miss sibling classes)

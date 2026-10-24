@@ -41,7 +41,7 @@ public class ActivatePanelForDeadAirMessage {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.getLevel();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air")) return;
             try {

@@ -23,8 +23,8 @@ public class WaveZombieWaterSpeedHandler {
 
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
-        if (event.getEntity() == null || event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity().level() instanceof ServerLevel)) return;
+        if (event.getEntity() == null || event.getEntity().level.isClientSide()) return;
+        if (!(event.getEntity().level instanceof ServerLevel)) return;
         if (!(event.getEntity() instanceof Zombie zombie)) return;
         if (!zombie.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
             && !zombie.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG))

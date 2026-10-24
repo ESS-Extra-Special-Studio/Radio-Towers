@@ -6,7 +6,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
 
 import net.mcreator.radiotowers.world.inventory.AirdropCrateguiMenu;
 import net.mcreator.radiotowers.init.RadiotowersModScreens;
@@ -39,18 +40,18 @@ public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateg
 	private static final ResourceLocation texture = new ResourceLocation("radiotowers:textures/screens/airdrop_crategui.png");
 
 	@Override
-	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-		this.renderBackground(guiGraphics);
-		super.render(guiGraphics, mouseX, mouseY, partialTicks);
-		this.renderTooltip(guiGraphics, mouseX, mouseY);
+	public void render(PoseStack pose, int mouseX, int mouseY, float partialTicks) {
+		this.renderBackground(pose);
+		super.render(pose, mouseX, mouseY, partialTicks);
+		this.renderTooltip(pose, mouseX, mouseY);
 	}
 
 	@Override
-	protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+	protected void renderBg(PoseStack pose, float partialTicks, int mouseX, int mouseY) {
 		RenderSystem.setShaderColor(1, 1, 1, 1);
 		RenderSystem.enableBlend();
 		RenderSystem.defaultBlendFunc();
-		guiGraphics.blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
+		new EscGraphics(pose).blit(texture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
 		RenderSystem.disableBlend();
 	}
 
@@ -64,8 +65,8 @@ public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateg
 	}
 
 	@Override
-	protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-		guiGraphics.drawString(this.font, Component.translatable("gui.radiotowers.airdrop_crategui.label_airfrop_crate"), 7, 9, -12829636, false);
+	protected void renderLabels(PoseStack pose, int mouseX, int mouseY) {
+		this.font.draw(pose, Component.translatable("gui.radiotowers.airdrop_crategui.label_airfrop_crate"), 7, 9, -12829636);
 	}
 
 	@Override

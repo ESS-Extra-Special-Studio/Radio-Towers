@@ -273,7 +273,7 @@ public final class AirdropLobbyService {
             new ArrayList<>(msg.itemIds() != null ? msg.itemIds() : List.of()),
             new ArrayList<>(msg.quantities() != null ? msg.quantities() : List.of())));
         int seconds = AirdropConfig.getLobbyCountdownSeconds();
-        COUNTDOWN_END.put(lobby.id(), host.serverLevel().getGameTime() + seconds * 20L);
+        COUNTDOWN_END.put(lobby.id(), host.getLevel().getGameTime() + seconds * 20L);
         broadcastCountdown(lobby, seconds);
         syncToLobby(lobby);
     }
@@ -298,7 +298,7 @@ public final class AirdropLobbyService {
         }
         if (!standardAirdrop && !AirdropDifficultyTier.canStart(totalDifficulty)) return;
 
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = sender.getLevel();
         UUID owner = orderOwner != null ? orderOwner : sender.getUUID();
         Set<UUID> party = new LinkedHashSet<>();
         party.add(owner);
@@ -489,7 +489,7 @@ public final class AirdropLobbyService {
     }
 
     private static EslLobby ensureLobby(ServerPlayer host, BlockPos panelPos) {
-        EslLobby existing = findLobbyAt(host.serverLevel(), panelPos);
+        EslLobby existing = findLobbyAt(host.getLevel(), panelPos);
         if (existing != null) {
             if (!existing.hostUuid().equals(host.getUUID())) {
                 host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
@@ -505,7 +505,7 @@ public final class AirdropLobbyService {
             host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.already_in_lobby"));
             return null;
         }
-        EslLobby lobby = EslLobbyManager.create(host.serverLevel(), panelPos.immutable(),
+        EslLobby lobby = EslLobbyManager.create(host.getLevel(), panelPos.immutable(),
             host.getUUID(), host.getGameProfile().getName(), AirdropConfig.getLobbyMaxPlayers());
         lobby.setInviteTimeoutTicks((int) AirdropConfig.getLobbyInviteTimeoutTicks());
         return lobby;
@@ -653,7 +653,7 @@ public final class AirdropLobbyService {
     }
 
     public static void teleportNearPanel(ServerPlayer player, BlockPos panel) {
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         int x = panel.getX();
         int z = panel.getZ() + 2;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);

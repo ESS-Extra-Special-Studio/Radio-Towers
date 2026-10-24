@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.client.renderer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import com.mojang.math.Vector3f;
 
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HierarchicalModel;
@@ -46,8 +46,8 @@ public class PlaneentityRenderer extends MobRenderer<PlaneentityEntity, EntityMo
 		super.setupRotations(entity, poseStack, ageInTicks, rotationYaw, partialTicks);
 		if (entity.isCrashedWreck()) {
 			// Nose into dirt + slight bank — same Modelplane mesh as the flyover.
-			poseStack.mulPose(Axis.XP.rotationDegrees(22f));
-			poseStack.mulPose(Axis.ZP.rotationDegrees(28f));
+			poseStack.mulPose(Vector3f.XP.rotationDegrees(22f));
+			poseStack.mulPose(Vector3f.ZP.rotationDegrees(28f));
 			poseStack.translate(0.0, -1.25, 0.0);
 		}
 	}

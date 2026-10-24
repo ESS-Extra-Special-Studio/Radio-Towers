@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -43,7 +43,7 @@ public class DefenseSessionSyncPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isClient()) return;
-            ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, msg.dimensionId);
+            ResourceKey<Level> key = ResourceKey.create(Registry.DIMENSION_REGISTRY, msg.dimensionId);
             DefenseSessionClientMirror.set(key, msg.active);
         });
         ctx.setPacketHandled(true);

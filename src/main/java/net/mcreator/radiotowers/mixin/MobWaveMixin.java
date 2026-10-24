@@ -19,13 +19,13 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Mob.class)
 public class MobWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     @ModifyVariable(method = "setNoAi", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceNoAiOffDuringWave(boolean noAi) {
         Mob self = (Mob) (Object) this;
         if (!noAi) return false;
-        if (self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return noAi;
+        if (self.level.isClientSide() || !(self.level instanceof ServerLevel level)) return noAi;
         if (!(self instanceof Monster)) return noAi;
         if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITY_TYPES.getKey(self.getType()))) return noAi;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return noAi;

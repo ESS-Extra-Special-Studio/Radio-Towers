@@ -58,18 +58,17 @@ public class RadiotowersMod {
 	/** Nuclear baseline mode for wave debugging: disable custom wave patches/mixins behavior. */
 	public static final boolean WAVE_PATCH_NUCLEAR_MODE = true;
 
-	public RadiotowersMod(FMLJavaModLoadingContext context) {
+	public RadiotowersMod() {
 		// Start of user code block mod constructor
 		// End of user code block mod constructor
 		MinecraftForge.EVENT_BUS.register(this);
-		IEventBus bus = context.getModEventBus();
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 		bus.addListener(this::commonSetup);
 		RadiotowersModSounds.REGISTRY.register(bus);
 		RadiotowersModBlocks.REGISTRY.register(bus);
 		RadiotowersModBlockEntities.REGISTRY.register(bus);
 		RadiotowersModItems.REGISTRY.register(bus);
 		RadiotowersModEntities.REGISTRY.register(bus);
-		RadiotowersModTabs.REGISTRY.register(bus);
 		RadiotowersModMenus.REGISTRY.register(bus);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, AirdropConfig.SPEC, "radiotowers-common.toml");
 		bus.addListener(this::onModConfig);
@@ -89,9 +88,9 @@ public class RadiotowersMod {
 		MinecraftForge.EVENT_BUS.register(new net.mcreator.radiotowers.events.WaveMobAggroHandler());
 
 		// RadioTowers special blocks in airdrop loot catalog: metal bars 5, trash 2.5 (3), airdrop crate 5
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:metal_bars"), 5));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:trashblock"), 1));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:airdrop_crate"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:metal_bars"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:trashblock"), 1));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:airdrop_crate"), 5));
 
 		// Vanilla music discs in airdrop loot selection, 30 points each
 		int discPoints = 30;
@@ -103,7 +102,7 @@ public class RadiotowersMod {
 			"minecraft:music_disc_otherside", "minecraft:music_disc_pigstep", "minecraft:music_disc_5",
 			"minecraft:music_disc_relic"
 		}) {
-			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse(id), discPoints));
+			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation(id), discPoints));
 		}
 	}
 
@@ -152,16 +151,16 @@ public class RadiotowersMod {
 		// Testing: when both cooldown configs are 0, clear any persisted cooldown from older sessions.
 		if (net.mcreator.radiotowers.config.AirdropConfig.getStandardAirdropCooldownTicks() == 0
 				&& net.mcreator.radiotowers.config.AirdropConfig.getWaveDeliveryCooldownTicks() == 0) {
-			AirdropCooldownSavedData.get(sp.serverLevel()).clearPlayer(sp.getUUID());
+			AirdropCooldownSavedData.get(sp.getLevel()).clearPlayer(sp.getUUID());
 		}
-		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.serverLevel(), sp.getUUID());
+		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.getLevel(), sp.getUUID());
 		PACKET_HANDLER.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
 				new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
 		// Place spawn tower into already-loaded chunks only (never force-gen).
 		net.mcreator.radiotowers.worldgen.GuaranteedSpawnTower.scheduleForPlayer(sp);
 		// Chunks (and straggler mobs) often finish loading after level load; sweep again when the player is in-world.
-		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.serverLevel())) {
-			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.serverLevel());
+		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.getLevel())) {
+			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.getLevel());
 		}
 	}
 
@@ -217,7 +216,7 @@ public class RadiotowersMod {
 
 	/** Discard any airdrop plane entities in the level so a saved-in-flight plane doesn't appear when rejoining. */
 	private static void discardSavedPlanesInLevel(ServerLevel level) {
-		ResourceLocation planeId = ResourceLocation.parse("radiotowers:planeentity");
+		ResourceLocation planeId = new ResourceLocation("radiotowers:planeentity");
 		for (Entity e : level.getAllEntities()) {
 			if (planeId.equals(ForgeRegistries.ENTITY_TYPES.getKey(e.getType())))
 				e.discard();

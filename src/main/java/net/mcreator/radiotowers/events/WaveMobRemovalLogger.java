@@ -110,10 +110,10 @@ public final class WaveMobRemovalLogger {
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getEntity().level().isClientSide()) return;
+        if (event.getEntity().level.isClientSide()) return;
         LivingEntity e = event.getEntity();
         if (!isZombieFamily(e)) return;
-        PendingAirdropStorage.Pending p = getPending(e.level(), e);
+        PendingAirdropStorage.Pending p = getPending(e.level, e);
         if (p == null) return;
         RadiotowersMod.LOGGER.warn(
             "[WaveRemovalDebug] id={} type={} DEATH pos={} nearWave={} hasWaveTag={}",

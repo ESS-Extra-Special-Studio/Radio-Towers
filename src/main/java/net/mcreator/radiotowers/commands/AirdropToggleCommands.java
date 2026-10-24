@@ -99,11 +99,11 @@ public class AirdropToggleCommands {
         BlockPos nearby = findNearbyRadioPanel(player);
         final BlockPos pos = nearby != null ? nearby : player.blockPosition();
         if (nearby == null) {
-            src.sendSuccess(() -> Component.literal(
+            src.sendSuccess(Component.literal(
                 "No radio panel within 10 blocks — opened at feet " + pos.toShortString()
                     + " (Base claim will fail until you open a real panel)"), false);
         } else {
-            src.sendSuccess(() -> Component.literal("Opened Call Airdrop at panel " + pos.toShortString()), false);
+            src.sendSuccess(Component.literal("Opened Call Airdrop at panel " + pos.toShortString()), false);
         }
         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new OpenCallAirdropPacket(pos));
         return 1;
@@ -111,7 +111,7 @@ public class AirdropToggleCommands {
 
     /** Nearest radiotowers:radio_panel within 10 blocks of the player (inclusive). */
     private static BlockPos findNearbyRadioPanel(ServerPlayer player) {
-        if (!(player.level() instanceof ServerLevel level)) return null;
+        if (!(player.level instanceof ServerLevel level)) return null;
         Block panel = RadiotowersModBlocks.RADIO_PANEL.get();
         BlockPos origin = player.blockPosition();
         BlockPos best = null;
@@ -167,7 +167,7 @@ public class AirdropToggleCommands {
     }
 
     private static void line(CommandSourceStack src, String text) {
-        src.sendSuccess(() -> Component.literal(text), false);
+        src.sendSuccess(Component.literal(text), false);
     }
 
     private static int dump(CommandSourceStack src) {
@@ -308,7 +308,7 @@ public class AirdropToggleCommands {
         boolean enabled = AirdropRuntimeToggles.isEndRecipeItemsEnabled();
         Boolean override = AirdropRuntimeToggles.getEndRecipeItemsOverride();
         String modeKey = override == null ? "command.radiotowers.endrecipeitems.mode.config" : "command.radiotowers.endrecipeitems.mode.runtime_override";
-        source.sendSuccess(() -> Component.translatable(
+        source.sendSuccess(Component.translatable(
             "command.radiotowers.endrecipeitems.status",
             Component.translatable(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off"),
             Component.translatable(modeKey)
@@ -319,7 +319,7 @@ public class AirdropToggleCommands {
     private static int set(CommandSourceStack source, boolean enabled) {
         AirdropRuntimeToggles.setEndRecipeItemsOverride(enabled);
         AirdropCatalog.invalidate();
-        source.sendSuccess(() -> Component.translatable(
+        source.sendSuccess(Component.translatable(
             "command.radiotowers.endrecipeitems.set",
             Component.translatable(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off")
         ), true);
@@ -334,7 +334,7 @@ public class AirdropToggleCommands {
     private static int clearOverride(CommandSourceStack source) {
         AirdropRuntimeToggles.setEndRecipeItemsOverride(null);
         AirdropCatalog.invalidate();
-        source.sendSuccess(() -> Component.translatable("command.radiotowers.endrecipeitems.use_config"), true);
+        source.sendSuccess(Component.translatable("command.radiotowers.endrecipeitems.use_config"), true);
         return 1;
     }
 }

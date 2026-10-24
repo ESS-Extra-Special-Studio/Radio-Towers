@@ -34,7 +34,7 @@ public class RadiotowersModMenus {
 			getMenuState().put(elementType + ":" + name, elementState);
 			if (player instanceof ServerPlayer serverPlayer) {
 				RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MenuStateUpdateMessage(elementType, name, elementState));
-			} else if (player.level().isClientSide) {
+			} else if (player.level.isClientSide) {
 				SafeClientCalls.onClientSendMenuStateUpdate(this, elementType, name, elementState, needClientUpdate);
 			}
 		}

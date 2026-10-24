@@ -50,7 +50,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 					try {
 						String idStr = ids.get(i);
 						if (idStr == null || idStr.isEmpty()) continue;
-						ResourceLocation id = ResourceLocation.parse(idStr);
+						ResourceLocation id = new ResourceLocation(idStr);
 						ItemStack stack = ItemStack.EMPTY;
 						int unitsPerStack = 1;
 						String path = id.getPath();
@@ -167,7 +167,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 	private static boolean touchesWater(LevelAccessor world, double x, double y, double z, Entity entity) {
 		if (!entity.isAlive() || entity.isRemoved()) return false;
 		if (entity.isInWater()) return true;
-		BlockPos pos = BlockPos.containing(x, y, z);
+		BlockPos pos = new BlockPos(x, y, z);
 		if (world.getFluidState(pos).is(FluidTags.WATER)) return true;
 		if (world.getFluidState(pos.below()).is(FluidTags.WATER)) return true;
 		return world.getFluidState(pos.above()).is(FluidTags.WATER);
@@ -182,7 +182,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			BlockState st = world.getBlockState(p);
-			if (st.blocksMotion())
+			if (st.getMaterial().blocksMotion())
 				return p.above();
 		}
 		return null;
@@ -198,7 +198,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 			BlockEntity altBe = world.getBlockEntity(alt);
 			if (altBe instanceof AirdropCrateBlockEntity altCrate && altCrate.isStructureLoot())
 				continue;
-			if (world.isEmptyBlock(alt) || world.getBlockState(alt).canBeReplaced())
+			if (world.isEmptyBlock(alt) || world.getBlockState(alt).getMaterial().isReplaceable())
 				return alt;
 		}
 		return preferred;
@@ -232,7 +232,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 						"data merge block ~ ~ ~ {LootTable:\"" + lootTableId + "\"}");
 			}
 		}
-		if (entity.level() != null && !entity.level().isClientSide())
+		if (entity.level != null && !entity.level.isClientSide())
 			entity.discard();
 	}
 
@@ -250,7 +250,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		int minY = world.getMinBuildHeight();
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
-			if (world.getBlockState(p).blocksMotion())
+			if (world.getBlockState(p).getMaterial().blocksMotion())
 				return p;
 		}
 		return null;

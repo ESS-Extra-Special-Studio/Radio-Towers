@@ -1,7 +1,6 @@
 package net.mcreator.radiotowers.mixin;
 
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
 import net.mcreator.radiotowers.integration.WaveSpawnTag;
@@ -25,7 +24,7 @@ public class LivingEntityFireImmuneWaveMixin {
             || self.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
             || self.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET);
         if (!isWaveMob) return;
-        if (source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.ON_FIRE) || source.is(DamageTypes.LAVA) || source.is(DamageTypes.HOT_FLOOR)) {
+        if (source.isFire()) {
             self.setRemainingFireTicks(0);
             cir.setReturnValue(false);
         }

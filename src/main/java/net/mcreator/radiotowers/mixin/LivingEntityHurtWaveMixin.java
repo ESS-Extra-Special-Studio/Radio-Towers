@@ -24,7 +24,7 @@ public class LivingEntityHurtWaveMixin {
     private void radiotowers$forceDamageableBeforeHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (!(self instanceof Monster)) return;
-        if (self.level() == null || self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return;
+        if (self.level == null || self.level.isClientSide() || !(self.level instanceof ServerLevel level)) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         if (!isWaveMob(self)) return;
         self.setInvulnerable(false);

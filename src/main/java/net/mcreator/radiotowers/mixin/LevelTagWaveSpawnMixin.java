@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ServerLevel.class)
 public class LevelTagWaveSpawnMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     /** Match {@link net.mcreator.radiotowers.events.WaveMobAggroHandler#WAVE_MOB_RANGE} so API spawns far from tower still get tagged. */
     private static final int TAG_HORIZONTAL_RANGE = 384;

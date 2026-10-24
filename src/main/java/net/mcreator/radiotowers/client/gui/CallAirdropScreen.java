@@ -12,9 +12,9 @@ import net.mcreator.radiotowers.client.AirdropWaveHudData;
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -100,7 +100,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private String searchQuery = "";
     /** Indices into catalog for entries that match searchQuery. Rebuilt when search changes. */
     private final List<Integer> filteredIndices = new ArrayList<>();
-    private EditBox searchEditBox;
+    private EscSearchBox searchEditBox;
 
     /** Responsive layout regions (recomputed in {@link #buildLayout}). */
     private EscRect listColumn;
@@ -603,7 +603,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     /** Word-wrap hint to the right of a button row; y = first line baseline (aligned with button text). */
-    private void drawDeadAirHint(GuiGraphics guiGraphics, String text, int x, int y, int maxWidth) {
+    private void drawDeadAirHint(EscGraphics guiGraphics, String text, int x, int y, int maxWidth) {
         EscText.drawWrapped(guiGraphics, font, text, x, y, maxWidth, DEAD_AIR_HINT_COLOR);
     }
 
@@ -617,7 +617,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         return "Music Disc (" + label + ")";
     }
 
-    private void drawTab(GuiGraphics g, EscRect rect, String label, boolean selected, boolean locked) {
+    private void drawTab(EscGraphics g, EscRect rect, String label, boolean selected, boolean locked) {
         if (rect == null) return;
         int bg = locked ? TAB_BG_LOCKED : (selected ? TAB_BG_ACTIVE : TAB_BG);
         g.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), bg);
@@ -667,7 +667,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         cachedBaseIsThisPanel = isThisPanel;
     }
 
-    private void drawBaseTab(GuiGraphics g) {
+    private void drawBaseTab(EscGraphics g) {
         if (bodyContentRect == null) return;
         EscRect body = bodyContentRect;
         g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
@@ -686,7 +686,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         EscText.drawWrapped(g, font, status, cx, cy, maxW, statusColor);
     }
 
-    private void drawModePlaceholder(GuiGraphics g) {
+    private void drawModePlaceholder(EscGraphics g) {
         if (bodyContentRect == null) return;
         EscRect body = bodyContentRect;
         g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
@@ -711,8 +711,9 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
 
@@ -733,16 +734,16 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
         if (isBaseTab()) {
             drawBaseTab(guiGraphics);
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            super.render(pose, mouseX, mouseY, partialTick);
             return;
         }
         if (!isAirdropTab()) {
             drawModePlaceholder(guiGraphics);
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            super.render(pose, mouseX, mouseY, partialTick);
             return;
         }
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
 
         if (listAreaRect == null) return;
 
@@ -798,8 +799,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 && "tacz".equals(itemId.getNamespace())
                 && (itemId.getPath().startsWith("ammo/") || itemId.getPath().startsWith("gun/"));
             if (!stack.isEmpty() && !useTaczPlaceholder) {
-                guiGraphics.renderItem(stack, listLeft + 4, y + 2);
-                guiGraphics.renderItemDecorations(font, stack, listLeft + 4, y + 2);
+                this.itemRenderer.renderAndDecorateItem(stack, listLeft + 4, y + 2);
+                this.itemRenderer.renderGuiItemDecorations(this.font, stack, listLeft + 4, y + 2);
             } else if (useTaczPlaceholder) {
                 guiGraphics.fill(listLeft + 4, y + 2, listLeft + 20, y + 18, 0xFF_3d3d3d);
                 guiGraphics.fill(listLeft + 5, y + 3, listLeft + 19, y + 17, 0xFF_2d2d2d);
@@ -820,9 +821,9 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         if (ModList.get().isLoaded("dead_air") && activeButton >= 0) {
             Button active = activeButton == 0 ? defaultStationButton : (activeButton == 1 ? dynamicStationButton : internetButton);
             if (active != null) {
-                int bx = active.getX();
+                int bx = active.x;
                 int bw = active.getWidth();
-                int by = active.getY();
+                int by = active.y;
                 int bh = active.getHeight();
                 int c = 0xFF22AA22;
                 guiGraphics.fill(bx, by, bx + bw, by + 2, c);
@@ -837,7 +838,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             Button topBtn = lobbyButton != null ? lobbyButton : turnOffButton;
             int textX = hintColumn.x();
             int maxW = hintColumn.width();
-            int y = topBtn.getY();
+            int y = topBtn.y;
             final String[] hints = {
                 "Broadcast on/off",
                 "What this tower plays (click to cycle).",

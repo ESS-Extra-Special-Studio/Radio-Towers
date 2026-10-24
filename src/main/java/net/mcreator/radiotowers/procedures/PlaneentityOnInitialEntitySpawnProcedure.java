@@ -76,7 +76,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		}
 		if (world instanceof Level _level) {
 			if (!_level.isClientSide()) {
-				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
+				_level.playSound(null, new BlockPos(entity.getX(), entity.getY(), entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
 			} else {
 				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
 			}
@@ -84,7 +84,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		RadiotowersMod.queueServerWork(65, () -> {
 			try {
 				if (!(world instanceof ServerLevel _level)) return;
-				if (entity.isRemoved() || entity.level() == null) return;
+				if (entity.isRemoved() || entity.level == null) return;
 				double planeX = entity.getX();
 				double planeY = entity.getY();
 				double planeZ = entity.getZ();
@@ -113,7 +113,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					dropX = x + Math.cos(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 					dropZ = z + Math.sin(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 				}
-				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED);
+				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, null, null, null, new BlockPos(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED, false, false);
 				if (entityToSpawn != null) {
 					entityToSpawn.setYRot(entity.getYRot());
 					entityToSpawn.setYBodyRot(entity.getYRot());
@@ -147,7 +147,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 			}
 			RadiotowersMod.queueServerWork(100, () -> {
 				try {
-					if (entity != null && !entity.isRemoved() && entity.level() != null && !entity.level().isClientSide())
+					if (entity != null && !entity.isRemoved() && entity.level != null && !entity.level.isClientSide())
 						entity.discard();
 				} catch (Exception ignored) {}
 			});

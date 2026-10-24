@@ -371,7 +371,7 @@ public final class PendingAirdropStorage {
         Pending p = take(level, waveStartPos);
         if (p == null) return;
         clearAllDeliveryOrders();
-        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, p.panelPos, MobSpawnType.MOB_SUMMONED);
+        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, null, null, null, p.panelPos, MobSpawnType.MOB_SUMMONED, false, false);
         if (planeEntity != null) {
             planeEntity.setYRot(level.getRandom().nextFloat() * 360F);
             if (planeEntity instanceof PlaneentityEntity pe) {

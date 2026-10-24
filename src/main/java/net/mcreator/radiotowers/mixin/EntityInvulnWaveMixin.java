@@ -28,7 +28,7 @@ public class EntityInvulnWaveMixin {
         Entity self = (Entity) (Object) this;
         if (radiotowers$inForceOff.get()) return;
         if (!(self instanceof Monster)) return;
-        if (self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return;
+        if (self.level.isClientSide() || !(self.level instanceof ServerLevel level)) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         if (!isWaveMob(self)) return;
         if (!self.isInvulnerable()) return;

@@ -495,7 +495,7 @@ public final class ZombieWavesAPILoader {
     /** Server -> one player: current defense session flag (call on login so client mirror matches). */
     public static void pushDefenseSessionStateToPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         boolean active = ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
             new DefenseSessionSyncPacket(level.dimension().location(), active));

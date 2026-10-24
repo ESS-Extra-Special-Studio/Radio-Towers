@@ -26,8 +26,8 @@ public class DrownedKillCountsHandler {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity().level() instanceof ServerLevel level)) return;
+        if (event.getEntity().level.isClientSide()) return;
+        if (!(event.getEntity().level instanceof ServerLevel level)) return;
         LivingEntity dead = event.getEntity();
 
         // In nuclear baseline mode we disabled all wave tags/mixins.

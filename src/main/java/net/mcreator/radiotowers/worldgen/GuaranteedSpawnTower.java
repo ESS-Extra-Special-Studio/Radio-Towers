@@ -44,8 +44,8 @@ import java.util.Optional;
  */
 @Mod.EventBusSubscriber(modid = RadiotowersMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class GuaranteedSpawnTower {
-    private static final ResourceLocation TEMPLATE = ResourceLocation.fromNamespaceAndPath("radiotowers", "tower");
-    private static final ResourceLocation TEMPLATE_FALLBACK = ResourceLocation.fromNamespaceAndPath("radiotowers", "radiotower");
+    private static final ResourceLocation TEMPLATE = new ResourceLocation("radiotowers", "tower");
+    private static final ResourceLocation TEMPLATE_FALLBACK = new ResourceLocation("radiotowers", "radiotower");
     private static final int STEP_BLOCKS = 8;
     private static final int GROUND_SEARCH_DEPTH = 48;
     /** radiotowers:tower size is 12×48×19 */
@@ -77,7 +77,7 @@ public final class GuaranteedSpawnTower {
 
     public static void scheduleForPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         if (level.dimension() != Level.OVERWORLD) return;
         if (!AirdropConfig.GUARANTEE_SPAWN_TOWER.get()) return;
         BlockPos pos = player.blockPosition();
@@ -349,7 +349,7 @@ public final class GuaranteedSpawnTower {
             || block == Blocks.BLACKSTONE || block == Blocks.NETHERRACK) {
             return true;
         }
-        return state.blocksMotion();
+        return state.getMaterial().blocksMotion();
     }
 
     private static void clearVegetationInFootprint(ServerLevel level, BlockPos origin, Vec3i size) {
@@ -361,7 +361,7 @@ public final class GuaranteedSpawnTower {
                 for (int dy = 0; dy <= sy; dy++) {
                     BlockPos p = origin.offset(dx, dy, dz);
                     BlockState state = level.getBlockState(p);
-                    if (isVegetation(state) || state.is(BlockTags.REPLACEABLE) || state.is(Blocks.SNOW)
+                    if (isVegetation(state) || state.getMaterial().isReplaceable() || state.is(Blocks.SNOW)
                         || state.is(Blocks.GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.FERN)
                         || state.is(Blocks.LARGE_FERN) || state.is(Blocks.DEAD_BUSH)) {
                         level.setBlock(p, Blocks.AIR.defaultBlockState(), 2);
@@ -388,7 +388,7 @@ public final class GuaranteedSpawnTower {
                 for (int y = padY - 1; y >= bottom; y--) {
                     BlockPos p = new BlockPos(x, y, z);
                     BlockState state = level.getBlockState(p);
-                    if (state.isAir() || isVegetation(state) || state.canBeReplaced()
+                    if (state.isAir() || isVegetation(state) || state.getMaterial().isReplaceable()
                         || state.is(Blocks.WATER) || state.is(Blocks.LAVA)
                         || state.getFluidState().getType() != Fluids.EMPTY) {
                         BlockState fill = (padY - y) <= 3

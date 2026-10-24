@@ -41,13 +41,13 @@ public abstract class NoMindlessShootingTacZListenerMixin {
                 return;
             }
             if (player instanceof ServerPlayer sp) {
-                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.serverLevel())) {
+                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.getLevel())) {
                     ci.cancel();
                 }
                 return;
             }
-            if (player.level().isClientSide()
-                && DefenseSessionClientMirror.isActive(player.level().dimension())) {
+            if (player.level.isClientSide()
+                && DefenseSessionClientMirror.isActive(player.level.dimension())) {
                 ci.cancel();
             }
         } catch (Throwable ignored) {

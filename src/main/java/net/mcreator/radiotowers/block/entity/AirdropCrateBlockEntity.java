@@ -42,7 +42,7 @@ import java.util.stream.IntStream;
 import io.netty.buffer.Unpooled;
 
 public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity implements WorldlyContainer {
-	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = ResourceLocation.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
+	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = new ResourceLocation("radiotowers", "radio_tower_overrun_loot");
 
 	private NonNullList<ItemStack> stacks = NonNullList.withSize(27, ItemStack.EMPTY);
 	private final LazyOptional<? extends IItemHandler>[] handlers = SidedInvWrapper.create(this, Direction.values());
@@ -79,7 +79,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		// Only tower overrun loot is structure-owned. Live delivery uses the same LootTable id —
 		// never treat it as structureLoot or order fills / opens get the wrong path.
 		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", net.minecraft.nbt.Tag.TAG_STRING)) {
-			ResourceLocation table = ResourceLocation.tryParse(compound.getString("LootTable"));
+			ResourceLocation table = compound.getString("LootTable").isEmpty() || !ResourceLocation.isValidResourceLocation(compound.getString("LootTable")) ? null : new ResourceLocation(compound.getString("LootTable"));
 			if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
 				this.structureLoot = true;
 		}

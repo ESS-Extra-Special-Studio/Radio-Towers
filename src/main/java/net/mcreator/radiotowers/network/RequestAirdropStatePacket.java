@@ -44,8 +44,8 @@ public class RequestAirdropStatePacket {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             ServerPlayer player = ctx.getSender();
-            if (player == null || player.serverLevel() == null) return;
-            var serverLevel = player.serverLevel();
+            if (player == null || player.getLevel() == null) return;
+            var serverLevel = player.getLevel();
             long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(serverLevel, player.getUUID());
             // Always sync Boss / Endless unlock flags (soft-dep Dead Air; both false without DA).
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),

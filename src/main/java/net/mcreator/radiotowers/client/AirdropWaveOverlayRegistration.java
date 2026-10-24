@@ -14,8 +14,8 @@ public class AirdropWaveOverlayRegistration {
     @SubscribeEvent
     public static void onRegisterGuiOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("radiotowers_airdrop_wave",
-            (gui, guiGraphics, partialTick, screenWidth, screenHeight) ->
-                AirdropWaveOverlay.render(guiGraphics, screenWidth, screenHeight)
+            (gui, pose, partialTick, screenWidth, screenHeight) ->
+                AirdropWaveOverlay.render(new uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics(pose), screenWidth, screenHeight)
         );
     }
 }

@@ -30,8 +30,8 @@ public class EntitySetPosMixin {
     @Inject(method = "setPos(DDD)V", at = @At("HEAD"), cancellable = true, remap = true)
     private void radiotowers$overrideSkyPositionOnce(double x, double y, double z, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
-        if (self.level().isClientSide()) return;
-        if (!(self.level() instanceof ServerLevel level)) return;
+        if (self.level.isClientSide()) return;
+        if (!(self.level instanceof ServerLevel level)) return;
         if (!(self instanceof Monster)) return;
         // Only touch wave-spawned mobs; otherwise we override every Monster in the dimension and rubberband normal mobs
         if (!self.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)

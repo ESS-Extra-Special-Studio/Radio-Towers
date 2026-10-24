@@ -49,7 +49,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 	public AirdropCrateguiMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
 		super(RadiotowersModMenus.AIRDROP_CRATEGUI.get(), id);
 		this.entity = inv.player;
-		this.world = inv.player.level();
+		this.world = inv.player.level;
 		this.internal = new ItemStackHandler(27);
 		BlockPos pos = null;
 		if (extraData != null) {
@@ -262,7 +262,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				return ItemStack.EMPTY;
 			}
 			if (itemstack1.isEmpty()) {
-				slot.setByPlayer(ItemStack.EMPTY);
+				slot.set(ItemStack.EMPTY);
 			} else {
 				slot.setChanged();
 			}
@@ -332,9 +332,9 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				ItemStack itemstack1 = slot1.getItem();
 				if (itemstack1.isEmpty() && slot1.mayPlace(p_38904_)) {
 					if (p_38904_.getCount() > slot1.getMaxStackSize()) {
-						slot1.setByPlayer(p_38904_.split(slot1.getMaxStackSize()));
+						slot1.set(p_38904_.split(slot1.getMaxStackSize()));
 					} else {
-						slot1.setByPlayer(p_38904_.split(p_38904_.getCount()));
+						slot1.set(p_38904_.split(p_38904_.getCount()));
 					}
 					slot1.setChanged();
 					flag = true;
