@@ -2,9 +2,9 @@
 
 ## Short Summary (for CurseForge short description field — under 200 characters)
 
-Worldgen radio towers and airdrops: climb metal bars, use the radio panel for coords and supply drops. Optional Dead Air adds broadcasts and stations. Requires ExtraSpecialCore.
+Worldgen radio towers and airdrops: climb metal bars, use the radio panel for coords and supply drops. Optional Dead Air adds broadcasts and stations. Requires ExtraSpecialCore, ExtraSpecialLIB, and ExtraSpecialNetwork.
 
-*(~155 characters — adjust if needed)*
+*(~200 characters — adjust if needed)*
 
 ---
 
@@ -43,7 +43,7 @@ Adds **three climbable radio tower** structures and an **airdrop** system to you
 
 - **RadioTowers only** — panel UI for coordinates and a **standard airdrop** (loot table, cooldown).
 - **+ Dead Air (optional)** — panel also assigns **broadcast stations** (Turn off, default cycle, Dynamic, Internet). Tune and listen on a **walkie-talkie** through Dead Air’s GUI (MHz, signal bars, music).
-- **+ ExtraSpecialLIB / Berezka Zombie Waves API (optional)** — **Call Airdrop** catalog with point budget, search, difficulty, and **defense waves** before the plane delivers your order. ESL is used when present; Berezka is the fallback.
+- **+ ExtraSpecialLIB + Berezka Zombie Waves API (optional waves)** — **Call Airdrop** catalog with point budget, search, difficulty, and **defense waves** before the plane delivers your order. ESL is required for the stack; Berezka remains the optional waves fallback.
 
 **Airdrop cooldown:** 3 minutes for standard panel calls; longer after wave-based delivery when the waves API is present.
 
@@ -63,6 +63,8 @@ Further options: pack config, **Berezka API for Radio Towers and Airdrops**, **B
 **Dependencies**
 
 - **Required:** **ExtraSpecialCore (ESC)** — shared panel and airdrop GUIs.
+- **Required:** **ExtraSpecialLIB (ESL)** — lobby/session and wave runtime APIs (ESC already depends on ESL).
+- **Required:** **ExtraSpecialNetwork (ESN)** — multiplayer lobby packet fabric. Packs must include ESN with Radio Towers.
 - **Optional:** **Dead Air** — tower broadcasts, station assignment on panels, walkie integration. Radio Towers does **not** require Dead Air to load; structures and basic airdrops work without it.  
   https://www.curseforge.com/minecraft/mc-mods/dead-air
 - **Optional:** **Berezka's library** — Berezka structure/loot library used by some Radio Towers integrations (not required for basic play).  

@@ -11,6 +11,7 @@ import net.minecraftforge.network.PacketDistributor;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.integration.AirdropCooldown;
+import net.mcreator.radiotowers.integration.DeadAirUnlockBridge;
 import net.mcreator.radiotowers.integration.EslWaveIntegration;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
@@ -46,6 +47,11 @@ public class RequestAirdropStatePacket {
             if (player == null || player.serverLevel() == null) return;
             var serverLevel = player.serverLevel();
             long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(serverLevel, player.getUUID());
+            // Always sync Boss / Endless unlock flags (soft-dep Dead Air; both false without DA).
+            RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
+                new AirdropModeUnlockPacket(
+                    DeadAirUnlockBridge.isBossModeUnlocked(player),
+                    DeadAirUnlockBridge.isEndlessModeUnlocked(player)));
             boolean waveBackend = ZombieWavesAPILoader.isZombieWavesAPILoaded()
                     || EslWaveIntegration.isEslWaveAvailable();
             if (!waveBackend) {

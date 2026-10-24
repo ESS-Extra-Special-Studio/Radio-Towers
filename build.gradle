@@ -102,15 +102,22 @@ tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'
 }
 
-def cIdeasModsDir = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods")
+def forgeTestModsDirs = [
+    file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods"),
+    file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/ESS Lastlight (post-apocalyptic modpack - 1.20.1 Forge)/mods")
+]
 tasks.named('build').configure {
     doLast {
         def jarFile = file("${layout.buildDirectory.get()}/libs/${mod_id}-${mod_version}+${minecraft_version}-forge.jar")
         if (!jarFile.exists()) return
-        if (cIdeasModsDir.exists()) {
-            cIdeasModsDir.listFiles()?.findAll { it.name.startsWith("${mod_id}-") && it.name.endsWith('.jar') }?.each { it.delete() }
-            copy { from jarFile; into cIdeasModsDir }
-            println "Copied ${jarFile.name} to ${cIdeasModsDir}"
+        forgeTestModsDirs.each { modsDir ->
+            if (!modsDir.exists()) {
+                println "Skip copy (missing): ${modsDir}"
+                return
+            }
+            modsDir.listFiles()?.findAll { it.name.startsWith("${mod_id}-") && it.name.endsWith('.jar') && it.name != jarFile.name }?.each { it.delete() }
+            copy { from jarFile; into modsDir }
+            println "Copied ${jarFile.name} to ${modsDir}"
         }
     }
 }

@@ -62,6 +62,18 @@ public final class AirdropLobbyClient {
         }
     }
 
+    /** Lobby ended on the server — clear cache and close the lobby screen. */
+    public static void applyClosed(LobbyPackets.Closed closed) {
+        UUID closedId = closed != null ? closed.lobbyId() : null;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+            if (closedId == null || closedId.equals(screen.lobbyId())) {
+                mc.setScreen(screen.getParent());
+            }
+        }
+        clear();
+    }
+
     @Nullable
     public static LobbyPackets.SyncLobby lastSync() {
         return lastSync;

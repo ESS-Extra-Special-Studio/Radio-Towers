@@ -81,6 +81,15 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         this.countdownSeconds = AirdropLobbyClient.countdownSeconds();
     }
 
+    public UUID lobbyId() {
+        return lobbyId;
+    }
+
+    @Nullable
+    public Screen getParent() {
+        return parent;
+    }
+
     public void onSync(LobbyPackets.SyncLobby sync) {
         this.sync = sync;
         rebuild();

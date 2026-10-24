@@ -14,6 +14,9 @@ public final class AirdropWaveHudData {
     private static volatile int totalWaves = 0;
     private static volatile int zombiesRemaining = -1;
     private static volatile int secondsRemaining = 0;
+    /** Synced from Dead Air via {@code AirdropModeUnlockPacket}; false without DA. */
+    private static volatile boolean bossModeUnlocked = false;
+    private static volatile boolean endlessModeUnlocked = false;
 
     public static boolean isWaveInProgress() { return waveInProgress; }
     public static long getCooldownEndGameTime() { return cooldownEndGameTime; }
@@ -21,6 +24,13 @@ public final class AirdropWaveHudData {
     public static int getTotalWaves() { return totalWaves; }
     public static int getZombiesRemaining() { return zombiesRemaining; }
     public static int getSecondsRemaining() { return secondsRemaining; }
+    public static boolean isBossModeUnlocked() { return bossModeUnlocked; }
+    public static boolean isEndlessModeUnlocked() { return endlessModeUnlocked; }
+
+    public static void setModeUnlocks(boolean boss, boolean endless) {
+        bossModeUnlocked = boss;
+        endlessModeUnlocked = endless;
+    }
 
     public static void setAirdropState(boolean inProgress, long cooldownEnd) {
         waveInProgress = inProgress;

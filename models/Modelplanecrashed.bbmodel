@@ -1,0 +1,1922 @@
+{
+  "meta": {
+    "format_version": "5.0",
+    "model_format": "modded_entity",
+    "box_uv": true
+  },
+  "name": "Modelplanecrashed",
+  "model_identifier": "",
+  "modded_entity_entity_class": "",
+  "modded_entity_version": "1.17",
+  "modded_entity_flip_y": true,
+  "visible_box": [
+    1,
+    1,
+    0
+  ],
+  "variable_placeholders": "",
+  "multi_file_ruleset": "",
+  "variable_placeholder_buttons": [],
+  "timeline_setups": [],
+  "unhandled_root_fields": {},
+  "ai_used": true,
+  "ai_agents": "cursor-vscode",
+  "resolution": {
+    "width": 2400,
+    "height": 2400
+  },
+  "elements": [
+    {
+      "name": "body",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -159,
+        -69,
+        -34
+      ],
+      "to": [
+        116,
+        0,
+        39
+      ],
+      "autouv": 0,
+      "color": 8,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        1255
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1691,
+            1328,
+            1966,
+            1397
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1328,
+            1691,
+            1397
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            2039,
+            1328,
+            2314,
+            1397
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1966,
+            1328,
+            2039,
+            1397
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1966,
+            1328,
+            1691,
+            1255
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            2241,
+            1255,
+            1966,
+            1328
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "b4dbdd6a-9f8d-5f51-731a-ed94bd21cb7e"
+    },
+    {
+      "name": "body_rear",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        115,
+        -69,
+        -34
+      ],
+      "to": [
+        312,
+        -30,
+        39
+      ],
+      "autouv": 0,
+      "color": 0,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        1397
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1691,
+            1470,
+            1888,
+            1509
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1470,
+            1691,
+            1509
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1961,
+            1470,
+            2158,
+            1509
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1888,
+            1470,
+            1961,
+            1509
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1888,
+            1470,
+            1691,
+            1397
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            2085,
+            1397,
+            1888,
+            1470
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "5c1b46d3-bee4-d89d-00ee-34fbaf83a550"
+    },
+    {
+      "name": "wing_deck",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -60,
+        -76,
+        -331
+      ],
+      "to": [
+        56,
+        -61,
+        362
+      ],
+      "autouv": 0,
+      "color": 5,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        925
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            693,
+            1618,
+            809,
+            1633
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            1618,
+            693,
+            1633
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1502,
+            1618,
+            1618,
+            1633
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            809,
+            1618,
+            1502,
+            1633
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            809,
+            1618,
+            693,
+            925
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            925,
+            925,
+            809,
+            1618
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "6c80181f-4146-e887-3726-0430e7345d1c"
+    },
+    {
+      "name": "wing_deck2",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -61,
+        -77,
+        -424
+      ],
+      "to": [
+        45,
+        -59,
+        483
+      ],
+      "autouv": 0,
+      "color": 7,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            907,
+            907,
+            1013,
+            925
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            907,
+            907,
+            925
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1920,
+            907,
+            2026,
+            925
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1013,
+            907,
+            1920,
+            925
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1013,
+            907,
+            907,
+            0
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1119,
+            0,
+            1013,
+            907
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "7911d4bb-025b-e9c9-bf3b-57fe4b26f79d"
+    },
+    {
+      "name": "engine_a",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -74,
+        -59,
+        -131
+      ],
+      "to": [
+        31,
+        -20,
+        -91
+      ],
+      "autouv": 0,
+      "color": 5,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        0,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            40,
+            1673,
+            145,
+            1712
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            1673,
+            40,
+            1712
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            185,
+            1673,
+            290,
+            1712
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            145,
+            1673,
+            185,
+            1712
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            145,
+            1673,
+            40,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            250,
+            1633,
+            145,
+            1673
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "9eb48c14-6541-bb6a-aa80-b9145adcf64b"
+    },
+    {
+      "name": "engine_b",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -74,
+        -59,
+        -278
+      ],
+      "to": [
+        31,
+        -20,
+        -238
+      ],
+      "autouv": 0,
+      "color": 5,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        290,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            330,
+            1673,
+            435,
+            1712
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            290,
+            1673,
+            330,
+            1712
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            475,
+            1673,
+            580,
+            1712
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            435,
+            1673,
+            475,
+            1712
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            435,
+            1673,
+            330,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            540,
+            1633,
+            435,
+            1673
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "e084b9a2-7934-d552-bf6d-8b8ae20246ab"
+    },
+    {
+      "name": "engine_c",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -74,
+        -59,
+        133
+      ],
+      "to": [
+        31,
+        -20,
+        173
+      ],
+      "autouv": 0,
+      "color": 7,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        870,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            910,
+            1673,
+            1015,
+            1712
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            870,
+            1673,
+            910,
+            1712
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1055,
+            1673,
+            1160,
+            1712
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1015,
+            1673,
+            1055,
+            1712
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1015,
+            1673,
+            910,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1120,
+            1633,
+            1015,
+            1673
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "4dbbad39-9e92-acf2-5617-7450d19f8a47"
+    },
+    {
+      "name": "engine_smashed",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -74,
+        -40,
+        280
+      ],
+      "to": [
+        31,
+        -1,
+        320
+      ],
+      "autouv": 0,
+      "color": 5,
+      "rotation": [
+        18,
+        -12,
+        55
+      ],
+      "origin": [
+        -21.5,
+        -20.5,
+        300
+      ],
+      "uv_offset": [
+        580,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            620,
+            1673,
+            725,
+            1712
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            580,
+            1673,
+            620,
+            1712
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            765,
+            1673,
+            870,
+            1712
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            725,
+            1673,
+            765,
+            1712
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            725,
+            1673,
+            620,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            830,
+            1633,
+            725,
+            1673
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "44226cf7-b5f9-ffc5-9e31-192ce306704e"
+    },
+    {
+      "name": "tail_plane",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        156,
+        -77,
+        -156
+      ],
+      "to": [
+        233,
+        -59,
+        156
+      ],
+      "autouv": 0,
+      "color": 6,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        925
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1930,
+            1237,
+            2007,
+            1255
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1237,
+            1930,
+            1255
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            2319,
+            1237,
+            2396,
+            1255
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            2007,
+            1237,
+            2319,
+            1255
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            2007,
+            1237,
+            1930,
+            925
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            2084,
+            925,
+            2007,
+            1237
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "eb8801e6-3548-3d12-5051-0f750cffbb74"
+    },
+    {
+      "name": "nose_crumpled",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -198,
+        -28,
+        -18
+      ],
+      "to": [
+        -154,
+        8,
+        22
+      ],
+      "autouv": 0,
+      "color": 0,
+      "rotation": [
+        35,
+        8,
+        -42
+      ],
+      "origin": [
+        -176,
+        -10,
+        2
+      ],
+      "uv_offset": [
+        0,
+        1712
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            40,
+            1752,
+            84,
+            1788
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            1752,
+            40,
+            1788
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            124,
+            1752,
+            168,
+            1788
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            84,
+            1752,
+            124,
+            1788
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            84,
+            1752,
+            40,
+            1712
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            128,
+            1712,
+            84,
+            1752
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "f4f73b04-b31e-5de3-ffc0-b1668b641bd3"
+    },
+    {
+      "name": "tail_fin",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -24.5,
+        -62,
+        -20
+      ],
+      "to": [
+        48.5,
+        -10,
+        20
+      ],
+      "autouv": 0,
+      "color": 1,
+      "rotation": [
+        12,
+        -8,
+        108.0002104591497
+      ],
+      "origin": [
+        212.3016,
+        -117.1301,
+        2
+      ],
+      "uv_offset": [
+        1160,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1200,
+            1673,
+            1273,
+            1725
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1160,
+            1673,
+            1200,
+            1725
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1313,
+            1673,
+            1386,
+            1725
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1273,
+            1673,
+            1313,
+            1725
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1273,
+            1673,
+            1200,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1346,
+            1633,
+            1273,
+            1673
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "e10c8c4e-ded1-b2b6-580d-a4b638623174"
+    },
+    {
+      "name": "tail_strut",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -8.5,
+        -24,
+        -20
+      ],
+      "to": [
+        33.5,
+        69,
+        20
+      ],
+      "autouv": 0,
+      "color": 7,
+      "rotation": [
+        5,
+        0,
+        49.998183678082775
+      ],
+      "origin": [
+        212.3016,
+        -117.1301,
+        2
+      ],
+      "uv_offset": [
+        1604,
+        1693
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1644,
+            1733,
+            1686,
+            1826
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1604,
+            1733,
+            1644,
+            1826
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1726,
+            1733,
+            1768,
+            1826
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1686,
+            1733,
+            1726,
+            1826
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1686,
+            1733,
+            1644,
+            1693
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1728,
+            1693,
+            1686,
+            1733
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "016ae545-6d67-1776-5911-463e83315daf"
+    },
+    {
+      "name": "wing_fairing",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -97.5,
+        -12.5,
+        -36.5
+      ],
+      "to": [
+        101.5,
+        19.5,
+        36.5
+      ],
+      "autouv": 0,
+      "color": 1,
+      "rotation": [
+        0,
+        0,
+        -15.500017538262476
+      ],
+      "origin": [
+        209.5,
+        -34.5,
+        2.5
+      ],
+      "uv_offset": [
+        1618,
+        1509
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1691,
+            1582,
+            1890,
+            1614
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1582,
+            1691,
+            1614
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1963,
+            1582,
+            2162,
+            1614
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1890,
+            1582,
+            1963,
+            1614
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1890,
+            1582,
+            1691,
+            1509
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            2089,
+            1509,
+            1890,
+            1582
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "3c1a54bc-05bb-3f0e-99aa-46d8d2a9d2a6"
+    },
+    {
+      "name": "intake_twisted_a",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -18,
+        -6.5,
+        -6.5
+      ],
+      "to": [
+        23,
+        10.5,
+        36.5
+      ],
+      "autouv": 0,
+      "color": 6,
+      "rotation": [
+        -72.50026307393715,
+        25,
+        -90.0002104591497
+      ],
+      "origin": [
+        -190.2651,
+        -18.883,
+        -11.5
+      ],
+      "uv_offset": [
+        336,
+        1712
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            379,
+            1755,
+            420,
+            1772
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            336,
+            1755,
+            379,
+            1772
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            463,
+            1755,
+            504,
+            1772
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            420,
+            1755,
+            463,
+            1772
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            420,
+            1755,
+            379,
+            1712
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            461,
+            1712,
+            420,
+            1755
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "5e34ce12-5360-2cd5-0e82-093575100822"
+    },
+    {
+      "name": "intake_twisted_b",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -18,
+        -6.5,
+        -6.5
+      ],
+      "to": [
+        23,
+        10.5,
+        36.5
+      ],
+      "autouv": 0,
+      "color": 5,
+      "rotation": [
+        -99.99825383113267,
+        -20,
+        -75.0002104591497
+      ],
+      "origin": [
+        -191.2651,
+        -18.883,
+        21.5
+      ],
+      "uv_offset": [
+        168,
+        1712
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            211,
+            1755,
+            252,
+            1772
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            168,
+            1755,
+            211,
+            1772
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            295,
+            1755,
+            336,
+            1772
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            252,
+            1755,
+            295,
+            1772
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            252,
+            1755,
+            211,
+            1712
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            293,
+            1712,
+            252,
+            1755
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "cbfb0365-4655-3afe-ebd1-a8114e373273"
+    },
+    {
+      "name": "nose_cone_crushed",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -33,
+        -69,
+        -34
+      ],
+      "to": [
+        3,
+        -56,
+        39
+      ],
+      "autouv": 0,
+      "color": 0,
+      "rotation": [
+        22,
+        -15,
+        -102.49827136939516
+      ],
+      "origin": [
+        -93,
+        -40,
+        0
+      ],
+      "uv_offset": [
+        1386,
+        1633
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1459,
+            1706,
+            1495,
+            1719
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1386,
+            1706,
+            1459,
+            1719
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1568,
+            1706,
+            1604,
+            1719
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1495,
+            1706,
+            1568,
+            1719
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1495,
+            1706,
+            1459,
+            1633
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1531,
+            1633,
+            1495,
+            1706
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "76e99693-ee49-7e66-d016-6186fda0ffaa"
+    },
+    {
+      "name": "wing_stump",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -97.5,
+        13.5,
+        -36.5
+      ],
+      "to": [
+        0,
+        19.5,
+        36.5
+      ],
+      "autouv": 0,
+      "color": 7,
+      "rotation": [
+        0,
+        0,
+        -7.500017538262475
+      ],
+      "origin": [
+        96,
+        -29,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        1614
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1691,
+            1687,
+            1788.5,
+            1693
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1687,
+            1691,
+            1693
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1861.5,
+            1687,
+            1959,
+            1693
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1788.5,
+            1687,
+            1861.5,
+            1693
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1788.5,
+            1687,
+            1691,
+            1614
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1886,
+            1614,
+            1788.5,
+            1687
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "6e0cee2e-59b1-365c-fee6-f5e5f5a1eb94"
+    },
+    {
+      "name": "wing_folded",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        0,
+        13.5,
+        -36.5
+      ],
+      "to": [
+        101.5,
+        19.5,
+        36.5
+      ],
+      "autouv": 0,
+      "color": 8,
+      "rotation": [
+        8,
+        5,
+        -78
+      ],
+      "origin": [
+        96,
+        -10,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        1614
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1691,
+            1687,
+            1792.5,
+            1693
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1687,
+            1691,
+            1693
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1865.5,
+            1687,
+            1967,
+            1693
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1792.5,
+            1687,
+            1865.5,
+            1693
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1792.5,
+            1687,
+            1691,
+            1614
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1894,
+            1614,
+            1792.5,
+            1687
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "b007f218-30d8-bb4d-3d95-0202f7b308a1"
+    },
+    {
+      "name": "wing_scrap",
+      "box_uv": true,
+      "render_order": "default",
+      "locked": false,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        -40,
+        0,
+        -20
+      ],
+      "to": [
+        40,
+        4,
+        20
+      ],
+      "autouv": 0,
+      "color": 2,
+      "rotation": [
+        12,
+        -40,
+        5
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "uv_offset": [
+        1618,
+        1614
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            1658,
+            1654,
+            1738,
+            1658
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            1618,
+            1654,
+            1658,
+            1658
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            1778,
+            1654,
+            1858,
+            1658
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            1738,
+            1654,
+            1778,
+            1658
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            1738,
+            1654,
+            1658,
+            1614
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            1818,
+            1614,
+            1738,
+            1654
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "20c3c1f0-3c95-1513-89eb-195b725c8f94"
+    }
+  ],
+  "groups": [
+    {
+      "name": "bone",
+      "uuid": "9909a6f3-d246-6590-3a15-4c940f71cf13",
+      "export": true,
+      "locked": false,
+      "scope": 0,
+      "selected": false,
+      "visibility": true,
+      "_static": {
+        "properties": {},
+        "temp_data": {}
+      },
+      "origin": [
+        0,
+        24,
+        0
+      ],
+      "rotation": [
+        26,
+        14,
+        48
+      ],
+      "color": 0,
+      "children": [],
+      "reset": false,
+      "shade": true,
+      "mirror_uv": false,
+      "autouv": 0,
+      "isOpen": false,
+      "primary_selected": false
+    },
+    {
+      "name": "wing_broken",
+      "uuid": "71638454-5ca2-7342-dc4f-bc43608a1684",
+      "export": true,
+      "locked": false,
+      "scope": 0,
+      "selected": false,
+      "visibility": true,
+      "_static": {
+        "properties": {},
+        "temp_data": {}
+      },
+      "origin": [
+        113.5,
+        -1.5,
+        2.5
+      ],
+      "rotation": [
+        22,
+        -14,
+        66
+      ],
+      "color": 0,
+      "children": [],
+      "reset": false,
+      "shade": true,
+      "mirror_uv": false,
+      "autouv": 0,
+      "isOpen": false,
+      "primary_selected": false
+    },
+    {
+      "name": "debris",
+      "uuid": "d2238e9d-9e5b-0a0f-d26d-b7fd7e5a2c68",
+      "export": true,
+      "locked": false,
+      "scope": 0,
+      "selected": false,
+      "visibility": true,
+      "_static": {
+        "properties": {},
+        "temp_data": {}
+      },
+      "origin": [
+        40,
+        -8,
+        90
+      ],
+      "rotation": [
+        70,
+        30,
+        -20
+      ],
+      "color": 0,
+      "children": [],
+      "reset": false,
+      "shade": true,
+      "mirror_uv": false,
+      "autouv": 0,
+      "isOpen": false,
+      "primary_selected": false
+    }
+  ],
+  "outliner": [
+    {
+      "uuid": "9909a6f3-d246-6590-3a15-4c940f71cf13",
+      "isOpen": false,
+      "children": [
+        "b4dbdd6a-9f8d-5f51-731a-ed94bd21cb7e",
+        "5c1b46d3-bee4-d89d-00ee-34fbaf83a550",
+        "6c80181f-4146-e887-3726-0430e7345d1c",
+        "7911d4bb-025b-e9c9-bf3b-57fe4b26f79d",
+        "9eb48c14-6541-bb6a-aa80-b9145adcf64b",
+        "e084b9a2-7934-d552-bf6d-8b8ae20246ab",
+        "4dbbad39-9e92-acf2-5617-7450d19f8a47",
+        "44226cf7-b5f9-ffc5-9e31-192ce306704e",
+        "eb8801e6-3548-3d12-5051-0f750cffbb74",
+        "f4f73b04-b31e-5de3-ffc0-b1668b641bd3",
+        "e10c8c4e-ded1-b2b6-580d-a4b638623174",
+        "016ae545-6d67-1776-5911-463e83315daf",
+        "3c1a54bc-05bb-3f0e-99aa-46d8d2a9d2a6",
+        "5e34ce12-5360-2cd5-0e82-093575100822",
+        "cbfb0365-4655-3afe-ebd1-a8114e373273",
+        "76e99693-ee49-7e66-d016-6186fda0ffaa",
+        {
+          "uuid": "71638454-5ca2-7342-dc4f-bc43608a1684",
+          "isOpen": false,
+          "children": [
+            "6e0cee2e-59b1-365c-fee6-f5e5f5a1eb94",
+            "b007f218-30d8-bb4d-3d95-0202f7b308a1"
+          ]
+        },
+        {
+          "uuid": "d2238e9d-9e5b-0a0f-d26d-b7fd7e5a2c68",
+          "isOpen": false,
+          "children": [
+            "20c3c1f0-3c95-1513-89eb-195b725c8f94"
+          ]
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "name": "airplane",
+      "path": "",
+      "folder": "",
+      "namespace": "",
+      "id": "0",
+      "group": "",
+      "scope": 0,
+      "width": 2400,
+      "height": 2400,
+      "uv_width": 2400,
+      "uv_height": 2400,
+      "particle": false,
+      "use_as_default": false,
+      "layers_enabled": false,
+      "sync_to_project": "",
+      "file_format": "png",
+      "render_mode": "default",
+      "render_sides": "auto",
+      "wrap_mode": "limited",
+      "pbr_channel": "color",
+      "fps": 7,
+      "force_translucent": false,
+      "frame_time": 1,
+      "frame_order_type": "loop",
+      "frame_order": "",
+      "frame_interpolate": false,
+      "visible": true,
+      "internal": true,
+      "saved": false,
+      "uuid": "bc956d2b-f2d0-5ede-bf77-4696f45208f1",
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAACWAAAAlgCAIAAACDL5s5AAAQAElEQVR4nOzZMQEAIAzAsB2zAif+5SGkiY3sfWcAAAAAAACAhh0AAAAAAAAgQxACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAIABAAAAoEMQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAcktOKwAAEABJREFUAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAAAAECIIAQAAAAAAIEQQAgAAAAAAQIggBAAAAAAAgBBBCAAAAAAAACGCEAAAAAAAAEIEIQAAAAAAAIQIQgAAAAAAAAgRhAAAAAAAABAiCAEAAAAAACBEEAIAAAAAAECIIAQAAAAAAIAQQQgAAAAAAAAhghAAAAAAAABCBCEAAAAAAACECEIAAAAAAAAIEYQAAAAAAAAQIggBAAAAAAAgRBACAAAAAABAiCAEAAAAAACAEEEIAAAAAAAAIYIQAAAAAAAAQgQhAAAAAAAAhAhCAAAAAAAACBGEAAAAAADw2bMDAQAAAABB/taDXBoBjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAANu85j8AABAASURBVAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAACSOfceAAAQAElEQVQAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAABi346NIgaCKIgOFOYVvmQp/6hkSWkQAjgnHdfv5TC7RtcHAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAKg79nPgD9ZtGeD/EwgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEI+BwAAAACAtnVbBoAMC0IAAAAAAAAIEQgBAAAAAIDfWZrC2xAIAQAAAADQfgBCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIGQAAAAAAADoEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAICQ2wLhsZ8D11q3ZUpcGddzZfBsrgyerXZlwFz73XhkAAB4ERaEAAAAAAAAECIQAgAAAAAAQIhACAAAAAAAACECIQAAAAAAAIQIhAAAAAAAABAiEAIAAAAAAECIQAgAAAAAAAAhAiEAAAAAAACECIQAAAAAAAAQIhACAAAAAABAiEAIAAAAAAAAIQIhAAAAAAAAhAiEAAAAAAAAECIQAgAAAAAAQIhACAAAAAAAACECIQAAAAAAAIQIhAAAAAAAABAiEAIAAAAAwAB0CIQAAAAAAAAQIhACAAAAAABAiEAIAAAAAAAAIQIhAAAAAAAAhAiEAAAAAAAAECIQAgAAAAAAQIhACAAAAAAAACECIQAAAAAAAIQIhAAAAAAAABAiEAIAAAAAAECIQAgAAAAAAAAhAiEAAAAAAACECIQAAAAAAAAQIhACAAAAAABAiEAIAAAAAAAAIQIhAAAAAAAAhAiEAAAAAAAAECIQAgAAAAAAQIhACAAAAAAAACECIQAAAAAAAIQIhAAAAAAAABDy8fh+DAAAAPdZt2WAmxz7OVdx7AAAvAgLQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAoGvdlgEAgBiBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCvtZtGQAAAAAAAKDBghAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAFxkOLwAAEABJREFUEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAO+pW/8AAAaFSURBVAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAAAAQgRCAAAAAAAACBEIAQAAAAAAIEQgBAAAAAAAgBCBEAAAAAAAAEIEQgAAAAAAAAgRCAEAAAAAACBEIAQAAAAAAIAQgRAAAAAAAABCBEIAAAAAAAAIEQgBAAAAAAAgRCAEAAAAAACAEIEQAAAAAOCHPTsQAAAAABDkbz3IpREAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADAiCAEAAAAAAGBEEAIAAAAAAMCIIAQAAAAAAIARQQgAAAAAAAAjghAAAAAAAABGBCEAAAAAAACMCEIAAAAAAAAYEYQAAAAAAAAwIggBAAAAAABgRBACAAAAAADAiCAEAAAAAACAEUEIAAAAAAAAI4IQAAAAAAAARgQhAAAAAAAAjAhCAAAAAAAAGBGEAAAAAAAAMCIIAQAAAAAAYEQQAgAAAAAAwIggBAAAAAAAgBFBCAAAAAAAACOCEAAAAAAAAEYEIQAAAAAAAIwIQgAAAAAAABgRhAAAAAAAADASAAAA///QaHcHAAAABklEQVQDAPe2PQ14WfPRAAAAAElFTkSuQmCC"
+    }
+  ]
+}

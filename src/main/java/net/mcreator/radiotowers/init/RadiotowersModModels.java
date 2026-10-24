@@ -9,6 +9,7 @@ import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.api.distmarker.Dist;
 
 import net.mcreator.radiotowers.client.model.Modelplane;
+import net.mcreator.radiotowers.client.model.Modelplanecrashed;
 import net.mcreator.radiotowers.client.model.Modelairdropcrate_Converted;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -17,5 +18,6 @@ public class RadiotowersModModels {
 	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
 		event.registerLayerDefinition(Modelairdropcrate_Converted.LAYER_LOCATION, Modelairdropcrate_Converted::createBodyLayer);
 		event.registerLayerDefinition(Modelplane.LAYER_LOCATION, Modelplane::createBodyLayer);
+		event.registerLayerDefinition(Modelplanecrashed.LAYER_LOCATION, Modelplanecrashed::createBodyLayer);
 	}
 }

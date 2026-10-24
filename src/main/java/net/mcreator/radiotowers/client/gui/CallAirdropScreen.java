@@ -8,6 +8,7 @@ import net.mcreator.radiotowers.network.CallAirdropMessage;
 import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
 import net.mcreator.radiotowers.network.DeactivatePanelMessage;
 import net.mcreator.radiotowers.network.RequestAirdropStatePacket;
+import net.mcreator.radiotowers.client.AirdropWaveHudData;
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.minecraft.client.Minecraft;
@@ -38,10 +39,34 @@ import java.util.Map;
 
 /**
  * Airdrop call GUI: item order list (left), START lever, difficulty meter.
+ * Top tabs: Airdrop | Boss Mode | Endless Mode (Boss/Endless gated by Dead Air unlock flags;
+ * unlocked tabs show Coming soon until gameplay ships).
  * When Dead Air is installed: Turn off, Default (cycle), Dynamic, Internet.
  * This screen assigns the tower's broadcast station — tuning in is done in Dead Air's walkie GUI.
  */
 public class CallAirdropScreen extends EscScreen implements InternetStationParent {
+
+    public enum ModeTab { AIRDROP, BASE, BOSS, ENDLESS }
+
+    private static final int TAB_BAR_HEIGHT = 22;
+    private static final int TAB_GAP = 4;
+    private static final int LOCKED_TAB_TEXT = 0x666666;
+    private static final int ACTIVE_TAB_TEXT = 0xE0E0E0;
+    private static final int TAB_BG = 0xFF2A2A2A;
+    private static final int TAB_BG_ACTIVE = 0xFF3A4A3A;
+    private static final int TAB_BG_LOCKED = 0xFF222222;
+    private static final int TAB_BORDER = 0xFF555555;
+
+    private ModeTab selectedTab = ModeTab.AIRDROP;
+    private EscRect tabBarRect;
+    private EscRect tabAirdropRect;
+    private EscRect tabBaseRect;
+    private EscRect tabBossRect;
+    private EscRect tabEndlessRect;
+    private EscRect bodyContentRect;
+    /** Client cache of Dead Air base status for this panel (updated by {@link net.mcreator.radiotowers.network.BaseStatusPacket}). */
+    private static String cachedBaseStatusLine = "";
+    private static boolean cachedBaseIsThisPanel;
 
     private final BlockPos panelPos;
     private final List<AirdropCatalog.Entry> catalog;
@@ -112,6 +137,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     /** Last non-null station used by this panel so Turn on restores expected broadcast. */
     private String lastStationIdBeforeTurnOff = null;
     private Button turnOffButton;
+    private Button lobbyButton;
 
     public CallAirdropScreen(BlockPos panelPos) {
         super(Component.translatable("screen.radiotowers.call_airdrop.title"));
@@ -199,14 +225,51 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private EscRect titleLine2;
     private EscRect titleLine3;
 
+    private boolean isAirdropTab() {
+        return selectedTab == ModeTab.AIRDROP;
+    }
+
+    private boolean isBaseTab() {
+        return selectedTab == ModeTab.BASE;
+    }
+
+    private boolean hasBaseTab() {
+        return ModList.get().isLoaded("dead_air");
+    }
+
+    private void selectTab(ModeTab tab) {
+        if (selectedTab == tab) return;
+        selectedTab = tab;
+        clearWidgets();
+        buildLayout();
+    }
+
     private void recomputeLayoutRegions(EscRect content) {
+        int tabCount = hasBaseTab() ? 4 : 3;
+        int tabW = Math.max(56, (content.width() - TAB_GAP * (tabCount - 1)) / tabCount);
+        tabBarRect = new EscRect(content.x(), content.y(), content.width(), TAB_BAR_HEIGHT);
+        tabAirdropRect = new EscRect(content.x(), content.y(), tabW, TAB_BAR_HEIGHT);
+        int nextX = tabAirdropRect.right() + TAB_GAP;
+        if (hasBaseTab()) {
+            tabBaseRect = new EscRect(nextX, content.y(), tabW, TAB_BAR_HEIGHT);
+            nextX = tabBaseRect.right() + TAB_GAP;
+        } else {
+            tabBaseRect = null;
+        }
+        tabBossRect = new EscRect(nextX, content.y(), tabW, TAB_BAR_HEIGHT);
+        tabEndlessRect = new EscRect(tabBossRect.right() + TAB_GAP, content.y(),
+            Math.max(40, content.right() - (tabBossRect.right() + TAB_GAP)), TAB_BAR_HEIGHT);
+        bodyContentRect = new EscRect(content.x(), content.y() + TAB_BAR_HEIGHT + 6,
+            content.width(), Math.max(40, content.height() - TAB_BAR_HEIGHT - 6));
+
+        EscRect body = bodyContentRect;
         if (ModList.get().isLoaded("dead_air")) {
-            EscRect[] cols = content.splitColumns(new float[]{0.42f, 0.30f, 0.28f}, 10);
+            EscRect[] cols = body.splitColumns(new float[]{0.42f, 0.30f, 0.28f}, 10);
             listColumn = cols[0];
             controlsColumn = cols[1];
             hintColumn = cols[2];
         } else {
-            EscRect[] cols = content.splitColumns(new float[]{0.52f, 0.48f}, 10);
+            EscRect[] cols = body.splitColumns(new float[]{0.52f, 0.48f}, 10);
             listColumn = cols[0];
             controlsColumn = cols[1];
             hintColumn = controlsColumn;
@@ -240,6 +303,25 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         EscRect content = contentRect();
         recomputeLayoutRegions(content);
 
+        // Always request wave state + Boss/Endless unlock flags (soft-dep Dead Air on server).
+        RadiotowersMod.PACKET_HANDLER.sendToServer(new RequestAirdropStatePacket(panelPos));
+
+        turnOffButton = null;
+        lobbyButton = null;
+        defaultStationButton = null;
+        dynamicStationButton = null;
+        internetButton = null;
+        searchEditBox = null;
+
+        if (isBaseTab()) {
+            buildBaseTabLayout();
+            return;
+        }
+        if (!isAirdropTab()) {
+            // Boss / Endless: placeholder only — no catalog widgets.
+            return;
+        }
+
         searchEditBox = addSearchBox(searchRect, EscText.styled(Component.translatable("screen.radiotowers.search.title")));
         searchEditBox.setHint(EscText.styled(Component.translatable("screen.radiotowers.search.hint")));
         searchEditBox.setMaxLength(64);
@@ -251,8 +333,6 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
         refreshDefaultStationsCache();
         fetchCurrentStationFromDeadAir();
-        if (ModList.get().isLoaded("berezkas_zombie_waves_api") || ModList.get().isLoaded("berezka_zombie_waves_api"))
-            RadiotowersMod.PACKET_HANDLER.sendToServer(new RequestAirdropStatePacket(panelPos));
 
         EscRect leverBounds = leverAreaRect;
         AirdropLeverWidget lever = new AirdropLeverWidget(0, 0, LEVER_WIDTH, LEVER_HEIGHT, this::onStart,
@@ -262,7 +342,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
         int y = leverBounds.bottom() + 14 - controlsColumn.y();
         if (net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.isAvailable()) {
-            addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.lobby")), controlsColumn,
+            lobbyButton = addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.lobby")), controlsColumn,
                 EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> onOpenLobby());
             y += 24;
         }
@@ -537,12 +617,134 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         return "Music Disc (" + label + ")";
     }
 
+    private void drawTab(GuiGraphics g, EscRect rect, String label, boolean selected, boolean locked) {
+        if (rect == null) return;
+        int bg = locked ? TAB_BG_LOCKED : (selected ? TAB_BG_ACTIVE : TAB_BG);
+        g.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), bg);
+        g.fill(rect.x(), rect.y(), rect.right(), rect.y() + 1, TAB_BORDER);
+        g.fill(rect.x(), rect.bottom() - 1, rect.right(), rect.bottom(), TAB_BORDER);
+        g.fill(rect.x(), rect.y(), rect.x() + 1, rect.bottom(), TAB_BORDER);
+        g.fill(rect.right() - 1, rect.y(), rect.right(), rect.bottom(), TAB_BORDER);
+        String text = locked ? label + " [LOCKED]" : label;
+        int color = locked ? LOCKED_TAB_TEXT : ACTIVE_TAB_TEXT;
+        if (selected && !locked) color = 0xFFFFFF;
+        int tw = font.width(text);
+        int tx = rect.x() + Math.max(2, (rect.width() - tw) / 2);
+        int ty = rect.y() + Math.max(2, (rect.height() - 8) / 2);
+        EscText.drawString(g, font, text, tx, ty, color, false, EscFonts.DEFAULT);
+    }
+
+    private void buildBaseTabLayout() {
+        if (bodyContentRect == null) return;
+        RadiotowersMod.PACKET_HANDLER.sendToServer(
+            new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY));
+        EscRect body = bodyContentRect;
+        int btnW = Math.min(180, body.width() - 32);
+        int y = 24;
+        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.claim_base")), body,
+            EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
+            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
+                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.SET)));
+        y += 28;
+        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.unset_base")), body,
+            EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
+            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
+                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.UNSET)));
+        y += 28;
+        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.refresh_base")), body,
+            EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
+            b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
+                new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
+                    net.mcreator.radiotowers.network.BasePanelActionMessage.QUERY)));
+    }
+
+    /** Called from {@link net.mcreator.radiotowers.network.BaseStatusPacket} on the client. */
+    public static void applyBaseStatus(String statusLine, boolean isThisPanel) {
+        cachedBaseStatusLine = statusLine != null ? statusLine : "";
+        cachedBaseIsThisPanel = isThisPanel;
+    }
+
+    private void drawBaseTab(GuiGraphics g) {
+        if (bodyContentRect == null) return;
+        EscRect body = bodyContentRect;
+        g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
+        g.fill(body.x(), body.y(), body.right(), body.y() + 1, 0xFF404040);
+        int cx = body.x() + 16;
+        int maxW = Math.max(40, body.width() - 32);
+        int cy = body.y() + 120;
+        EscText.drawWrapped(g, font,
+            Component.translatable("screen.radiotowers.base.help").getString(),
+            cx, cy, maxW, 0xAAAAAA);
+        cy += EscText.wrapHeight(font, Component.translatable("screen.radiotowers.base.help").getString(), maxW) + 12;
+        String status = cachedBaseStatusLine.isEmpty()
+            ? Component.translatable("screen.radiotowers.base.status_loading").getString()
+            : cachedBaseStatusLine;
+        int statusColor = cachedBaseIsThisPanel ? 0xFF88FF88 : 0xFFE0E0E0;
+        EscText.drawWrapped(g, font, status, cx, cy, maxW, statusColor);
+    }
+
+    private void drawModePlaceholder(GuiGraphics g) {
+        if (bodyContentRect == null) return;
+        EscRect body = bodyContentRect;
+        g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
+        g.fill(body.x(), body.y(), body.right(), body.y() + 1, 0xFF404040);
+        boolean boss = selectedTab == ModeTab.BOSS;
+        boolean unlocked = boss ? AirdropWaveHudData.isBossModeUnlocked() : AirdropWaveHudData.isEndlessModeUnlocked();
+        String titleKey = boss
+            ? (unlocked ? "screen.radiotowers.mode.boss.coming_soon.title" : "screen.radiotowers.mode.boss.locked.title")
+            : (unlocked ? "screen.radiotowers.mode.endless.coming_soon.title" : "screen.radiotowers.mode.endless.locked.title");
+        String bodyKey = boss
+            ? (unlocked ? "screen.radiotowers.mode.boss.coming_soon.body" : "screen.radiotowers.mode.boss.locked.body")
+            : (unlocked ? "screen.radiotowers.mode.endless.coming_soon.body" : "screen.radiotowers.mode.endless.locked.body");
+        Component title = Component.translatable(titleKey);
+        Component detail = Component.translatable(bodyKey);
+        int titleColor = unlocked ? 0xFFE0C060 : 0xFF888888;
+        int cx = body.x() + 16;
+        int cy = body.y() + Math.max(24, body.height() / 3);
+        int maxW = Math.max(40, body.width() - 32);
+        EscText.drawWrapped(g, font, title.getString(), cx, cy, maxW, titleColor);
+        int afterTitle = cy + EscText.wrapHeight(font, title.getString(), maxW) + 10;
+        EscText.drawWrapped(g, font, detail.getString(), cx, afterTitle, maxW, 0xAAAAAA);
+    }
+
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(guiGraphics);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
+
+        drawTab(guiGraphics, tabAirdropRect,
+            Component.translatable("screen.radiotowers.tab.airdrop").getString(),
+            selectedTab == ModeTab.AIRDROP, false);
+        if (tabBaseRect != null) {
+            drawTab(guiGraphics, tabBaseRect,
+                Component.translatable("screen.radiotowers.tab.base").getString(),
+                selectedTab == ModeTab.BASE, false);
+        }
+        drawTab(guiGraphics, tabBossRect,
+            Component.translatable("screen.radiotowers.tab.boss").getString(),
+            selectedTab == ModeTab.BOSS, !AirdropWaveHudData.isBossModeUnlocked());
+        drawTab(guiGraphics, tabEndlessRect,
+            Component.translatable("screen.radiotowers.tab.endless").getString(),
+            selectedTab == ModeTab.ENDLESS, !AirdropWaveHudData.isEndlessModeUnlocked());
+
+        if (isBaseTab()) {
+            drawBaseTab(guiGraphics);
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            return;
+        }
+        if (!isAirdropTab()) {
+            drawModePlaceholder(guiGraphics);
+            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            return;
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        if (listAreaRect == null) return;
 
         int visibleRows = getListVisibleRows();
         int listSize = filteredIndices.size();
@@ -630,22 +832,24 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             }
         }
 
-        // Dead Air: short hint in the hint column beside each button row
-        if (ModList.get().isLoaded("dead_air") && turnOffButton != null) {
+        // Dead Air: hint block aligned to top of the top button (Lobby, else Turn on)
+        if (ModList.get().isLoaded("dead_air") && turnOffButton != null && hintColumn != null) {
+            Button topBtn = lobbyButton != null ? lobbyButton : turnOffButton;
             int textX = hintColumn.x();
             int maxW = hintColumn.width();
-            final String hintDynamic = "Extra stations added via addons or other mods.";
-            final String hintInternet = "Web stream as a station.";
-            final String hintFoot = "Hear it: walkie on, match MHz (Dead Air).";
-            drawDeadAirHint(guiGraphics, "Broadcast on/off", textX, turnOffButton.getY() + 6, maxW);
-            drawDeadAirHint(guiGraphics, "What this tower plays (click to cycle).", textX, defaultStationButton.getY() + 6, maxW);
-            int dynamicY = dynamicStationButton.getY() + 6;
-            drawDeadAirHint(guiGraphics, hintDynamic, textX, dynamicY, maxW);
-            int dynamicBottom = dynamicY + EscText.wrapHeight(font, hintDynamic, maxW);
-            int internetY = Math.max(internetButton.getY() + 6, dynamicBottom + 4);
-            drawDeadAirHint(guiGraphics, hintInternet, textX, internetY, maxW);
-            int footY = internetY + EscText.wrapHeight(font, hintInternet, maxW) + 4;
-            drawDeadAirHint(guiGraphics, hintFoot, textX, footY, maxW);
+            int y = topBtn.getY();
+            final String[] hints = {
+                "Broadcast on/off",
+                "What this tower plays (click to cycle).",
+                "Extra stations added via addons or other mods.",
+                "Web stream as a station.",
+                "Hear it: walkie on, match MHz (Dead Air)."
+            };
+            int lineGap = 2;
+            for (String hint : hints) {
+                drawDeadAirHint(guiGraphics, hint, textX, y, maxW);
+                y += EscText.wrapHeight(font, hint, maxW) + lineGap;
+            }
         }
 
         // Difficulty meter: bottom-aligned with lever, to the right of the lever
@@ -682,6 +886,26 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            if (tabAirdropRect != null && tabAirdropRect.contains(mouseX, mouseY)) {
+                selectTab(ModeTab.AIRDROP);
+                return true;
+            }
+            if (tabBaseRect != null && tabBaseRect.contains(mouseX, mouseY)) {
+                selectTab(ModeTab.BASE);
+                return true;
+            }
+            if (tabBossRect != null && tabBossRect.contains(mouseX, mouseY)) {
+                // Locked tabs still selectable so the locked / coming-soon panel is visible.
+                selectTab(ModeTab.BOSS);
+                return true;
+            }
+            if (tabEndlessRect != null && tabEndlessRect.contains(mouseX, mouseY)) {
+                selectTab(ModeTab.ENDLESS);
+                return true;
+            }
+        }
+        if (!isAirdropTab()) return super.mouseClicked(mouseX, mouseY, button);
         if (listAreaRect == null) return super.mouseClicked(mouseX, mouseY, button);
         int visibleRows = getListVisibleRows();
         int listBottom = getListBottom();
@@ -720,6 +944,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollAmount) {
+        if (!isAirdropTab()) return super.mouseScrolled(mouseX, mouseY, scrollAmount);
         if (listAreaRect == null) return super.mouseScrolled(mouseX, mouseY, scrollAmount);
         int listBottom = getListBottom();
         int listPanelLeft = listPanelLeft();

@@ -1,7 +1,7 @@
-# Rebuild RadioTowers and copy JAR to C.Ideas test modpack.
+# Rebuild RadioTowers and copy JAR to Forge test packs (C.Ideas + ESS Lastlight).
 # Run from this folder: .\buildAndCopyToModpack.ps1
 Set-Location $PSScriptRoot
 .\gradlew build --no-daemon
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Done. JAR was copied to: $env:USERPROFILE\curseforge\minecraft\Instances\C.Ideas\mods" -ForegroundColor Green
+    Write-Host "Done. JAR copied to C.Ideas + ESS Lastlight mods folders." -ForegroundColor Green
 }

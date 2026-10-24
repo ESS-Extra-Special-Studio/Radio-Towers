@@ -49,8 +49,8 @@ Server and client: install this mod on the dedicated server and on every client.
 
 [[dependencies.radiotowers]]
     modId="esn"
-    mandatory=false
-    versionRange="[1.0,)"
+    mandatory=true
+    versionRange="[1.0.0,2.0)"
     ordering="AFTER"
     side="BOTH"
 

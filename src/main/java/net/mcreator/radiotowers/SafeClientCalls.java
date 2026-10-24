@@ -18,6 +18,11 @@ public final class SafeClientCalls {
 		invokeVoid("openRadioPanel", new Class<?>[] { BlockPos.class }, new Object[] { pos });
 	}
 
+	/** Force-open Call Airdrop even if another screen is currently open (OP debug). */
+	public static void forceOpenCallAirdrop(BlockPos pos) {
+		invokeVoid("forceOpenCallAirdrop", new Class<?>[] { BlockPos.class }, new Object[] { pos });
+	}
+
 	public static void applyWaveStatePacket(int currentWave, int totalWaves, int zombiesRemaining, int secondsRemaining, boolean nmsSuppressActive) {
 		invokeVoid("applyWaveStatePacket",
 			new Class<?>[] { int.class, int.class, int.class, int.class, boolean.class },
@@ -26,6 +31,11 @@ public final class SafeClientCalls {
 
 	public static void applyAirdropStatePacket(boolean waveInProgress, long cooldownEndGameTime) {
 		invokeVoid("applyAirdropStatePacket", new Class<?>[] { boolean.class, long.class }, new Object[] { waveInProgress, cooldownEndGameTime });
+	}
+
+	public static void applyAirdropModeUnlockPacket(boolean bossModeUnlocked, boolean endlessModeUnlocked) {
+		invokeVoid("applyAirdropModeUnlockPacket", new Class<?>[] { boolean.class, boolean.class },
+			new Object[] { bossModeUnlocked, endlessModeUnlocked });
 	}
 
 	public static void applyLobbySync(Object syncPacket) {
@@ -38,6 +48,10 @@ public final class SafeClientCalls {
 
 	public static void openLobbyScreen(java.util.UUID lobbyId, BlockPos panelPos) {
 		invokeVoid("openLobbyScreen", new Class<?>[] { java.util.UUID.class, BlockPos.class }, new Object[] { lobbyId, panelPos });
+	}
+
+	public static void applyLobbyClosed(Object closedPacket) {
+		invokeVoid("applyLobbyClosed", new Class<?>[] { Object.class }, new Object[] { closedPacket });
 	}
 
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {

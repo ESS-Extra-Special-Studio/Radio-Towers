@@ -24,10 +24,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 import uk.co.extraspecialstudio.esl.lobby.EslLobby;
 import uk.co.extraspecialstudio.esl.lobby.EslLobbyEvent;
@@ -49,6 +50,7 @@ import java.util.UUID;
  * RadioTowers airdrop lobby feature (ESL sessions + ESN packets via {@link AirdropLobbyNetwork}).
  * Solo / empty lobby keeps the Call Airdrop lever path unchanged.
  */
+@Mod.EventBusSubscriber(modid = RadiotowersMod.MODID)
 public final class AirdropLobbyService {
 
     private static boolean busRegistered;
@@ -62,14 +64,14 @@ public final class AirdropLobbyService {
     private AirdropLobbyService() {}
 
     public static boolean isAvailable() {
-        return ModList.get().isLoaded("extraspeciallib") && ModList.get().isLoaded("esn");
+        return ModList.get().isLoaded("extraspeciallib") && ModList.get().isLoaded("esn")
+            && AirdropLobbyNetwork.isAvailable();
     }
 
     private static void ensureBus() {
-        if (busRegistered || !isAvailable()) return;
+        if (busRegistered || !ModList.get().isLoaded("extraspeciallib")) return;
         busRegistered = true;
         EslLobbyManager.init();
-        MinecraftForge.EVENT_BUS.register(AirdropLobbyService.class);
     }
 
     /** True when host has invited/joined guests — solo lever must not start. */
@@ -234,7 +236,7 @@ public final class AirdropLobbyService {
             } else {
                 EslLobbyManager.cancel(lobby);
             }
-            notifyClosed(player.getServer(), id, lobby.anchor());
+            // Closed event sends lobby_closed to members.
         } else {
             syncToLobby(lobby);
         }
@@ -256,7 +258,7 @@ public final class AirdropLobbyService {
         if (!party) {
             // Empty lobby Go = same as solo lever (no countdown ceremony)
             startAirdrop(host, panelPos, msg.totalDifficulty(), msg.itemIds(), msg.quantities(),
-                lobby.memberUuids(), null);
+                lobby.memberUuids(), null, host.getUUID());
             EslLobbyManager.cancel(lobby);
             PENDING_GO.remove(lobby.id());
             COUNTDOWN_END.remove(lobby.id());
@@ -276,9 +278,13 @@ public final class AirdropLobbyService {
         syncToLobby(lobby);
     }
 
+    /**
+     * @param orderOwner player whose cooldown / pending slot owns this run (host UUID even if a
+     *                   guest is the live {@code sender} after host disconnect mid-countdown)
+     */
     private static void startAirdrop(ServerPlayer sender, BlockPos panelPos, int totalDifficulty,
                                      List<String> itemIds, List<Integer> quantities,
-                                     Set<UUID> members, @Nullable UUID lobbyId) {
+                                     Set<UUID> members, @Nullable UUID lobbyId, @Nullable UUID orderOwner) {
         List<String> ids = itemIds != null ? new ArrayList<>(itemIds) : new ArrayList<>();
         List<Integer> qty = quantities != null ? new ArrayList<>(quantities) : new ArrayList<>();
         boolean standardAirdrop = totalDifficulty == 0 && ids.isEmpty();
@@ -293,7 +299,9 @@ public final class AirdropLobbyService {
         if (!standardAirdrop && !AirdropDifficultyTier.canStart(totalDifficulty)) return;
 
         ServerLevel level = sender.serverLevel();
+        UUID owner = orderOwner != null ? orderOwner : sender.getUUID();
         Set<UUID> party = new LinkedHashSet<>();
+        party.add(owner);
         party.add(sender.getUUID());
         if (members != null) party.addAll(members);
         boolean lobbied = party.size() > 1;
@@ -305,14 +313,16 @@ public final class AirdropLobbyService {
             && (EslWaveIntegration.isEslWaveAvailable() || ZombieWavesAPILoader.isZombieWavesAPILoaded());
 
         if (hasWaveBackend) {
-            if (PendingAirdropStorage.hasPendingForPlayer(level, sender.getUUID())) return;
-            if (AirdropCooldown.isOnCooldown(level, sender.getUUID())) return;
+            // Always gate on the order owner (host), not the live sender — guest fallback after
+            // host disconnect must not no-op on the guest's unrelated cooldown.
+            if (PendingAirdropStorage.hasPendingForPlayer(level, owner)) return;
+            if (AirdropCooldown.isOnCooldown(level, owner)) return;
             AirdropDifficultyTier.Tier tier = AirdropDifficultyTier.getTier(totalDifficulty);
             if (tier == null) return;
             BlockPos panel = panelPos.immutable();
             BlockPos waveStart = groundForWave(level, panel);
             ZombieWavesAPILoader.purgeWaveEntityResidue(level, waveStart);
-            PendingAirdropStorage.store(level, waveStart, panel, ids, qty, totalDifficulty, sender.getUUID(),
+            PendingAirdropStorage.store(level, waveStart, panel, ids, qty, totalDifficulty, owner,
                 tier.numWaves, tier.numWaves, tier.apiDifficulty, party, storeLobbyId);
             // Force members-only flag from config when lobbied
             PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPending(level, waveStart);
@@ -346,7 +356,7 @@ public final class AirdropLobbyService {
             return;
         }
 
-        if (AirdropCooldown.isOnCooldown(level, sender.getUUID())) return;
+        if (AirdropCooldown.isOnCooldown(level, owner)) return;
         RadioPanelOnBlockRightClickedProcedure.execute(level, panelPos.getX(), panelPos.getY(), panelPos.getZ(), ids, qty, totalDifficulty);
         if (membersOnly) {
             PendingAirdropStorage.putNextDeliveryMembers(level.dimension(), party, true);
@@ -415,14 +425,44 @@ public final class AirdropLobbyService {
             return;
         }
         lobby.markInProgress();
-        ServerPlayer host = server.getPlayerList().getPlayer(go.hostUuid());
         Set<UUID> members = new LinkedHashSet<>(lobby.memberUuids());
         broadcastCountdown(lobby, 0);
-        if (host != null) {
-            startAirdrop(host, go.panelPos(), go.totalDifficulty(), go.itemIds(), go.quantities(),
-                members, lobby.id());
+        ServerPlayer actor = server.getPlayerList().getPlayer(go.hostUuid());
+        if (actor == null) {
+            // Host disconnected mid-countdown — start from any online member so the party is not wasted.
+            for (UUID uuid : members) {
+                actor = server.getPlayerList().getPlayer(uuid);
+                if (actor != null) break;
+            }
+        }
+        if (actor != null) {
+            startAirdrop(actor, go.panelPos(), go.totalDifficulty(), go.itemIds(), go.quantities(),
+                members, lobby.id(), go.hostUuid());
+        } else {
+            RadiotowersMod.LOGGER.warn("[Lobby] Countdown finished for {} but no members online — aborting", lobbyId);
         }
         EslLobbyManager.cancel(lobby);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (!isAvailable()) return;
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        ensureBus();
+        EslLobby lobby = EslLobbyManager.findByMember(player.getUUID());
+        if (lobby == null || lobby.state() == EslLobby.State.CLOSED) return;
+        if (lobby.hostUuid().equals(player.getUUID())) {
+            UUID id = lobby.id();
+            // Mid-countdown: start for remaining online members instead of wasting the party.
+            if (PENDING_GO.containsKey(id) && COUNTDOWN_END.containsKey(id)) {
+                finishCountdown(player.getServer(), id);
+            } else {
+                EslLobbyManager.cancel(lobby);
+            }
+        } else {
+            lobby.leave(player.getUUID());
+            syncToLobby(lobby);
+        }
     }
 
     @SubscribeEvent
@@ -430,6 +470,10 @@ public final class AirdropLobbyService {
         if (event instanceof EslLobbyEvent.Closed closed) {
             PENDING_GO.remove(closed.lobby().id());
             COUNTDOWN_END.remove(closed.lobby().id());
+            MinecraftServer server = closed.lobby().level() != null ? closed.lobby().level().getServer() : null;
+            if (server != null) {
+                notifyClosed(server, closed.lobby().id(), closed.lobby().allMemberUuids());
+            }
             return;
         }
         if (event instanceof EslLobbyEvent.InviteSent
@@ -562,8 +606,15 @@ public final class AirdropLobbyService {
         }
     }
 
-    private static void notifyClosed(MinecraftServer server, UUID lobbyId, BlockPos panel) {
-        // Clients clear via leave / screen close; no dedicated Closed packet in v1.
+    private static void notifyClosed(MinecraftServer server, UUID lobbyId, Collection<UUID> members) {
+        if (!AirdropLobbyNetwork.isAvailable() || server == null || lobbyId == null) return;
+        LobbyPackets.Closed pkt = new LobbyPackets.Closed(lobbyId);
+        if (members != null) {
+            for (UUID uuid : members) {
+                ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+                if (p != null) AirdropLobbyNetwork.channel().sendTo(p, pkt);
+            }
+        }
     }
 
     private static void sendInviteChat(ServerPlayer host, ServerPlayer target, EslLobby lobby) {

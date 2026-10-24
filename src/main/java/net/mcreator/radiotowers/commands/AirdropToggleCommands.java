@@ -2,6 +2,7 @@ package net.mcreator.radiotowers.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.airdrop.AirdropCatalog;
 import net.mcreator.radiotowers.airdrop.AirdropProfiles;
 import net.mcreator.radiotowers.airdrop.AirdropRuntimeToggles;
@@ -9,14 +10,21 @@ import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.integration.AirdropDifficultyTier;
 import net.mcreator.radiotowers.integration.EslWaveIntegration;
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
+import net.mcreator.radiotowers.init.RadiotowersModBlocks;
+import net.mcreator.radiotowers.network.OpenCallAirdropPacket;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
 
 @Mod.EventBusSubscriber(modid = "radiotowers")
 public class AirdropToggleCommands {
@@ -77,7 +85,51 @@ public class AirdropToggleCommands {
                         .then(Commands.argument("name", StringArgumentType.word())
                             .executes(ctx -> profileLoad(ctx.getSource(), StringArgumentType.getString(ctx, "name")))))
                 )
+                // OP debug: force-open Call Airdrop (Boss/Endless tabs) without right-clicking a thin panel hitbox.
+                .then(Commands.literal("opencall").executes(ctx -> openCall(ctx.getSource())))
         );
+    }
+
+    private static int openCall(CommandSourceStack src) {
+        if (!(src.getEntity() instanceof ServerPlayer player)) {
+            src.sendFailure(Component.literal("Player only"));
+            return 0;
+        }
+        // Prefer a real radio panel nearby — Base claim rejects non-panel positions.
+        BlockPos nearby = findNearbyRadioPanel(player);
+        final BlockPos pos = nearby != null ? nearby : player.blockPosition();
+        if (nearby == null) {
+            src.sendSuccess(() -> Component.literal(
+                "No radio panel within 10 blocks — opened at feet " + pos.toShortString()
+                    + " (Base claim will fail until you open a real panel)"), false);
+        } else {
+            src.sendSuccess(() -> Component.literal("Opened Call Airdrop at panel " + pos.toShortString()), false);
+        }
+        RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new OpenCallAirdropPacket(pos));
+        return 1;
+    }
+
+    /** Nearest radiotowers:radio_panel within 10 blocks of the player (inclusive). */
+    private static BlockPos findNearbyRadioPanel(ServerPlayer player) {
+        if (!(player.level() instanceof ServerLevel level)) return null;
+        Block panel = RadiotowersModBlocks.RADIO_PANEL.get();
+        BlockPos origin = player.blockPosition();
+        BlockPos best = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (int dy = -2; dy <= 4; dy++) {
+            for (int dx = -10; dx <= 10; dx++) {
+                for (int dz = -10; dz <= 10; dz++) {
+                    BlockPos p = origin.offset(dx, dy, dz);
+                    if (!level.getBlockState(p).is(panel)) continue;
+                    int d = dx * dx + dy * dy + dz * dz;
+                    if (d < bestDist) {
+                        bestDist = d;
+                        best = p.immutable();
+                    }
+                }
+            }
+        }
+        return best;
     }
 
     private static int lobbyAccept(CommandSourceStack src, String id) {
