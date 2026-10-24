@@ -1,4 +1,5 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -123,8 +124,8 @@ public final class EslWaveIntegration {
                 }
                 ServerPlayer p = ctx.triggeringPlayer();
                 if (moreWaves && p != null && p.isAlive()) {
-                    p.sendSystemMessage(Component.translatable(
-                        "message.radiotowers.wave.cleared_next_starting", justCleared, total));
+                    p.sendMessage(new TranslatableComponent(
+                        "message.radiotowers.wave.cleared_next_starting", justCleared, total), net.minecraft.Util.NIL_UUID);
                 }
                 if (moreWaves) {
                     level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
@@ -146,7 +147,7 @@ public final class EslWaveIntegration {
                     long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(level, p.getUUID());
                     RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
                         new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
-                    p.sendSystemMessage(Component.translatable("message.radiotowers.airdrop.failed"));
+                    p.sendMessage(new TranslatableComponent("message.radiotowers.airdrop.failed"), net.minecraft.Util.NIL_UUID);
                 }
             });
 

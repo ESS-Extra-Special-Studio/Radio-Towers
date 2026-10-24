@@ -22,7 +22,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
 import java.util.Map;
 
 public class RadiotowersModMenus {
-	public static final DeferredRegister<MenuType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.MENU_TYPES, RadiotowersMod.MODID);
+	public static final DeferredRegister<MenuType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.CONTAINERS, RadiotowersMod.MODID);
 	public static final RegistryObject<MenuType<AirdropCrateguiMenu>> AIRDROP_CRATEGUI = REGISTRY.register("airdrop_crategui", () -> IForgeMenuType.create(AirdropCrateguiMenu::new));
 
 	public interface MenuAccessor {
@@ -34,7 +34,7 @@ public class RadiotowersModMenus {
 			getMenuState().put(elementType + ":" + name, elementState);
 			if (player instanceof ServerPlayer serverPlayer) {
 				RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> serverPlayer), new MenuStateUpdateMessage(elementType, name, elementState));
-			} else if (player.level().isClientSide) {
+			} else if (player.level.isClientSide) {
 				SafeClientCalls.onClientSendMenuStateUpdate(this, elementType, name, elementState, needClientUpdate);
 			}
 		}

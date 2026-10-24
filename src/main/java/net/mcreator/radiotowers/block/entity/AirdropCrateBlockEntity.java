@@ -1,10 +1,11 @@
 package net.mcreator.radiotowers.block.entity;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.common.capabilities.Capability;
 
 import net.minecraft.world.level.block.state.BlockState;
@@ -13,7 +14,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -42,7 +42,7 @@ import java.util.stream.IntStream;
 import io.netty.buffer.Unpooled;
 
 public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity implements WorldlyContainer {
-	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = ResourceLocation.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
+	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = new ResourceLocation("radiotowers", "radio_tower_overrun_loot");
 
 	private NonNullList<ItemStack> stacks = NonNullList.withSize(27, ItemStack.EMPTY);
 	private final LazyOptional<? extends IItemHandler>[] handlers = SidedInvWrapper.create(this, Direction.values());
@@ -79,7 +79,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		// Only tower overrun loot is structure-owned. Live delivery uses the same LootTable id —
 		// never treat it as structureLoot or order fills / opens get the wrong path.
 		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", net.minecraft.nbt.Tag.TAG_STRING)) {
-			ResourceLocation table = ResourceLocation.tryParse(compound.getString("LootTable"));
+			ResourceLocation table = compound.getString("LootTable").isEmpty() || !ResourceLocation.isValidResourceLocation(compound.getString("LootTable")) ? null : new ResourceLocation(compound.getString("LootTable"));
 			if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
 				this.structureLoot = true;
 		}
@@ -127,7 +127,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 
 	@Override
 	public Component getDefaultName() {
-		return Component.translatable("block.radiotowers.airdrop_crate");
+		return new TranslatableComponent("block.radiotowers.airdrop_crate");
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 
 	@Override
 	public Component getDisplayName() {
-		return Component.translatable("block.radiotowers.airdrop_crate");
+		return new TranslatableComponent("block.radiotowers.airdrop_crate");
 	}
 
 	@Override
@@ -177,7 +177,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 
 	@Override
 	public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-		if (!this.remove && capability == ForgeCapabilities.ITEM_HANDLER) {
+		if (!this.remove && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
 			// AirdropCrateguiMenu binds with facing == null. Previously only sided handlers
 			// were exposed, so the menu fell back to a private empty ItemStackHandler —
 			// classic ghost-slot / click-reshuffle desync (especially visible with TaCZ NBT items).
@@ -232,7 +232,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		// Structure / ordered crates keep fixed contents. Bonus TaCZ only for live loot-table drops.
 		if (!hadLootTable || this.filledFromOrder || this.structureLoot) return;
 		if (!ModList.get().isLoaded("tacz") || !AirdropConfig.INCLUDE_TACZ_AMMO.get()) return;
-		RandomSource random = level != null ? level.getRandom() : RandomSource.create();
+		java.util.Random random = level != null ? level.getRandom() : new java.util.Random();
 		List<Integer> emptySlots = new ArrayList<>();
 		for (int i = 0; i < getContainerSize(); i++)
 			if (this.stacks.get(i).isEmpty()) emptySlots.add(i);

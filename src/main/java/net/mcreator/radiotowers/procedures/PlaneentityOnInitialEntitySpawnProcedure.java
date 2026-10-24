@@ -6,7 +6,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.util.RandomSource;
 import net.minecraft.util.Mth;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.server.level.ServerPlayer;
@@ -51,9 +50,9 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 			double maxRangeBlocks = (viewChunks * 16) * 0.45; // stay within ~45% of render distance
 			if (range > maxRangeBlocks) range = Math.max(16, maxRangeBlocks);
 		}
-		double spawnX = Mth.nextDouble(RandomSource.create(), x - range, x + range);
-		double spawnY = Mth.nextDouble(RandomSource.create(), heightMin, heightMax);
-		double spawnZ = Mth.nextDouble(RandomSource.create(), z - range, z + range);
+		double spawnX = Mth.nextDouble(new java.util.Random(), x - range, x + range);
+		double spawnY = Mth.nextDouble(new java.util.Random(), heightMin, heightMax);
+		double spawnZ = Mth.nextDouble(new java.util.Random(), z - range, z + range);
 		// Ensure plane never flies through tower: at least MIN_BLOCKS_ABOVE_TOWER above tower/panel, and at least 25 above terrain, and at least 120 absolute
 		if (world instanceof ServerLevel _level) {
 			int groundY = _level.getHeight(Heightmap.Types.MOTION_BLOCKING, Mth.floor(x), Mth.floor(z));
@@ -76,7 +75,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		}
 		if (world instanceof Level _level) {
 			if (!_level.isClientSide()) {
-				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
+				_level.playSound(null, new BlockPos(entity.getX(), entity.getY(), entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
 			} else {
 				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), ForgeRegistries.SOUND_EVENTS.getValue(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
 			}
@@ -84,7 +83,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		RadiotowersMod.queueServerWork(65, () -> {
 			try {
 				if (!(world instanceof ServerLevel _level)) return;
-				if (entity.isRemoved() || entity.level() == null) return;
+				if (entity.isRemoved() || entity.level == null) return;
 				double planeX = entity.getX();
 				double planeY = entity.getY();
 				double planeZ = entity.getZ();
@@ -109,11 +108,11 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 					dropZ = z + (dropZ - z) * scale;
 				} else if (distToTower <= 0.01) {
 					// Plane is directly over tower: drop at random direction, min distance from tower so crate never lands on top
-					double angle = RandomSource.create().nextDouble() * 2 * Math.PI;
+					double angle = new java.util.Random().nextDouble() * 2 * Math.PI;
 					dropX = x + Math.cos(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 					dropZ = z + Math.sin(angle) * MIN_DROP_OFFSET_FROM_TOWER;
 				}
-				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, BlockPos.containing(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED);
+				Entity entityToSpawn = RadiotowersModEntities.AIRDROPENTITY.get().spawn(_level, null, null, null, new BlockPos(dropX, planeY, dropZ), MobSpawnType.MOB_SUMMONED, false, false);
 				if (entityToSpawn != null) {
 					entityToSpawn.setYRot(entity.getYRot());
 					entityToSpawn.setYBodyRot(entity.getYRot());
@@ -147,7 +146,7 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 			}
 			RadiotowersMod.queueServerWork(100, () -> {
 				try {
-					if (entity != null && !entity.isRemoved() && entity.level() != null && !entity.level().isClientSide())
+					if (entity != null && !entity.isRemoved() && entity.level != null && !entity.level.isClientSide())
 						entity.discard();
 				} catch (Exception ignored) {}
 			});

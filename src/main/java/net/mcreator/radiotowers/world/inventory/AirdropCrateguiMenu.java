@@ -4,7 +4,7 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.CapabilityItemHandler;
 
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
@@ -49,7 +49,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 	public AirdropCrateguiMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
 		super(RadiotowersModMenus.AIRDROP_CRATEGUI.get(), id);
 		this.entity = inv.player;
-		this.world = inv.player.level();
+		this.world = inv.player.level;
 		this.internal = new ItemStackHandler(27);
 		BlockPos pos = null;
 		if (extraData != null) {
@@ -64,7 +64,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				byte hand = extraData.readByte();
 				ItemStack itemstack = hand == 0 ? this.entity.getMainHandItem() : this.entity.getOffhandItem();
 				this.boundItemMatcher = () -> itemstack == (hand == 0 ? this.entity.getMainHandItem() : this.entity.getOffhandItem());
-				itemstack.getCapability(ForgeCapabilities.ITEM_HANDLER, null).ifPresent(capability -> {
+				itemstack.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null).ifPresent(capability -> {
 					this.internal = capability;
 					this.bound = true;
 				});
@@ -72,14 +72,14 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				extraData.readByte(); // drop padding
 				boundEntity = world.getEntity(extraData.readVarInt());
 				if (boundEntity != null)
-					boundEntity.getCapability(ForgeCapabilities.ITEM_HANDLER, null).ifPresent(capability -> {
+					boundEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null).ifPresent(capability -> {
 						this.internal = capability;
 						this.bound = true;
 					});
 			} else { // might be bound to block
 				boundBlockEntity = this.world.getBlockEntity(pos);
 				if (boundBlockEntity != null)
-					boundBlockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER, null).ifPresent(capability -> {
+					boundBlockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null).ifPresent(capability -> {
 						this.internal = capability;
 						this.bound = true;
 					});
@@ -262,7 +262,7 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				return ItemStack.EMPTY;
 			}
 			if (itemstack1.isEmpty()) {
-				slot.setByPlayer(ItemStack.EMPTY);
+				slot.set(ItemStack.EMPTY);
 			} else {
 				slot.setChanged();
 			}
@@ -332,9 +332,9 @@ public class AirdropCrateguiMenu extends AbstractContainerMenu implements Radiot
 				ItemStack itemstack1 = slot1.getItem();
 				if (itemstack1.isEmpty() && slot1.mayPlace(p_38904_)) {
 					if (p_38904_.getCount() > slot1.getMaxStackSize()) {
-						slot1.setByPlayer(p_38904_.split(slot1.getMaxStackSize()));
+						slot1.set(p_38904_.split(slot1.getMaxStackSize()));
 					} else {
-						slot1.setByPlayer(p_38904_.split(p_38904_.getCount()));
+						slot1.set(p_38904_.split(p_38904_.getCount()));
 					}
 					slot1.setChanged();
 					flag = true;

@@ -8,6 +8,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.BlockItem;
@@ -27,14 +28,14 @@ public class RadiotowersModItems {
 		RADIO_PANEL = block(RadiotowersModBlocks.RADIO_PANEL);
 		AIRDROP_CRATE = block(RadiotowersModBlocks.AIRDROP_CRATE);
 		TRASHBLOCK = block(RadiotowersModBlocks.TRASHBLOCK);
-		AIRDROPENTITY_SPAWN_EGG = REGISTRY.register("airdropentity_spawn_egg", () -> new ForgeSpawnEggItem(RadiotowersModEntities.AIRDROPENTITY, -1, -1, new Item.Properties()));
-		PLANEENTITY_SPAWN_EGG = REGISTRY.register("planeentity_spawn_egg", () -> new ForgeSpawnEggItem(RadiotowersModEntities.PLANEENTITY, -1, -1, new Item.Properties()));
+		AIRDROPENTITY_SPAWN_EGG = REGISTRY.register("airdropentity_spawn_egg", () -> new ForgeSpawnEggItem(RadiotowersModEntities.AIRDROPENTITY, -1, -1, new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
+		PLANEENTITY_SPAWN_EGG = REGISTRY.register("planeentity_spawn_egg", () -> new ForgeSpawnEggItem(RadiotowersModEntities.PLANEENTITY, -1, -1, new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
 	}
 
 	// Start of user code block custom items
 	// End of user code block custom items
 	private static RegistryObject<Item> block(RegistryObject<Block> block) {
-		return block(block, new Item.Properties());
+		return block(block, new Item.Properties().tab(RadiotowersModTabs.RADIOTOWERS));
 	}
 
 	private static RegistryObject<Item> block(RegistryObject<Block> block, Item.Properties properties) {

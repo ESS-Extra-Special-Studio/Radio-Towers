@@ -20,15 +20,15 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Entity.class)
 public class LivingEntityWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     @ModifyVariable(method = "setInvulnerable(Z)V", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceInvulnOffDuringWave(boolean invulnerable) {
         Entity self = (Entity) (Object) this;
         if (!invulnerable) return false;
         if (!(self instanceof LivingEntity living) || !(living instanceof Monster)) return invulnerable;
-        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITY_TYPES.getKey(self.getType()))) return invulnerable;
-        if (living.level().isClientSide() || !(living.level() instanceof ServerLevel level)) return invulnerable;
+        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITIES.getKey(self.getType()))) return invulnerable;
+        if (living.level.isClientSide() || !(living.level instanceof ServerLevel level)) return invulnerable;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return invulnerable;
         if (!isWaveMob(self)) return invulnerable;
         return false;

@@ -29,8 +29,8 @@ public class ZombieAttractionHandler {
     private static final double SPEED = 0.08 * 1.2;
 
     @SubscribeEvent
-    public static void onLevelTick(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.level.isClientSide() || !(event.level instanceof ServerLevel level)) return;
+    public static void onLevelTick(TickEvent.WorldTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || event.world.isClientSide() || !(event.world instanceof ServerLevel level)) return;
         if (!ModList.get().isLoaded("dead_air")) return;
         if (level.getGameTime() % CHECK_INTERVAL != 0) return;
 

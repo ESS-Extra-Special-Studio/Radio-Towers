@@ -33,8 +33,8 @@ public class RadiotowersModVariables {
 		@SubscribeEvent
 		public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
 			if (event.getEntity() instanceof ServerPlayer player) {
-				SavedData mapdata = MapVariables.get(player.level());
-				SavedData worlddata = WorldVariables.get(player.level());
+				SavedData mapdata = MapVariables.get(player.level);
+				SavedData worlddata = WorldVariables.get(player.level);
 				if (mapdata != null)
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(0, mapdata));
 				if (worlddata != null)
@@ -45,15 +45,15 @@ public class RadiotowersModVariables {
 		@SubscribeEvent
 		public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
 			if (event.getEntity() instanceof ServerPlayer player) {
-				SavedData worlddata = WorldVariables.get(player.level());
+				SavedData worlddata = WorldVariables.get(player.level);
 				if (worlddata != null)
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(1, worlddata));
 			}
 		}
 
 		@SubscribeEvent
-		public static void onWorldTick(TickEvent.LevelTickEvent event) {
-			if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
+		public static void onWorldTick(TickEvent.WorldTickEvent event) {
+			if (event.phase == TickEvent.Phase.END && event.world instanceof ServerLevel level) {
 				WorldVariables worldVariables = WorldVariables.get(level);
 				if (worldVariables._syncDirty) {
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.DIMENSION.with(level::dimension), new SavedDataSyncMessage(1, worldVariables));

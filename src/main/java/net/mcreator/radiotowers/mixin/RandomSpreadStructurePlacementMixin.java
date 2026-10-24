@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(RandomSpreadStructurePlacement.class)
 public abstract class RandomSpreadStructurePlacementMixin {
 
-    @Inject(method = "getPotentialStructureChunk", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "getPotentialFeatureChunk", at = @At("HEAD"), cancellable = true)
     private void radiotowers$scaleDensity(long seed, int chunkX, int chunkZ, CallbackInfoReturnable<ChunkPos> cir) {
         int salt = ((StructurePlacementSaltAccessor) (Object) this).radiotowers$getSalt();
         if (!TowerSpawnDensity.isRadioTowerPlacement(salt)) return;

@@ -12,7 +12,7 @@ public class AirdropentityOnInitialEntitySpawnProcedure {
 		if (entity == null)
 			return false;
 		entity.setNoGravity(false);
-		if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
+		if (entity instanceof LivingEntity _entity && !_entity.level.isClientSide())
 			_entity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 120, 3, false, true));
 		return entity instanceof AirdropentityEntity _datEntL2 && _datEntL2.getEntityData().get(AirdropentityEntity.DATA_IsOpening);
 	}

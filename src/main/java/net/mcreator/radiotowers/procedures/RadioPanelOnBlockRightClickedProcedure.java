@@ -25,7 +25,7 @@ public class RadioPanelOnBlockRightClickedProcedure {
 		if (world instanceof ServerLevel _level) {
 			// Clear any previous delivery orders so this airdrop crate gets only THIS request's selection, not a previous airdrop's
 			PendingAirdropStorage.clearAllDeliveryOrders();
-			Entity entityToSpawn = RadiotowersModEntities.PLANEENTITY.get().spawn(_level, BlockPos.containing(x, y, z), MobSpawnType.MOB_SUMMONED);
+			Entity entityToSpawn = RadiotowersModEntities.PLANEENTITY.get().spawn(_level, null, null, null, new BlockPos(x, y, z), MobSpawnType.MOB_SUMMONED, false, false);
 			if (entityToSpawn != null) {
 				entityToSpawn.setYRot(world.getRandom().nextFloat() * 360F);
 				if (entityToSpawn instanceof PlaneentityEntity plane) {

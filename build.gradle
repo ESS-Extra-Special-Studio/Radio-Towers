@@ -63,14 +63,10 @@ mixin {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    implementation "uk.co.extraspecialstudio:extraspeciallib:1.1.0"
-    implementation "uk.creatopia.unbound:extraspecialcore:${esc_version}"
-    implementation "uk.co.extraspecialstudio:esn:1.0.1"
+    implementation fg.deobf(files('C:/Users/Ksivi/IdeaProjects/ESL - 1.18.2 Forge/build/libs/extraspeciallib-1.2.0+1.18.2-forge.jar'))
+    implementation fg.deobf(files('C:/Users/Ksivi/IdeaProjects/ESC - 1.18.2 Forge/build/libs/extraspecialcore-2.1.0+1.18.2-forge.jar'))
+    implementation fg.deobf(files('C:/Users/Ksivi/IdeaProjects/ESN - 1.18.2 Forge/build/libs/esn-1.0.2+1.18.2-forge.jar'))
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    // Optional: real API on classpath when present (better signature match than stub).
-    def testMods = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods")
-    // TacZ (compileOnly): needed for correct GunShootEvent parameter type on NoMindlessShootingTacZListenerMixin (Mixin validates descriptors).
-    compileOnly fileTree(dir: project.file('libs').exists() ? 'libs' : testMods, include: ['*zombie*waves*.jar', '*berezka*zombie*.jar', 'tacz*.jar'])
 }
 
 afterEvaluate {
@@ -102,22 +98,3 @@ tasks.named('jar', Jar).configure {
     finalizedBy 'reobfJar'
 }
 
-def forgeTestModsDirs = [
-    file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/C.Ideas/mods"),
-    file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/ESS Lastlight (post-apocalyptic modpack - 1.20.1 Forge)/mods")
-]
-tasks.named('build').configure {
-    doLast {
-        def jarFile = file("${layout.buildDirectory.get()}/libs/${mod_id}-${mod_version}+${minecraft_version}-forge.jar")
-        if (!jarFile.exists()) return
-        forgeTestModsDirs.each { modsDir ->
-            if (!modsDir.exists()) {
-                println "Skip copy (missing): ${modsDir}"
-                return
-            }
-            modsDir.listFiles()?.findAll { it.name.startsWith("${mod_id}-") && it.name.endsWith('.jar') && it.name != jarFile.name }?.each { it.delete() }
-            copy { from jarFile; into modsDir }
-            println "Copied ${jarFile.name} to ${modsDir}"
-        }
-    }
-}

@@ -1,4 +1,5 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -371,7 +372,7 @@ public final class PendingAirdropStorage {
         Pending p = take(level, waveStartPos);
         if (p == null) return;
         clearAllDeliveryOrders();
-        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, p.panelPos, MobSpawnType.MOB_SUMMONED);
+        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, null, null, null, p.panelPos, MobSpawnType.MOB_SUMMONED, false, false);
         if (planeEntity != null) {
             planeEntity.setYRot(level.getRandom().nextFloat() * 360F);
             if (planeEntity instanceof PlaneentityEntity pe) {
@@ -390,8 +391,8 @@ public final class PendingAirdropStorage {
         for (UUID memberId : p.effectiveMembers()) {
             var player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
             if (player != null) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                    "message.radiotowers.wave.all_cleared_airdrop_inbound"));
+                player.sendMessage(new TranslatableComponent(
+                    "message.radiotowers.wave.all_cleared_airdrop_inbound"), net.minecraft.Util.NIL_UUID);
             }
         }
     }

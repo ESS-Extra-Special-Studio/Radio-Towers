@@ -12,7 +12,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -34,8 +33,6 @@ import javax.annotation.Nullable;
 
 public class AirdropentityEntity extends Monster {
 	public static final EntityDataAccessor<Boolean> DATA_IsOpening = SynchedEntityData.defineId(AirdropentityEntity.class, EntityDataSerializers.BOOLEAN);
-	public final AnimationState animationState0 = new AnimationState();
-	public final AnimationState animationState1 = new AnimationState();
 	private List<String> airdropItemIds = new ArrayList<>();
 	private List<Integer> airdropQuantities = new ArrayList<>();
 	private int airdropDifficulty;
@@ -79,14 +76,14 @@ public class AirdropentityEntity extends Monster {
 
 	public AirdropentityEntity(EntityType<AirdropentityEntity> type, Level world) {
 		super(type, world);
-		setMaxUpStep(0.6f);
+		maxUpStep = 0.6f;
 		xpReward = 0;
 		setNoAi(true);
 		setPersistenceRequired();
 	}
 
 	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
+	public Packet<?> getAddEntityPacket() {
 		return NetworkHooks.getEntitySpawningPacket(this);
 	}
 
@@ -112,7 +109,7 @@ public class AirdropentityEntity extends Monster {
 
 	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		if (damagesource.is(DamageTypes.IN_FIRE))
+		if (damagesource == DamageSource.IN_FIRE)
 			return false;
 		if (damagesource.getDirectEntity() instanceof AbstractArrow)
 			return false;
@@ -120,23 +117,23 @@ public class AirdropentityEntity extends Monster {
 			return false;
 		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
 			return false;
-		if (damagesource.is(DamageTypes.FALL))
+		if (damagesource.isFall())
 			return false;
-		if (damagesource.is(DamageTypes.CACTUS))
+		if (damagesource == DamageSource.CACTUS)
 			return false;
-		if (damagesource.is(DamageTypes.DROWN))
+		if (damagesource == DamageSource.DROWN)
 			return false;
-		if (damagesource.is(DamageTypes.LIGHTNING_BOLT))
+		if (damagesource == DamageSource.LIGHTNING_BOLT)
 			return false;
-		if (damagesource.is(DamageTypes.EXPLOSION) || damagesource.is(DamageTypes.PLAYER_EXPLOSION))
+		if (damagesource.isExplosion())
 			return false;
-		if (damagesource.is(DamageTypes.TRIDENT))
+		if ("trident".equals(damagesource.getMsgId()))
 			return false;
-		if (damagesource.is(DamageTypes.FALLING_ANVIL))
+		if (damagesource == DamageSource.ANVIL)
 			return false;
-		if (damagesource.is(DamageTypes.DRAGON_BREATH))
+		if (damagesource == DamageSource.DRAGON_BREATH)
 			return false;
-		if (damagesource.is(DamageTypes.WITHER) || damagesource.is(DamageTypes.WITHER_SKULL))
+		if (damagesource == DamageSource.WITHER || "witherSkull".equals(damagesource.getMsgId()))
 			return false;
 		return super.hurt(damagesource, amount);
 	}
@@ -201,16 +198,12 @@ public class AirdropentityEntity extends Monster {
 	@Override
 	public void tick() {
 		super.tick();
-		if (this.level().isClientSide()) {
-			this.animationState0.animateWhen(AirdropentityOnInitialEntitySpawnProcedure.execute(this), this.tickCount);
-			this.animationState1.animateWhen(true, this.tickCount);
-		}
 	}
 
 	@Override
 	public void baseTick() {
 		super.baseTick();
-		AirdropentityOnEntityTickUpdateProcedure.execute(this.level(), this.getX(), this.getY(), this.getZ(), this);
+		AirdropentityOnEntityTickUpdateProcedure.execute(this.level, this.getX(), this.getY(), this.getZ(), this);
 	}
 
 	public static void init() {

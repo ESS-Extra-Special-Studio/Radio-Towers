@@ -12,7 +12,6 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -37,7 +36,6 @@ public class PlaneentityEntity extends Monster {
 	public static final EntityDataAccessor<Boolean> DATA_CRASHED = SynchedEntityData.defineId(PlaneentityEntity.class,
 		EntityDataSerializers.BOOLEAN);
 
-	public final AnimationState animationState0 = new AnimationState();
 	private List<String> airdropItemIds = new ArrayList<>();
 	private List<Integer> airdropQuantities = new ArrayList<>();
 	private int airdropDifficulty;
@@ -64,7 +62,7 @@ public class PlaneentityEntity extends Monster {
 
 	public PlaneentityEntity(EntityType<PlaneentityEntity> type, Level world) {
 		super(type, world);
-		setMaxUpStep(0.6f);
+		maxUpStep = 0.6f;
 		xpReward = 0;
 		setNoAi(true);
 		setPersistenceRequired();
@@ -82,7 +80,6 @@ public class PlaneentityEntity extends Monster {
 		setNoAi(true);
 		setDeltaMovement(Vec3.ZERO);
 		setXRot(0f);
-		this.animationState0.stop();
 	}
 
 	public boolean isCrashedWreck() {
@@ -90,7 +87,7 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
+	public Packet<?> getAddEntityPacket() {
 		return NetworkHooks.getEntitySpawningPacket(this);
 	}
 
@@ -106,7 +103,7 @@ public class PlaneentityEntity extends Monster {
 
 	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		if (damagesource.is(DamageTypes.IN_FIRE))
+		if (damagesource == DamageSource.IN_FIRE)
 			return false;
 		if (damagesource.getDirectEntity() instanceof AbstractArrow)
 			return false;
@@ -114,23 +111,23 @@ public class PlaneentityEntity extends Monster {
 			return false;
 		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
 			return false;
-		if (damagesource.is(DamageTypes.FALL))
+		if (damagesource.isFall())
 			return false;
-		if (damagesource.is(DamageTypes.CACTUS))
+		if (damagesource == DamageSource.CACTUS)
 			return false;
-		if (damagesource.is(DamageTypes.DROWN))
+		if (damagesource == DamageSource.DROWN)
 			return false;
-		if (damagesource.is(DamageTypes.LIGHTNING_BOLT))
+		if (damagesource == DamageSource.LIGHTNING_BOLT)
 			return false;
-		if (damagesource.is(DamageTypes.EXPLOSION) || damagesource.is(DamageTypes.PLAYER_EXPLOSION))
+		if (damagesource.isExplosion())
 			return false;
-		if (damagesource.is(DamageTypes.TRIDENT))
+		if ("trident".equals(damagesource.getMsgId()))
 			return false;
-		if (damagesource.is(DamageTypes.FALLING_ANVIL))
+		if (damagesource == DamageSource.ANVIL)
 			return false;
-		if (damagesource.is(DamageTypes.DRAGON_BREATH))
+		if (damagesource == DamageSource.DRAGON_BREATH)
 			return false;
-		if (damagesource.is(DamageTypes.WITHER) || damagesource.is(DamageTypes.WITHER_SKULL))
+		if (damagesource == DamageSource.WITHER || "witherSkull".equals(damagesource.getMsgId()))
 			return false;
 		return super.hurt(damagesource, amount);
 	}
@@ -187,14 +184,7 @@ public class PlaneentityEntity extends Monster {
 	@Override
 	public void tick() {
 		super.tick();
-		if (this.level().isClientSide()) {
-			if (isCrashedWreck()) {
-				this.animationState0.stop();
-			} else {
-				this.animationState0.animateWhen(true, this.tickCount);
-			}
-		}
-		if (isCrashedWreck() && !this.level().isClientSide()) {
+		if (isCrashedWreck() && !this.level.isClientSide()) {
 			setDeltaMovement(Vec3.ZERO);
 		}
 	}

@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.block;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.TextComponent;
 
 import net.minecraftforge.network.NetworkHooks;
 
@@ -10,6 +12,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.Level;
@@ -38,7 +41,7 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
 	public AirdropCrateBlock() {
-		super(BlockBehaviour.Properties.of().sound(SoundType.WOOD).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+		super(BlockBehaviour.Properties.of(Material.WOOD).sound(SoundType.WOOD).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
 
@@ -92,13 +95,13 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 		if (entity instanceof ServerPlayer player) {
 			BlockEntity be = world.getBlockEntity(pos);
 			if (be instanceof AirdropCrateBlockEntity crate && !crate.canPlayerOpen(player.getUUID())) {
-				player.sendSystemMessage(Component.literal("[RadioTowers] This airdrop crate is for lobby members only."));
+				player.sendMessage(new TextComponent("[RadioTowers] This airdrop crate is for lobby members only."), net.minecraft.Util.NIL_UUID);
 				return InteractionResult.FAIL;
 			}
-			NetworkHooks.openScreen(player, new MenuProvider() {
+			NetworkHooks.openGui(player, new MenuProvider() {
 				@Override
 				public Component getDisplayName() {
-					return Component.translatable("block.radiotowers.airdrop_crate");
+					return new TranslatableComponent("block.radiotowers.airdrop_crate");
 				}
 
 				@Override

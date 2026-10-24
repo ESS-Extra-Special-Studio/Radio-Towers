@@ -1,4 +1,5 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -18,7 +19,6 @@ import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.monster.ZombieVillager;
 import net.minecraft.world.entity.monster.Zoglin;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
-import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -146,8 +146,8 @@ public final class ZombieWavesAPILoader {
                 PendingAirdropSavedData.get(level).setDirty();
                 if (playerWhoStarted != null) {
                     int waveNum = p.totalWaves - p.wavesRemaining + 1;
-                    playerWhoStarted.sendSystemMessage(Component.translatable(
-                        "message.radiotowers.wave.started", waveNum, p.totalWaves));
+                    playerWhoStarted.sendMessage(new TranslatableComponent(
+                        "message.radiotowers.wave.started", waveNum, p.totalWaves), net.minecraft.Util.NIL_UUID);
                 }
                 if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) {
                     logNuclearWaveAPISnapshot(level, p.waveStartPos);
@@ -280,7 +280,7 @@ public final class ZombieWavesAPILoader {
             int zombiesPerWave = AirdropDifficultyTier.getZombiesPerWaveForTier(waveDifficulty);
             String cmd = String.format("wave start %d %d %d %d", waveDifficulty, zombiesPerWave, spawnRange, timeBetweenWaves);
             var source = player.createCommandSourceStack().withLevel(level).withPosition(Vec3.atCenterOf(groundPos));
-            int result = server.getCommands().performPrefixedCommand(source, cmd);
+            int result = server.getCommands().performCommand(source, cmd);
             return result > 0;
         } catch (Throwable t) {
             RadiotowersMod.LOGGER.warn("[Zombie Waves] Command wave start threw: {} (cause: {})", t.getMessage(), t.getCause() != null ? t.getCause().getMessage() : "none", t);
@@ -342,8 +342,8 @@ public final class ZombieWavesAPILoader {
             ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
             if (player != null) {
                 int cleared = p.totalWaves - p.wavesRemaining;
-                player.sendSystemMessage(Component.translatable(
-                    "message.radiotowers.wave.cleared_next_starting", cleared, p.totalWaves));
+                player.sendMessage(new TranslatableComponent(
+                    "message.radiotowers.wave.cleared_next_starting", cleared, p.totalWaves), net.minecraft.Util.NIL_UUID);
             }
             if (!forcedCleanup) endWaveViaReflection(); // stop current wave before starting next
             WaveMobAggroHandler.clearAllWaveAggroState();
@@ -371,7 +371,7 @@ public final class ZombieWavesAPILoader {
             long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(level, p.playerWhoStarted);
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
                 new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
-            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.radiotowers.airdrop.failed"));
+            player.sendMessage(new TranslatableComponent("message.radiotowers.airdrop.failed"), net.minecraft.Util.NIL_UUID);
         }
     }
 
@@ -495,7 +495,7 @@ public final class ZombieWavesAPILoader {
     /** Server -> one player: current defense session flag (call on login so client mirror matches). */
     public static void pushDefenseSessionStateToPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         boolean active = ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
             new DefenseSessionSyncPacket(level.dimension().location(), active));
@@ -789,7 +789,6 @@ public final class ZombieWavesAPILoader {
             if (!(mob instanceof Monster)) continue;
             if (mob.getMobType() != MobType.UNDEAD) continue;
             if (mob instanceof ZombifiedPiglin) continue;
-            if (mob instanceof Warden) continue;
             if (mob instanceof Phantom) continue;
             if (mob instanceof Skeleton) continue;
             if (mob instanceof Stray) continue;

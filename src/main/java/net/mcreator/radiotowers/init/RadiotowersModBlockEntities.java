@@ -15,7 +15,7 @@ import net.mcreator.radiotowers.block.entity.AirdropCrateBlockEntity;
 import net.mcreator.radiotowers.RadiotowersMod;
 
 public class RadiotowersModBlockEntities {
-	public static final DeferredRegister<BlockEntityType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, RadiotowersMod.MODID);
+	public static final DeferredRegister<BlockEntityType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, RadiotowersMod.MODID);
 	public static final RegistryObject<BlockEntityType<AirdropCrateBlockEntity>> AIRDROP_CRATE = register("airdrop_crate", RadiotowersModBlocks.AIRDROP_CRATE, AirdropCrateBlockEntity::new);
 
 	// Start of user code block custom block entities

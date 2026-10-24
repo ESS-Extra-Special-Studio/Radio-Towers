@@ -56,14 +56,14 @@ public class LevelAddEntityMixin {
         }
     }
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     private static boolean setWaveMobPositionBeforeAdd(ServerLevel level, Entity entity) {
         if (!ENABLE_PRE_ADD_REPLACEMENT) return false;
         if (level.isClientSide()) return false;
         if (RADIOTOWERS_ADDING_REPLACEMENT.get()) return false;
         if (!(entity instanceof Mob mob) || !(entity instanceof Monster)) return false;
-        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()))) return false;
+        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITIES.getKey(entity.getType()))) return false;
         if (entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) return false;
         if (entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) return false;
 

@@ -325,10 +325,10 @@ public class AirdropConfig {
     public static ResourceLocation getStandardAirdropLootTable() {
         String raw = STANDARD_AIRDROP_LOOT_TABLE.get();
         if (raw == null || raw.isBlank()) {
-            return ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+            return new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
         }
-        ResourceLocation parsed = ResourceLocation.tryParse(raw.trim());
-        return parsed != null ? parsed : ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+        ResourceLocation parsed = raw != null && ResourceLocation.isValidResourceLocation(raw.trim()) ? new ResourceLocation(raw.trim()) : null;
+        return parsed != null ? parsed : new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
     }
 
     /** Whether catalog airdrops should use ESL (preferred) or Berezka waves when a backend is present. */
@@ -339,7 +339,7 @@ public class AirdropConfig {
     /** True if this entity type is excluded from defense-wave aggro / capture. */
     public static boolean isWaveAggroExcluded(net.minecraft.world.entity.EntityType<?> type) {
         if (type == null) return false;
-        net.minecraft.resources.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(type);
+        net.minecraft.resources.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(type);
         if (id == null) return false;
         List<? extends String> list = WAVES_AGGRO_EXCLUDE_ENTITY_IDS.get();
         if (list == null || list.isEmpty()) return false;

@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
 
 /**
  * In-game HUD overlay for airdrop wave progress. Shown only during an active airdrop wave.
@@ -19,7 +19,7 @@ public final class AirdropWaveOverlay {
     private static final int LABEL_COLOR = 0xAAAAAA;
     private static final int BG_COLOR = 0xCC000000;
 
-    public static void render(GuiGraphics guiGraphics, int screenWidth, int screenHeight) {
+    public static void render(EscGraphics guiGraphics, int screenWidth, int screenHeight) {
         if (!AirdropWaveHudData.isWaveInProgress() || AirdropWaveHudData.getTotalWaves() <= 0) return;
 
         Minecraft mc = Minecraft.getInstance();

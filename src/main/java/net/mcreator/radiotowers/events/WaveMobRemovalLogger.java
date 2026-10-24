@@ -7,8 +7,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -49,25 +49,25 @@ public final class WaveMobRemovalLogger {
     }
 
     @SubscribeEvent
-    public static void onJoin(EntityJoinLevelEvent event) {
+    public static void onJoin(EntityJoinWorldEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getLevel().isClientSide()) return;
+        if (event.getWorld().isClientSide()) return;
         Entity e = event.getEntity();
         if (!isZombieFamily(e)) return;
-        PendingAirdropStorage.Pending p = getPending(event.getLevel(), e);
+        PendingAirdropStorage.Pending p = getPending(event.getWorld(), e);
         if (p == null) return;
-        long now = ((ServerLevel) event.getLevel()).getGameTime();
+        long now = ((ServerLevel) event.getWorld()).getGameTime();
         JOINED_AT.put(e.getId(), now);
         JOINED_POS.put(e.getId(), e.blockPosition());
     }
 
     @SubscribeEvent
-    public static void onLeave(EntityLeaveLevelEvent event) {
+    public static void onLeave(EntityLeaveWorldEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getLevel().isClientSide()) return;
+        if (event.getWorld().isClientSide()) return;
         Entity e = event.getEntity();
         if (!isZombieFamily(e)) return;
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        if (!(event.getWorld() instanceof ServerLevel level)) return;
 
         Long joinedAt = JOINED_AT.get(e.getId());
         if (joinedAt == null) return;
@@ -94,7 +94,7 @@ public final class WaveMobRemovalLogger {
         RadiotowersMod.LOGGER.warn(
             "[WaveRemovalDebug] id={} type={} ageTicks={} reason={} pos={} joinedPos={} nearWave={} wavePos={} hasWaveTag={} alive={} removed={}",
             e.getId(),
-            net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(e.getType()),
+            net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(e.getType()),
             age,
             reason,
             e.blockPosition(),
@@ -110,15 +110,15 @@ public final class WaveMobRemovalLogger {
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getEntity().level().isClientSide()) return;
-        LivingEntity e = event.getEntity();
+        if (event.getEntity().level.isClientSide()) return;
+        LivingEntity e = event.getEntityLiving();
         if (!isZombieFamily(e)) return;
-        PendingAirdropStorage.Pending p = getPending(e.level(), e);
+        PendingAirdropStorage.Pending p = getPending(e.level, e);
         if (p == null) return;
         RadiotowersMod.LOGGER.warn(
             "[WaveRemovalDebug] id={} type={} DEATH pos={} nearWave={} hasWaveTag={}",
             e.getId(),
-            net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(e.getType()),
+            net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(e.getType()),
             e.blockPosition(),
             true,
             e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)

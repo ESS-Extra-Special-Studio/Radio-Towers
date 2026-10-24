@@ -1,4 +1,5 @@
 package net.mcreator.radiotowers.network;
+import net.minecraft.network.chat.TextComponent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -73,23 +74,23 @@ public class CallAirdropMessage {
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
             var sender = ctx.getSender();
-            if (sender == null || sender.serverLevel() == null) return;
+            if (sender == null || sender.getLevel() == null) return;
             if (net.mcreator.radiotowers.lobby.AirdropLobbyService.hasGuestsBlockingSoloStart(sender.getUUID())) {
-                sender.sendSystemMessage(Component.literal(
-                    "[RadioTowers] Guests are in your airdrop lobby — use Lobby → Go (everyone must be ready)."));
+                sender.sendMessage(new TextComponent(
+                    "[RadioTowers] Guests are in your airdrop lobby — use Lobby → Go (everyone must be ready)."), net.minecraft.Util.NIL_UUID);
                 return;
             }
             boolean standardAirdrop = (msg.totalDifficulty == 0 && (msg.itemIds == null || msg.itemIds.isEmpty()));
             if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
-                sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));
+                sender.sendMessage(new TextComponent("[RadioTowers] Standard airdrops are disabled in config."), net.minecraft.Util.NIL_UUID);
                 return;
             }
             if (!standardAirdrop && !AirdropConfig.ENABLE_CATALOG_AIRDROP.get()) {
-                sender.sendSystemMessage(Component.literal("[RadioTowers] Catalog airdrops are disabled in config."));
+                sender.sendMessage(new TextComponent("[RadioTowers] Catalog airdrops are disabled in config."), net.minecraft.Util.NIL_UUID);
                 return;
             }
             if (!standardAirdrop && !AirdropDifficultyTier.canStart(msg.totalDifficulty)) return; // require 10-point increments unless standard airdrop (loot table)
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.getLevel();
             // Wave integration priority: ESL > Berezka > immediate
             boolean hasWaveBackend = !standardAirdrop
                     && net.mcreator.radiotowers.config.AirdropConfig.shouldUseZombieWavesForAirdrop()

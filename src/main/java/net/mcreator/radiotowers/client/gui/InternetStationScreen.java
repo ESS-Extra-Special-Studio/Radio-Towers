@@ -1,8 +1,10 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -30,7 +32,7 @@ public class InternetStationScreen extends EscScreen {
     private final InternetStationParent stationParent;
 
     public InternetStationScreen(Screen parent, BlockPos panelPos) {
-        super(Component.translatable("screen.radiotowers.internet.title"));
+        super(new TranslatableComponent("screen.radiotowers.internet.title"));
         this.parent = parent;
         this.panelPos = panelPos;
         this.stationParent = parent instanceof InternetStationParent ? (InternetStationParent) parent : null;
@@ -40,11 +42,11 @@ public class InternetStationScreen extends EscScreen {
     protected void buildLayout() {
         EscRect content = contentRect();
         EscRect body = EscPanel.bodyBelowTitle(content, style);
-        addAnchoredButton(Component.translatable("screen.radiotowers.internet.station.cr1"), body,
+        addAnchoredButton(new TranslatableComponent("screen.radiotowers.internet.station.cr1"), body,
             EscLayoutSpec.of(EscAnchor.CENTER, 0, -10, BUTTON_WIDTH, BUTTON_HEIGHT), b -> choose(STATION_CR1));
-        addAnchoredButton(Component.translatable("screen.radiotowers.internet.station.ambiance_fm"), body,
+        addAnchoredButton(new TranslatableComponent("screen.radiotowers.internet.station.ambiance_fm"), body,
             EscLayoutSpec.of(EscAnchor.CENTER, 0, 14, BUTTON_WIDTH, BUTTON_HEIGHT), b -> choose(STATION_AMBIANCE_FM));
-        addAnchoredButton(Component.translatable("screen.radiotowers.internet.back"), body,
+        addAnchoredButton(new TranslatableComponent("screen.radiotowers.internet.back"), body,
             EscLayoutSpec.of(EscAnchor.CENTER, 0, 42, BUTTON_WIDTH, BUTTON_HEIGHT), b -> onClose());
     }
 
@@ -57,22 +59,23 @@ public class InternetStationScreen extends EscScreen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
 
         EscRect introBand = resolve(content, EscLayoutSpec.stretchH(style.titleGap(), 52, EscInsets.of(12, 0)));
         EscRect[] lines = introBand.splitRows(new float[]{1f, 1f, 1f, 1f}, 2);
         if (lines.length >= 4) {
-            EscText.drawInRect(guiGraphics, font, Component.translatable("screen.radiotowers.internet.line1"),
+            EscText.drawInRect(guiGraphics, font, new TranslatableComponent("screen.radiotowers.internet.line1"),
                 lines[0], 0xE0E0E0, EscFonts.DEFAULT, false, 0.5f);
-            EscText.drawInRect(guiGraphics, font, Component.translatable("screen.radiotowers.internet.line2"),
+            EscText.drawInRect(guiGraphics, font, new TranslatableComponent("screen.radiotowers.internet.line2"),
                 lines[1], 0xB0B0B0, EscFonts.DEFAULT, false, 0.5f);
-            EscText.drawInRect(guiGraphics, font, Component.translatable("screen.radiotowers.internet.line3"),
+            EscText.drawInRect(guiGraphics, font, new TranslatableComponent("screen.radiotowers.internet.line3"),
                 lines[2], 0xB0B0B0, EscFonts.DEFAULT, false, 0.5f);
-            EscText.drawInRect(guiGraphics, font, Component.translatable("screen.radiotowers.internet.line4"),
+            EscText.drawInRect(guiGraphics, font, new TranslatableComponent("screen.radiotowers.internet.line4"),
                 lines[3], 0x888888, EscFonts.DEFAULT, false, 0.5f);
         }
     }

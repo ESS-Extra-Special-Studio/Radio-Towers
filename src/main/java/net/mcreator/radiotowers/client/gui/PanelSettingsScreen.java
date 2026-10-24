@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.TextComponent;
 
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -7,7 +9,8 @@ import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
 import net.mcreator.radiotowers.network.CallAirdropMessage;
 import net.mcreator.radiotowers.network.DeactivatePanelMessage;
 import net.mcreator.radiotowers.network.RequestAirdropStatePacket;
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.vertex.PoseStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -67,7 +70,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     private EscRect hintLine2;
 
     public PanelSettingsScreen(BlockPos panelPos) {
-        super(Component.translatable("screen.radiotowers.panel_settings.title"));
+        super(new TranslatableComponent("screen.radiotowers.panel_settings.title"));
         this.panelPos = panelPos;
     }
 
@@ -100,7 +103,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
             dynamicStationButton = addAnchoredButton(EscText.literal(dynamicLabel()), bodyRect,
                 EscLayoutSpec.of(EscAnchor.TOP_CENTER, 0, y, BUTTON_WIDTH, 20), b -> onDynamicCycle());
             y += 24;
-            internetButton = addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.internet")), bodyRect,
+            internetButton = addAnchoredButton(EscText.styled(new TranslatableComponent("screen.radiotowers.button.internet")), bodyRect,
                 EscLayoutSpec.of(EscAnchor.TOP_CENTER, 0, y, BUTTON_WIDTH, 20), b -> openInternet());
         }
     }
@@ -127,7 +130,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
             && minecraft.player.tickCount % 40 == 0) {
             refreshDefaultStationsCache();
             if (defaultStationButton != null) {
-                defaultStationButton.setMessage(Component.literal(defaultLabel()));
+                defaultStationButton.setMessage(new TextComponent(defaultLabel()));
             }
         }
     }
@@ -179,14 +182,14 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     }
 
     private String defaultLabel() {
-        if (defaultStationsCache.isEmpty()) return Component.translatable("screen.radiotowers.button.default").getString();
+        if (defaultStationsCache.isEmpty()) return new TranslatableComponent("screen.radiotowers.button.default").getString();
         int idx = findDefaultIndex(currentStationId);
         if (idx >= 0) return defaultStationsCache.get(idx).displayName;
         return defaultStationsCache.get(Math.min(defaultCycleIndex, defaultStationsCache.size() - 1)).displayName;
     }
 
     private String dynamicLabel() {
-        return lastDynamicName != null ? lastDynamicName : Component.translatable("screen.radiotowers.button.dynamic").getString();
+        return lastDynamicName != null ? lastDynamicName : new TranslatableComponent("screen.radiotowers.button.dynamic").getString();
     }
 
     private void onDefaultCycle() {
@@ -204,8 +207,8 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 0;
         defaultCycleIndex = nextIndex;
-        if (defaultStationButton != null) defaultStationButton.setMessage(Component.literal(defaultLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (defaultStationButton != null) defaultStationButton.setMessage(new TextComponent(defaultLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new TextComponent(getPowerButtonLabel()));
     }
 
     private void onDynamicCycle() {
@@ -225,8 +228,8 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         activeButton = 1;
         lastDynamicName = opt.displayName;
         dynamicCycleIndex = nextIndex;
-        if (dynamicStationButton != null) dynamicStationButton.setMessage(Component.literal(dynamicLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (dynamicStationButton != null) dynamicStationButton.setMessage(new TextComponent(dynamicLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new TextComponent(getPowerButtonLabel()));
     }
 
     private void openInternet() {
@@ -239,7 +242,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         this.currentStationId = deadAirStationId;
         this.lastStationIdBeforeTurnOff = deadAirStationId;
         this.activeButton = 2;
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new TextComponent(getPowerButtonLabel()));
     }
 
     private void onCallStandardAirdrop() {
@@ -278,29 +281,30 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 activeButton = 2;
             }
         }
-        if (defaultStationButton != null) defaultStationButton.setMessage(Component.literal(defaultLabel()));
-        if (dynamicStationButton != null) dynamicStationButton.setMessage(Component.literal(dynamicLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (defaultStationButton != null) defaultStationButton.setMessage(new TextComponent(defaultLabel()));
+        if (dynamicStationButton != null) dynamicStationButton.setMessage(new TextComponent(dynamicLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new TextComponent(getPowerButtonLabel()));
     }
 
     private String getPowerButtonLabel() {
         return (currentStationId == null || currentStationId.isEmpty())
-            ? Component.translatable("screen.radiotowers.button.turn_on").getString()
-            : Component.translatable("screen.radiotowers.button.turn_off").getString();
+            ? new TranslatableComponent("screen.radiotowers.button.turn_on").getString()
+            : new TranslatableComponent("screen.radiotowers.button.turn_off").getString();
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(PoseStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
 
         EscText.drawInRect(guiGraphics, font, title, EscPanel.titleBar(content, style),
             0xE0E0E0, EscFonts.DEFAULT, false, 0.5f);
 
         if (hintLine1 != null && hintLine2 != null) {
-            EscText.drawInRect(guiGraphics, font, Component.literal("Pull the lever for a standard airdrop (loot crate)."),
+            EscText.drawInRect(guiGraphics, font, new TextComponent("Pull the lever for a standard airdrop (loot crate)."),
                 hintLine1, 0x88CCFF, EscFonts.DEFAULT, false, 0.5f);
             int cooldownMin = AirdropConfig.STANDARD_AIRDROP_COOLDOWN_MINUTES.get();
             String cooldownHint = cooldownMin <= 0
@@ -308,15 +312,15 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 : cooldownMin == 1
                     ? "1 minute cooldown between calls."
                     : cooldownMin + " minute cooldown between calls.";
-            EscText.drawInRect(guiGraphics, font, Component.literal(cooldownHint),
+            EscText.drawInRect(guiGraphics, font, new TextComponent(cooldownHint),
                 hintLine2, 0xA0A0A0, EscFonts.DEFAULT, false, 0.5f);
         }
 
         if (ModList.get().isLoaded("dead_air") && activeButton >= 0) {
             Button active = activeButton == 0 ? defaultStationButton : (activeButton == 1 ? dynamicStationButton : internetButton);
             if (active != null) {
-                int bx = active.getX();
-                int by = active.getY();
+                int bx = active.x;
+                int by = active.y;
                 int bw = active.getWidth();
                 int bh = active.getHeight();
                 int c = 0xFF22AA22;

@@ -22,14 +22,15 @@ public class WaveEndDetector {
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.getServer() == null) return;
+        net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server == null) return;
 
         // Nuclear baseline: do not end/fail waves or unfreeze mobs, but still push HUD state to the client.
         if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) {
             if (event.phase != TickEvent.Phase.START) return;
-            long tick = event.getServer().getTickCount();
+            long tick = server.getTickCount();
             if (tick % 20 != 0) return;
-            for (ServerLevel level : event.getServer().getAllLevels()) {
+            for (ServerLevel level : server.getAllLevels()) {
                 ZombieWavesAPILoader.enforceApiStoppedWhenNoPending(level);
                 // In nuclear mode we rely on basic zombie-family death counting (no tags/mixins),
                 // so we still allow wave completion/failure to run, but we skip any unfreeze logic.
@@ -40,14 +41,14 @@ public class WaveEndDetector {
             }
             return;
         }
-        if (event.getServer() == null) return;
+        if (server == null) return;
         if (event.phase == TickEvent.Phase.START) {
             // Unfreeze wave monsters before any entity ticks (reduces ghost zombies)
-            WaveMobAggroHandler.forceUnfreezeAllWaveMonsters(event.getServer());
+            WaveMobAggroHandler.forceUnfreezeAllWaveMonsters(server);
             // Run at START so we call endWave before the API's tick (reduces duplicate "Wave has ended" chat)
-            long tick = event.getServer().getTickCount();
+            long tick = server.getTickCount();
             if (tick % 20 != 0) return;
-            for (ServerLevel level : event.getServer().getAllLevels()) {
+            for (ServerLevel level : server.getAllLevels()) {
                 ZombieWavesAPILoader.enforceApiStoppedWhenNoPending(level);
                 ZombieWavesAPILoader.checkWaveEndAndDeliver(level);
                 ZombieWavesAPILoader.checkTimeBasedWaveEnd(level);
@@ -75,7 +76,7 @@ public class WaveEndDetector {
             }
         } else {
             // END: after all entity ticks, force unfreeze every Monster in levels with pending wave (fixes ghost zombies)
-            net.mcreator.radiotowers.events.WaveMobAggroHandler.forceUnfreezeAllWaveMonsters(event.getServer());
+            net.mcreator.radiotowers.events.WaveMobAggroHandler.forceUnfreezeAllWaveMonsters(server);
         }
     }
 }

@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.lobby;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.TextComponent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -117,22 +119,22 @@ public final class AirdropLobbyService {
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
         if (targetName == null || targetName.isBlank()) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.player_offline"), net.minecraft.Util.NIL_UUID);
             return;
         }
         ServerPlayer target = findOnlineByName(host.getServer(), targetName.trim());
         if (target == null) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.player_offline"), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (target.getUUID().equals(host.getUUID())) return;
         EslLobby already = EslLobbyManager.findByMember(target.getUUID());
         if (already != null && already.state() != EslLobby.State.CLOSED) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.target_busy"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.target_busy"), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (!lobby.invite(target.getUUID(), target.getGameProfile().getName())) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_failed"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.invite_failed"), net.minecraft.Util.NIL_UUID);
             return;
         }
         sendInviteChat(host, target, lobby);
@@ -144,15 +146,15 @@ public final class AirdropLobbyService {
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
         if (lobby == null) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.no_invite"));
+            player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.no_invite"), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (!lobby.join(player.getUUID())) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.accept_failed"));
+            player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.accept_failed"), net.minecraft.Util.NIL_UUID);
             return;
         }
         teleportNearPanel(player, lobby.anchor());
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.joined"));
+        player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.joined"), net.minecraft.Util.NIL_UUID);
         sendReadyHint(player);
         syncToLobby(lobby);
     }
@@ -169,7 +171,7 @@ public final class AirdropLobbyService {
         } else {
             lobby.leave(player.getUUID());
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.declined"));
+        player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.declined"), net.minecraft.Util.NIL_UUID);
         syncToLobby(lobby);
     }
 
@@ -178,7 +180,7 @@ public final class AirdropLobbyService {
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
         if (lobby == null) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_in_lobby"));
+            player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.not_in_lobby"), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (!ready) {
@@ -187,10 +189,10 @@ public final class AirdropLobbyService {
             return;
         }
         if (!lobby.setReady(player.getUUID())) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_failed"));
+            player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.ready_failed"), net.minecraft.Util.NIL_UUID);
             return;
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_ok"));
+        player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.ready_ok"), net.minecraft.Util.NIL_UUID);
         syncToLobby(lobby);
     }
 
@@ -202,7 +204,7 @@ public final class AirdropLobbyService {
         if (!lobby.kick(target)) return;
         ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
-            victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.kicked"));
+            victim.sendMessage(new TranslatableComponent("message.radiotowers.lobby.kicked"), net.minecraft.Util.NIL_UUID);
         }
         syncToLobby(lobby);
     }
@@ -215,7 +217,7 @@ public final class AirdropLobbyService {
         if (!lobby.cancelInvite(target)) return;
         ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
-            victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_cancelled"));
+            victim.sendMessage(new TranslatableComponent("message.radiotowers.lobby.invite_cancelled"), net.minecraft.Util.NIL_UUID);
         }
         syncToLobby(lobby);
     }
@@ -240,7 +242,7 @@ public final class AirdropLobbyService {
         } else {
             syncToLobby(lobby);
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.left"));
+        player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.left"), net.minecraft.Util.NIL_UUID);
     }
 
     public static void handleGo(ServerPlayer host, LobbyPackets.Go msg) {
@@ -250,7 +252,7 @@ public final class AirdropLobbyService {
         if (lobby == null) return;
         BlockPos panelPos = msg.panelPos() != null ? msg.panelPos() : lobby.anchor();
         if (hasPendingInvites(lobby) || !lobby.canStart()) {
-            host.sendSystemMessage(Component.literal(goBlockReason(lobby)));
+            host.sendMessage(new TextComponent(goBlockReason(lobby)), net.minecraft.Util.NIL_UUID);
             syncToLobby(lobby);
             return;
         }
@@ -265,7 +267,7 @@ public final class AirdropLobbyService {
             return;
         }
         if (!lobby.start()) {
-            host.sendSystemMessage(Component.literal(goBlockReason(lobby)));
+            host.sendMessage(new TextComponent(goBlockReason(lobby)), net.minecraft.Util.NIL_UUID);
             syncToLobby(lobby);
             return;
         }
@@ -273,7 +275,7 @@ public final class AirdropLobbyService {
             new ArrayList<>(msg.itemIds() != null ? msg.itemIds() : List.of()),
             new ArrayList<>(msg.quantities() != null ? msg.quantities() : List.of())));
         int seconds = AirdropConfig.getLobbyCountdownSeconds();
-        COUNTDOWN_END.put(lobby.id(), host.serverLevel().getGameTime() + seconds * 20L);
+        COUNTDOWN_END.put(lobby.id(), host.getLevel().getGameTime() + seconds * 20L);
         broadcastCountdown(lobby, seconds);
         syncToLobby(lobby);
     }
@@ -289,16 +291,16 @@ public final class AirdropLobbyService {
         List<Integer> qty = quantities != null ? new ArrayList<>(quantities) : new ArrayList<>();
         boolean standardAirdrop = totalDifficulty == 0 && ids.isEmpty();
         if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
-            sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));
+            sender.sendMessage(new TextComponent("[RadioTowers] Standard airdrops are disabled in config."), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (!standardAirdrop && !AirdropConfig.ENABLE_CATALOG_AIRDROP.get()) {
-            sender.sendSystemMessage(Component.literal("[RadioTowers] Catalog airdrops are disabled in config."));
+            sender.sendMessage(new TextComponent("[RadioTowers] Catalog airdrops are disabled in config."), net.minecraft.Util.NIL_UUID);
             return;
         }
         if (!standardAirdrop && !AirdropDifficultyTier.canStart(totalDifficulty)) return;
 
-        ServerLevel level = sender.serverLevel();
+        ServerLevel level = sender.getLevel();
         UUID owner = orderOwner != null ? orderOwner : sender.getUUID();
         Set<UUID> party = new LinkedHashSet<>();
         party.add(owner);
@@ -489,10 +491,10 @@ public final class AirdropLobbyService {
     }
 
     private static EslLobby ensureLobby(ServerPlayer host, BlockPos panelPos) {
-        EslLobby existing = findLobbyAt(host.serverLevel(), panelPos);
+        EslLobby existing = findLobbyAt(host.getLevel(), panelPos);
         if (existing != null) {
             if (!existing.hostUuid().equals(host.getUUID())) {
-                host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
+                host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.not_host"), net.minecraft.Util.NIL_UUID);
                 return null;
             }
             return existing;
@@ -502,10 +504,10 @@ public final class AirdropLobbyService {
             if (other.hostUuid().equals(host.getUUID()) && other.anchor().equals(panelPos.immutable())) {
                 return other;
             }
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.already_in_lobby"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.already_in_lobby"), net.minecraft.Util.NIL_UUID);
             return null;
         }
-        EslLobby lobby = EslLobbyManager.create(host.serverLevel(), panelPos.immutable(),
+        EslLobby lobby = EslLobbyManager.create(host.getLevel(), panelPos.immutable(),
             host.getUUID(), host.getGameProfile().getName(), AirdropConfig.getLobbyMaxPlayers());
         lobby.setInviteTimeoutTicks((int) AirdropConfig.getLobbyInviteTimeoutTicks());
         return lobby;
@@ -522,11 +524,11 @@ public final class AirdropLobbyService {
     private static @Nullable EslLobby requireHostLobby(ServerPlayer host, UUID lobbyId) {
         EslLobby lobby = lobbyId != null ? EslLobbyManager.find(lobbyId) : EslLobbyManager.findByMember(host.getUUID());
         if (lobby == null || lobby.state() == EslLobby.State.CLOSED) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_in_lobby"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.not_in_lobby"), net.minecraft.Util.NIL_UUID);
             return null;
         }
         if (!lobby.hostUuid().equals(host.getUUID())) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
+            host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.not_host"), net.minecraft.Util.NIL_UUID);
             return null;
         }
         return lobby;
@@ -555,13 +557,13 @@ public final class AirdropLobbyService {
             else if (m.status() == EslLobbyMember.Status.JOINED) notReady++;
         }
         if (pending > 0) {
-            return Component.translatable("message.radiotowers.lobby.waiting_invites", pending).getString();
+            return new TranslatableComponent("message.radiotowers.lobby.waiting_invites", pending).getString();
         }
         if (notReady > 0) {
-            return Component.translatable("message.radiotowers.lobby.waiting_ready", notReady).getString();
+            return new TranslatableComponent("message.radiotowers.lobby.waiting_ready", notReady).getString();
         }
         if (lobby.state() == EslLobby.State.COUNTDOWN) {
-            return Component.translatable("message.radiotowers.lobby.counting_down").getString();
+            return new TranslatableComponent("message.radiotowers.lobby.counting_down").getString();
         }
         return "";
     }
@@ -600,7 +602,7 @@ public final class AirdropLobbyService {
             if (p != null) {
                 AirdropLobbyNetwork.channel().sendTo(p, pkt);
                 if (seconds > 0) {
-                    p.sendSystemMessage(Component.translatable("message.radiotowers.lobby.countdown", seconds));
+                    p.sendMessage(new TranslatableComponent("message.radiotowers.lobby.countdown", seconds), net.minecraft.Util.NIL_UUID);
                 }
             }
         }
@@ -619,41 +621,41 @@ public final class AirdropLobbyService {
 
     private static void sendInviteChat(ServerPlayer host, ServerPlayer target, EslLobby lobby) {
         String id = lobby.id().toString();
-        MutableComponent msg = Component.translatable("message.radiotowers.lobby.invite",
+        MutableComponent msg = new TranslatableComponent("message.radiotowers.lobby.invite",
                 host.getGameProfile().getName())
-            .append(Component.literal(" "))
-            .append(Component.translatable("message.radiotowers.lobby.invite_tp_warn")
+            .append(new TextComponent(" "))
+            .append(new TranslatableComponent("message.radiotowers.lobby.invite_tp_warn")
                 .withStyle(ChatFormatting.YELLOW))
-            .append(Component.literal(" "));
-        MutableComponent accept = Component.literal("[Accept]")
+            .append(new TextComponent(" "));
+        MutableComponent accept = new TextComponent("[Accept]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.GREEN).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby accept " + id))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.accept_hover"))));
-        MutableComponent decline = Component.literal("[Decline]")
+                    new TranslatableComponent("message.radiotowers.lobby.accept_hover"))));
+        MutableComponent decline = new TextComponent("[Decline]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.RED).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby decline " + id))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.decline_hover"))));
-        target.sendSystemMessage(msg.append(accept).append(Component.literal(" ")).append(decline));
-        host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_sent",
-            target.getGameProfile().getName()));
+                    new TranslatableComponent("message.radiotowers.lobby.decline_hover"))));
+        target.sendMessage(msg.append(accept).append(new TextComponent(" ")).append(decline), net.minecraft.Util.NIL_UUID);
+        host.sendMessage(new TranslatableComponent("message.radiotowers.lobby.invite_sent",
+            target.getGameProfile().getName()), net.minecraft.Util.NIL_UUID);
     }
 
     private static void sendReadyHint(ServerPlayer player) {
-        MutableComponent ready = Component.literal("[Ready]")
+        MutableComponent ready = new TextComponent("[Ready]")
             .withStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby ready"))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.ready_hover"))));
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_hint")
-            .append(Component.literal(" ")).append(ready)
-            .append(Component.literal(" "))
-            .append(Component.translatable("message.radiotowers.lobby.ready_cmd_fallback")));
+                    new TranslatableComponent("message.radiotowers.lobby.ready_hover"))));
+        player.sendMessage(new TranslatableComponent("message.radiotowers.lobby.ready_hint")
+            .append(new TextComponent(" ")).append(ready)
+            .append(new TextComponent(" "))
+            .append(new TranslatableComponent("message.radiotowers.lobby.ready_cmd_fallback")), net.minecraft.Util.NIL_UUID);
     }
 
     public static void teleportNearPanel(ServerPlayer player, BlockPos panel) {
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.getLevel();
         int x = panel.getX();
         int z = panel.getZ() + 2;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);

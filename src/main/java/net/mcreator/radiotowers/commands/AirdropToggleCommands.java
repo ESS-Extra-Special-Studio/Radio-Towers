@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.commands;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.TextComponent;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -92,18 +94,18 @@ public class AirdropToggleCommands {
 
     private static int openCall(CommandSourceStack src) {
         if (!(src.getEntity() instanceof ServerPlayer player)) {
-            src.sendFailure(Component.literal("Player only"));
+            src.sendFailure(new TextComponent("Player only"));
             return 0;
         }
         // Prefer a real radio panel nearby — Base claim rejects non-panel positions.
         BlockPos nearby = findNearbyRadioPanel(player);
         final BlockPos pos = nearby != null ? nearby : player.blockPosition();
         if (nearby == null) {
-            src.sendSuccess(() -> Component.literal(
+            src.sendSuccess(new TextComponent(
                 "No radio panel within 10 blocks — opened at feet " + pos.toShortString()
                     + " (Base claim will fail until you open a real panel)"), false);
         } else {
-            src.sendSuccess(() -> Component.literal("Opened Call Airdrop at panel " + pos.toShortString()), false);
+            src.sendSuccess(new TextComponent("Opened Call Airdrop at panel " + pos.toShortString()), false);
         }
         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new OpenCallAirdropPacket(pos));
         return 1;
@@ -111,7 +113,7 @@ public class AirdropToggleCommands {
 
     /** Nearest radiotowers:radio_panel within 10 blocks of the player (inclusive). */
     private static BlockPos findNearbyRadioPanel(ServerPlayer player) {
-        if (!(player.level() instanceof ServerLevel level)) return null;
+        if (!(player.level instanceof ServerLevel level)) return null;
         Block panel = RadiotowersModBlocks.RADIO_PANEL.get();
         BlockPos origin = player.blockPosition();
         BlockPos best = null;
@@ -138,7 +140,7 @@ public class AirdropToggleCommands {
             net.mcreator.radiotowers.lobby.AirdropLobbyService.handleAccept(player, java.util.UUID.fromString(id));
             return 1;
         } catch (Exception e) {
-            src.sendFailure(Component.literal("Invalid lobby id"));
+            src.sendFailure(new TextComponent("Invalid lobby id"));
             return 0;
         }
     }
@@ -149,7 +151,7 @@ public class AirdropToggleCommands {
             net.mcreator.radiotowers.lobby.AirdropLobbyService.handleDecline(player, java.util.UUID.fromString(id));
             return 1;
         } catch (Exception e) {
-            src.sendFailure(Component.literal("Invalid lobby id"));
+            src.sendFailure(new TextComponent("Invalid lobby id"));
             return 0;
         }
     }
@@ -161,13 +163,13 @@ public class AirdropToggleCommands {
             net.mcreator.radiotowers.lobby.AirdropLobbyService.handleReady(player, lobbyId, true);
             return 1;
         } catch (Exception e) {
-            src.sendFailure(Component.literal("Invalid lobby id"));
+            src.sendFailure(new TextComponent("Invalid lobby id"));
             return 0;
         }
     }
 
     private static void line(CommandSourceStack src, String text) {
-        src.sendSuccess(() -> Component.literal(text), false);
+        src.sendSuccess(new TextComponent(text), false);
     }
 
     private static int dump(CommandSourceStack src) {
@@ -286,7 +288,7 @@ public class AirdropToggleCommands {
             var file = AirdropProfiles.saveLive(name);
             line(src, "Saved current airdrop settings to " + file);
         } catch (Exception e) {
-            src.sendFailure(Component.literal("Save failed: " + e.getMessage()));
+            src.sendFailure(new TextComponent("Save failed: " + e.getMessage()));
             return 0;
         }
         return 1;
@@ -298,7 +300,7 @@ public class AirdropToggleCommands {
             line(src, "Loaded " + file + " into radiotowers-common.toml.");
             catalog(src);
         } catch (Exception e) {
-            src.sendFailure(Component.literal("Load failed: " + e.getMessage()));
+            src.sendFailure(new TextComponent("Load failed: " + e.getMessage()));
             return 0;
         }
         return 1;
@@ -308,10 +310,10 @@ public class AirdropToggleCommands {
         boolean enabled = AirdropRuntimeToggles.isEndRecipeItemsEnabled();
         Boolean override = AirdropRuntimeToggles.getEndRecipeItemsOverride();
         String modeKey = override == null ? "command.radiotowers.endrecipeitems.mode.config" : "command.radiotowers.endrecipeitems.mode.runtime_override";
-        source.sendSuccess(() -> Component.translatable(
+        source.sendSuccess(new TranslatableComponent(
             "command.radiotowers.endrecipeitems.status",
-            Component.translatable(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off"),
-            Component.translatable(modeKey)
+            new TranslatableComponent(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off"),
+            new TranslatableComponent(modeKey)
         ), false);
         return 1;
     }
@@ -319,9 +321,9 @@ public class AirdropToggleCommands {
     private static int set(CommandSourceStack source, boolean enabled) {
         AirdropRuntimeToggles.setEndRecipeItemsOverride(enabled);
         AirdropCatalog.invalidate();
-        source.sendSuccess(() -> Component.translatable(
+        source.sendSuccess(new TranslatableComponent(
             "command.radiotowers.endrecipeitems.set",
-            Component.translatable(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off")
+            new TranslatableComponent(enabled ? "command.radiotowers.endrecipeitems.state.on" : "command.radiotowers.endrecipeitems.state.off")
         ), true);
         return 1;
     }
@@ -334,7 +336,7 @@ public class AirdropToggleCommands {
     private static int clearOverride(CommandSourceStack source) {
         AirdropRuntimeToggles.setEndRecipeItemsOverride(null);
         AirdropCatalog.invalidate();
-        source.sendSuccess(() -> Component.translatable("command.radiotowers.endrecipeitems.use_config"), true);
+        source.sendSuccess(new TranslatableComponent("command.radiotowers.endrecipeitems.use_config"), true);
         return 1;
     }
 }

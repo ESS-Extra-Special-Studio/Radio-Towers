@@ -21,7 +21,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RadiotowersModEntities {
-	public static final DeferredRegister<EntityType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, RadiotowersMod.MODID);
+	public static final DeferredRegister<EntityType<?>> REGISTRY = DeferredRegister.create(ForgeRegistries.ENTITIES, RadiotowersMod.MODID);
 	public static final RegistryObject<EntityType<AirdropentityEntity>> AIRDROPENTITY = register("airdropentity", EntityType.Builder.<AirdropentityEntity>of(AirdropentityEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true)
 			.setTrackingRange(64).setUpdateInterval(3).setCustomClientFactory(AirdropentityEntity::new).fireImmune().sized(0.6f, 1.8f));
 	public static final RegistryObject<EntityType<PlaneentityEntity>> PLANEENTITY = register("planeentity", EntityType.Builder.<PlaneentityEntity>of(PlaneentityEntity::new, MobCategory.MONSTER).setShouldReceiveVelocityUpdates(true)
