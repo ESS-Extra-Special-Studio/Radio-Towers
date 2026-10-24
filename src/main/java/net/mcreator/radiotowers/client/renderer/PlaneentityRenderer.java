@@ -3,32 +3,42 @@ package net.mcreator.radiotowers.client.renderer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
-import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.HierarchicalModel;
-import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.AABB;
 
 import net.mcreator.radiotowers.client.model.Modelplane;
-import net.mcreator.radiotowers.client.model.animations.planeAnimation;
 import net.mcreator.radiotowers.entity.PlaneentityEntity;
 
 /**
  * Flying airdrops and grounded EB wrecks both use {@link Modelplane} (same mesh as the fly-in).
  * Crashed wrecks skip the fly-in animation and apply a nose-down / bank pose.
  */
-public class PlaneentityRenderer extends MobRenderer<PlaneentityEntity, EntityModel<PlaneentityEntity>> {
+public class PlaneentityRenderer extends MobRenderer<PlaneentityEntity, PlaneentityRenderState, Modelplane> {
+
+	private static final Identifier TEXTURE = Identifier.parse("radiotowers:textures/entities/airplane.png");
 
 	public PlaneentityRenderer(EntityRendererProvider.Context context) {
-		super(context, new AnimatedModel(context.bakeLayer(Modelplane.LAYER_LOCATION)), 1f);
+		super(context, new Modelplane(context.bakeLayer(Modelplane.LAYER_LOCATION)), 1f);
 	}
 
 	@Override
-	public ResourceLocation getTextureLocation(PlaneentityEntity entity) {
-		return ResourceLocation.parse("radiotowers:textures/entities/airplane.png");
+	public Identifier getTextureLocation(PlaneentityRenderState state) {
+		return TEXTURE;
+	}
+
+	@Override
+	public PlaneentityRenderState createRenderState() {
+		return new PlaneentityRenderState();
+	}
+
+	@Override
+	public void extractRenderState(PlaneentityEntity entity, PlaneentityRenderState state, float partialTicks) {
+		super.extractRenderState(entity, state, partialTicks);
+		state.crashedWreck = entity.isCrashedWreck();
+		state.flyIn.copyFrom(entity.animationState0);
 	}
 
 	@Override
@@ -41,43 +51,12 @@ public class PlaneentityRenderer extends MobRenderer<PlaneentityEntity, EntityMo
 	}
 
 	@Override
-	protected void setupRotations(PlaneentityEntity entity, PoseStack poseStack, float ageInTicks, float rotationYaw,
-			float partialTicks, float scale) {
-		super.setupRotations(entity, poseStack, ageInTicks, rotationYaw, partialTicks, scale);
-		if (entity.isCrashedWreck()) {
+	protected void setupRotations(PlaneentityRenderState state, PoseStack poseStack, float bodyRot, float entityScale) {
+		super.setupRotations(state, poseStack, bodyRot, entityScale);
+		if (state.crashedWreck) {
 			poseStack.mulPose(Axis.XP.rotationDegrees(22f));
 			poseStack.mulPose(Axis.ZP.rotationDegrees(28f));
 			poseStack.translate(0.0, -1.25, 0.0);
-		}
-	}
-
-	private static final class AnimatedModel extends Modelplane<PlaneentityEntity> {
-		private final ModelPart root;
-		private final HierarchicalModel animator = new HierarchicalModel<PlaneentityEntity>() {
-			@Override
-			public ModelPart root() {
-				return root;
-			}
-
-			@Override
-			public void setupAnim(PlaneentityEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
-					float headPitch) {
-				this.root().getAllParts().forEach(ModelPart::resetPose);
-				if (!entity.isCrashedWreck()) {
-					this.animate(entity.animationState0, planeAnimation.flyIn, ageInTicks, 1.2f);
-				}
-			}
-		};
-
-		public AnimatedModel(ModelPart root) {
-			super(root);
-			this.root = root;
-		}
-
-		@Override
-		public void setupAnim(PlaneentityEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
-				float headPitch) {
-			animator.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 		}
 	}
 }

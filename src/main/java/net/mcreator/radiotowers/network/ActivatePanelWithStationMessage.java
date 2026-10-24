@@ -4,9 +4,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -24,7 +24,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
  * Server calls Dead Air's API to activate the panel at the given pos with the chosen station (if Dead Air is loaded).
  */
 public class ActivatePanelWithStationMessage implements CustomPacketPayload {
-    public static final Type<ActivatePanelWithStationMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "activate_panel_station"));
+    public static final Type<ActivatePanelWithStationMessage> TYPE = new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "activate_panel_station"));
     public static final StreamCodec<FriendlyByteBuf, ActivatePanelWithStationMessage> STREAM_CODEC = StreamCodec.of((buf, msg) -> ActivatePanelWithStationMessage.encode(msg, buf), ActivatePanelWithStationMessage::new);
 
     @Override
@@ -57,10 +57,10 @@ public class ActivatePanelWithStationMessage implements CustomPacketPayload {
             if (!(ctx.player() instanceof net.minecraft.server.level.ServerPlayer)) return;
             var sender = (ctx.player() instanceof net.minecraft.server.level.ServerPlayer _sp ? _sp : null);
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerLevel level = sender.level();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air") || msg.stationId == null || msg.stationId.isEmpty()) return;
-            ResourceLocation id = ResourceLocation.tryParse(msg.stationId);
+            Identifier id = Identifier.tryParse(msg.stationId);
             if (id == null) return;
             try {
                 // Load via context CL so Dead Air's package resolves (RadioTowers module CL can miss sibling classes)
@@ -69,10 +69,10 @@ public class ActivatePanelWithStationMessage implements CustomPacketPayload {
                 Class<?> api = Class.forName("uk.co.extraspecialstudio.dead_air.api.DeadAirAPI", true, cl);
                 // Prefer 4-arg overload so the triggering player gets "New station discovered!" if applicable
                 try {
-                    var method = api.getMethod("activatePanelAt", ServerLevel.class, BlockPos.class, ResourceLocation.class, ServerPlayer.class);
+                    var method = api.getMethod("activatePanelAt", ServerLevel.class, BlockPos.class, Identifier.class, ServerPlayer.class);
                     method.invoke(null, level, msg.pos, id, sender);
                 } catch (NoSuchMethodException e) {
-                    var method = api.getMethod("activatePanelAt", ServerLevel.class, BlockPos.class, ResourceLocation.class);
+                    var method = api.getMethod("activatePanelAt", ServerLevel.class, BlockPos.class, Identifier.class);
                     method.invoke(null, level, msg.pos, id);
                 }
                 var syncMethod = api.getMethod("syncKnownTowersToPlayer", ServerPlayer.class);

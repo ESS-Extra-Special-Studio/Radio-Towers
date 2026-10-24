@@ -26,7 +26,7 @@ public abstract class NoMindlessShootingTriggerHandlerMixin {
     private void radiotowers$skipNmsDuringDefense(ServerPlayer player, CallbackInfo ci) {
         if (player == null) return;
         try {
-            if (ZombieWavesAPILoader.isDefenseWaveActive(player.serverLevel())) {
+            if (ZombieWavesAPILoader.isDefenseWaveActive(player.level())) {
                 ci.cancel();
             }
         } catch (Throwable ignored) {

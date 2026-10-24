@@ -6,7 +6,7 @@ import net.mcreator.radiotowers.init.RadiotowersModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BiomeTags;
@@ -45,8 +45,8 @@ import java.util.Optional;
  */
 @EventBusSubscriber(modid = RadiotowersMod.MODID)
 public final class GuaranteedSpawnTower {
-    private static final ResourceLocation TEMPLATE = ResourceLocation.fromNamespaceAndPath("radiotowers", "tower");
-    private static final ResourceLocation TEMPLATE_FALLBACK = ResourceLocation.fromNamespaceAndPath("radiotowers", "radiotower");
+    private static final Identifier TEMPLATE = Identifier.fromNamespaceAndPath("radiotowers", "tower");
+    private static final Identifier TEMPLATE_FALLBACK = Identifier.fromNamespaceAndPath("radiotowers", "radiotower");
     private static final int STEP_BLOCKS = 8;
     private static final int GROUND_SEARCH_DEPTH = 48;
     /** radiotowers:tower size is 12×48×19 */
@@ -78,7 +78,7 @@ public final class GuaranteedSpawnTower {
 
     public static void scheduleForPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         if (level.dimension() != Level.OVERWORLD) return;
         if (!AirdropConfig.GUARANTEE_SPAWN_TOWER.get()) return;
         BlockPos pos = player.blockPosition();
@@ -97,11 +97,11 @@ public final class GuaranteedSpawnTower {
         if (GuaranteedSpawnTowerData.get(level).isPlaced()) return;
 
         ChunkPos cp = event.getChunk().getPos();
-        BlockPos spawn = level.getSharedSpawnPos();
+        BlockPos spawn = level.getRespawnData().pos();
         int maxChunks = Math.max(4, Math.min(32, AirdropConfig.SPAWN_TOWER_SEARCH_RADIUS_CHUNKS.get()));
         int sx = spawn.getX() >> 4;
         int sz = spawn.getZ() >> 4;
-        if (Math.abs(cp.x - sx) > maxChunks || Math.abs(cp.z - sz) > maxChunks) return;
+        if (Math.abs(cp.x() - sx) > maxChunks || Math.abs(cp.z() - sz) > maxChunks) return;
 
         long t = level.getGameTime();
         if (t == lastChunkRetryGameTime) return;
@@ -116,7 +116,7 @@ public final class GuaranteedSpawnTower {
         GuaranteedSpawnTowerData data = GuaranteedSpawnTowerData.get(level);
         if (data.isPlaced()) return;
 
-        BlockPos spawn = level.getSharedSpawnPos();
+        BlockPos spawn = level.getRespawnData().pos();
         BlockPos center = preferNear != null ? preferNear : spawn;
 
         // Natural worldgen may already have put a tower in the spawn circle — don't stack another.
@@ -167,14 +167,14 @@ public final class GuaranteedSpawnTower {
                 int x = center.getX() + dx;
                 int z = center.getZ() + dz;
                 ChunkPos cp = new ChunkPos(x >> 4, z >> 4);
-                if (!level.getChunkSource().hasChunk(cp.x, cp.z)) continue;
-                if (level.getChunkSource().getChunkNow(cp.x, cp.z) == null) continue;
+                if (!level.getChunkSource().hasChunk(cp.x(), cp.z())) continue;
+                if (level.getChunkSource().getChunkNow(cp.x(), cp.z()) == null) continue;
                 int groundY = findGroundY(level, x, z);
                 if (groundY == Integer.MIN_VALUE) {
                     groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z) - 1;
                 }
-                int minY = Math.max(level.getMinBuildHeight(), groundY - 4);
-                int maxY = Math.min(level.getMaxBuildHeight() - 1, groundY + 48);
+                int minY = Math.max(level.getMinY(), groundY - 4);
+                int maxY = Math.min(level.getMaxY() - 1, groundY + 48);
                 for (int y = minY; y <= maxY; y++) {
                     if (level.getBlockState(new BlockPos(x, y, z)).is(panel)) return true;
                 }
@@ -268,8 +268,8 @@ public final class GuaranteedSpawnTower {
         for (int dx = 0; dx < FOOTPRINT_X; dx += 8) {
             for (int dz = 0; dz < FOOTPRINT_Z; dz += 8) {
                 ChunkPos cp = new ChunkPos((x + dx) >> 4, (z + dz) >> 4);
-                if (!level.getChunkSource().hasChunk(cp.x, cp.z)) return null;
-                if (level.getChunkSource().getChunkNow(cp.x, cp.z) == null) return null;
+                if (!level.getChunkSource().hasChunk(cp.x(), cp.z())) return null;
+                if (level.getChunkSource().getChunkNow(cp.x(), cp.z()) == null) return null;
             }
         }
 
@@ -317,7 +317,7 @@ public final class GuaranteedSpawnTower {
     private static int findGroundY(ServerLevel level, int x, int z) {
         BlockPos top = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(x, 0, z));
         int startY = top.getY();
-        int minY = level.getMinBuildHeight();
+        int minY = level.getMinY();
         int limit = Math.min(GROUND_SEARCH_DEPTH, startY - minY);
         for (int d = 0; d <= limit; d++) {
             int y = startY - d;
@@ -384,7 +384,7 @@ public final class GuaranteedSpawnTower {
                 if (naturalGround != Integer.MIN_VALUE && naturalGround >= padY) continue;
 
                 int bottom = naturalGround == Integer.MIN_VALUE
-                    ? Math.max(level.getMinBuildHeight() + 1, padY - 32)
+                    ? Math.max(level.getMinY() + 1, padY - 32)
                     : naturalGround + 1;
                 for (int y = padY - 1; y >= bottom; y--) {
                     BlockPos p = new BlockPos(x, y, z);

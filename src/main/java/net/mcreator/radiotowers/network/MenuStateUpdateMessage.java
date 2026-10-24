@@ -8,7 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 
 import net.mcreator.radiotowers.RadiotowersMod;
@@ -17,7 +17,7 @@ import net.mcreator.radiotowers.init.RadiotowersModMenus;
 
 
 public class MenuStateUpdateMessage implements CustomPacketPayload {
-    public static final Type<MenuStateUpdateMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "menu_state_update"));
+    public static final Type<MenuStateUpdateMessage> TYPE = new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "menu_state_update"));
     public static final StreamCodec<FriendlyByteBuf, MenuStateUpdateMessage> STREAM_CODEC = StreamCodec.of(
             (buf, msg) -> MenuStateUpdateMessage.buffer(msg, buf), MenuStateUpdateMessage::new);
 

@@ -3,7 +3,7 @@ import net.mcreator.radiotowers.network.RadiotowersNetwork;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -58,11 +58,11 @@ public class InternetStationScreen extends EscScreen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderWorldDim(guiGraphics);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         EscRect introBand = resolve(content, EscLayoutSpec.stretchH(style.titleGap(), 52, EscInsets.of(12, 0)));
         EscRect[] lines = introBand.splitRows(new float[]{1f, 1f, 1f, 1f}, 2);

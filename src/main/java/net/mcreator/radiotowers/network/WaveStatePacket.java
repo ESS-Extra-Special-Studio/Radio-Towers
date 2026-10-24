@@ -3,7 +3,7 @@ package net.mcreator.radiotowers.network;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -20,7 +20,7 @@ import net.mcreator.radiotowers.SafeClientCalls;
  * Also carries a flag so the client keeps NMS suppression in sync even if {@link DefenseSessionSyncPacket} is missed.
  */
 public class WaveStatePacket implements CustomPacketPayload {
-    public static final Type<WaveStatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "wave_state"));
+    public static final Type<WaveStatePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(RadiotowersMod.MODID, "wave_state"));
     public static final StreamCodec<FriendlyByteBuf, WaveStatePacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> WaveStatePacket.encode(msg, buf), WaveStatePacket::new);
 
     @Override

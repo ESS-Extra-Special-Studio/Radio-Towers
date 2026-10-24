@@ -1,12 +1,12 @@
 package net.mcreator.radiotowers.integration;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +19,33 @@ import java.util.UUID;
  */
 public class PendingAirdropSavedData extends SavedData {
 
-    private static final String DATA_NAME = "radiotowers_pending_airdrops";
+    private record Entry(List<Integer> wavePos, List<Integer> panelPos, List<String> itemIds, List<Integer> quantities,
+                         int difficulty, String player, long storedAt, long waveStartedAt, int wavesRemaining,
+                         int totalWaves, int tier, int maxZombies, int spawnCount, int killedCount) {
+        static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.INT.listOf().fieldOf("wavePos").forGetter(Entry::wavePos),
+            Codec.INT.listOf().fieldOf("panelPos").forGetter(Entry::panelPos),
+            Codec.STRING.listOf().fieldOf("itemIds").forGetter(Entry::itemIds),
+            Codec.INT.listOf().fieldOf("quantities").forGetter(Entry::quantities),
+            Codec.INT.fieldOf("difficulty").forGetter(Entry::difficulty),
+            Codec.STRING.fieldOf("player").forGetter(Entry::player),
+            Codec.LONG.fieldOf("storedAt").forGetter(Entry::storedAt),
+            Codec.LONG.fieldOf("waveStartedAt").forGetter(Entry::waveStartedAt),
+            Codec.INT.fieldOf("wavesRemaining").forGetter(Entry::wavesRemaining),
+            Codec.INT.fieldOf("totalWaves").forGetter(Entry::totalWaves),
+            Codec.INT.fieldOf("tier").forGetter(Entry::tier),
+            Codec.INT.fieldOf("maxZombies").forGetter(Entry::maxZombies),
+            Codec.INT.fieldOf("spawnCount").forGetter(Entry::spawnCount),
+            Codec.INT.fieldOf("killedCount").forGetter(Entry::killedCount)
+        ).apply(i, Entry::new));
+    }
+
+    public static final Codec<PendingAirdropSavedData> CODEC = RecordCodecBuilder.create(i -> i.group(
+        Entry.CODEC.listOf().optionalFieldOf("pending", List.of()).forGetter(PendingAirdropSavedData::toEntries)
+    ).apply(i, PendingAirdropSavedData::fromEntries));
+
+    public static final SavedDataType<PendingAirdropSavedData> TYPE = new SavedDataType<>(
+        Identifier.fromNamespaceAndPath("radiotowers", "pending_airdrops"), () -> new PendingAirdropSavedData(), CODEC);
 
     private final Map<BlockPos, PendingAirdropStorage.Pending> pending = new HashMap<>();
 
@@ -27,82 +53,44 @@ public class PendingAirdropSavedData extends SavedData {
         super();
     }
 
-    public static PendingAirdropSavedData load(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
+    private static PendingAirdropSavedData fromEntries(List<Entry> entries) {
         PendingAirdropSavedData data = new PendingAirdropSavedData();
-        ListTag list = tag.getList("pending", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            BlockPos waveStart = net.minecraft.core.BlockPos.of(entry.getLong("wavePos"));
-            if (entry.contains("wavePos", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
-                int[] a = entry.getIntArray("wavePos");
-                waveStart = new BlockPos(a[0], a[1], a[2]);
-            } else if (entry.contains("wavePos", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
-                CompoundTag wp = entry.getCompound("wavePos");
-                waveStart = new BlockPos(wp.getInt("X"), wp.getInt("Y"), wp.getInt("Z"));
+        for (Entry entry : entries) {
+            if (entry.wavePos().size() < 3 || entry.player() == null || entry.player().isEmpty()) continue;
+            UUID player;
+            try {
+                player = UUID.fromString(entry.player());
+            } catch (IllegalArgumentException ignored) {
+                continue;
             }
-            BlockPos panelPos = waveStart;
-            if (entry.contains("panelPos", net.minecraft.nbt.Tag.TAG_INT_ARRAY)) {
-                int[] a = entry.getIntArray("panelPos");
-                panelPos = new BlockPos(a[0], a[1], a[2]);
-            } else if (entry.contains("panelPos", net.minecraft.nbt.Tag.TAG_COMPOUND)) {
-                CompoundTag pp = entry.getCompound("panelPos");
-                panelPos = new BlockPos(pp.getInt("X"), pp.getInt("Y"), pp.getInt("Z"));
-            }
-            List<String> itemIds = new ArrayList<>();
-            ListTag ids = entry.getList("itemIds", Tag.TAG_STRING);
-            for (int j = 0; j < ids.size(); j++) itemIds.add(ids.get(j).getAsString());
-            List<Integer> quantities = new ArrayList<>();
-            ListTag qty = entry.getList("quantities", Tag.TAG_INT);
-            for (int j = 0; j < qty.size(); j++) quantities.add(((net.minecraft.nbt.NumericTag) qty.get(j)).getAsInt());
-            int difficulty = entry.getInt("difficulty");
-            UUID player = entry.hasUUID("player") ? entry.getUUID("player") : null;
-            if (player == null) continue;
-            long storedAt = entry.getLong("storedAt");
-            long waveStartedAt = entry.getLong("waveStartedAt");
-            int wavesRemaining = entry.getInt("wavesRemaining");
-            int totalWaves = entry.getInt("totalWaves");
-            int tier = entry.getInt("tier");
-            int maxZombies = entry.getInt("maxZombies");
-            int spawnCount = entry.getInt("spawnCount");
-            int killedCount = entry.getInt("killedCount");
-            PendingAirdropStorage.Pending p = new PendingAirdropStorage.Pending(waveStart, panelPos, itemIds, quantities, difficulty, player, storedAt, wavesRemaining, totalWaves, tier, maxZombies);
-            p.currentWaveStartedAtGameTime = waveStartedAt;
-            p.wavesRemaining = wavesRemaining;
-            p.spawnCountThisWave = spawnCount;
-            p.killedCountThisWave = killedCount;
+            BlockPos waveStart = new BlockPos(entry.wavePos().get(0), entry.wavePos().get(1), entry.wavePos().get(2));
+            BlockPos panelPos = entry.panelPos().size() >= 3
+                ? new BlockPos(entry.panelPos().get(0), entry.panelPos().get(1), entry.panelPos().get(2))
+                : waveStart;
+            PendingAirdropStorage.Pending p = new PendingAirdropStorage.Pending(
+                waveStart, panelPos, new ArrayList<>(entry.itemIds()), new ArrayList<>(entry.quantities()),
+                entry.difficulty(), player, entry.storedAt(), entry.wavesRemaining(), entry.totalWaves(), entry.tier(), entry.maxZombies());
+            p.currentWaveStartedAtGameTime = entry.waveStartedAt();
+            p.wavesRemaining = entry.wavesRemaining();
+            p.spawnCountThisWave = entry.spawnCount();
+            p.killedCountThisWave = entry.killedCount();
             data.pending.put(waveStart.immutable(), p);
         }
         return data;
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
-        ListTag list = new ListTag();
-        for (Map.Entry<BlockPos, PendingAirdropStorage.Pending> e : pending.entrySet()) {
-            PendingAirdropStorage.Pending p = e.getValue();
-            CompoundTag entry = new CompoundTag();
-            entry.putIntArray("wavePos", new int[]{p.waveStartPos.getX(), p.waveStartPos.getY(), p.waveStartPos.getZ()});
-            entry.putIntArray("panelPos", new int[]{p.panelPos.getX(), p.panelPos.getY(), p.panelPos.getZ()});
-            ListTag ids = new ListTag();
-            for (String s : p.itemIds) ids.add(net.minecraft.nbt.StringTag.valueOf(s));
-            entry.put("itemIds", ids);
-            ListTag qty = new ListTag();
-            for (Integer n : p.quantities) qty.add(net.minecraft.nbt.IntTag.valueOf(n));
-            entry.put("quantities", qty);
-            entry.putInt("difficulty", p.difficulty);
-            entry.putUUID("player", p.playerWhoStarted);
-            entry.putLong("storedAt", p.storedAtGameTime);
-            entry.putLong("waveStartedAt", p.currentWaveStartedAtGameTime);
-            entry.putInt("wavesRemaining", p.wavesRemaining);
-            entry.putInt("totalWaves", p.totalWaves);
-            entry.putInt("tier", p.tierDifficulty);
-            entry.putInt("maxZombies", p.maxZombiesPerWave);
-            entry.putInt("spawnCount", p.spawnCountThisWave);
-            entry.putInt("killedCount", p.killedCountThisWave);
-            list.add(entry);
+    private List<Entry> toEntries() {
+        List<Entry> list = new ArrayList<>();
+        for (PendingAirdropStorage.Pending p : pending.values()) {
+            list.add(new Entry(
+                List.of(p.waveStartPos.getX(), p.waveStartPos.getY(), p.waveStartPos.getZ()),
+                List.of(p.panelPos.getX(), p.panelPos.getY(), p.panelPos.getZ()),
+                List.copyOf(p.itemIds), List.copyOf(p.quantities),
+                p.difficulty, p.playerWhoStarted.toString(), p.storedAtGameTime, p.currentWaveStartedAtGameTime,
+                p.wavesRemaining, p.totalWaves, p.tierDifficulty, p.maxZombiesPerWave,
+                p.spawnCountThisWave, p.killedCountThisWave));
         }
-        tag.put("pending", list);
-        return tag;
+        return list;
     }
 
     public Map<BlockPos, PendingAirdropStorage.Pending> getPending() {
@@ -110,6 +98,6 @@ public class PendingAirdropSavedData extends SavedData {
     }
 
     public static PendingAirdropSavedData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(PendingAirdropSavedData::new, PendingAirdropSavedData::load), DATA_NAME);
+        return level.getDataStorage().computeIfAbsent(TYPE);
     }
 }

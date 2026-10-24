@@ -8,23 +8,4 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'radiotowers-1.21.1-neoforge'
-
-includeBuild('../ESL - 1.21.1 NeoForge') {
-    dependencySubstitution {
-        substitute module('uk.co.extraspecialstudio:extraspeciallib') using project(':')
-    }
-}
-
-includeBuild('../ESN - 1.21.1 NeoForge') {
-    dependencySubstitution {
-        substitute module('uk.co.extraspecialstudio:esn') using project(':')
-    }
-}
-
-includeBuild('../ESC - 1.21.1 NeoForge') {
-    dependencySubstitution {
-        substitute module('uk.co.extraspecialstudio:extraspecialcore') using project(':')
-        substitute module('uk.co.extraspecialstudio.extraspecial:extraspecialcore') using project(':')
-    }
-}
+rootProject.name = 'radiotowers-26.1-neoforge'

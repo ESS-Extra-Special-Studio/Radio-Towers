@@ -11,9 +11,9 @@ import net.mcreator.radiotowers.integration.EslWaveIntegration;
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
@@ -45,7 +45,7 @@ public class AirdropToggleCommands {
         );
         dispatcher.register(
             Commands.literal("radiotowers")
-                .requires(src -> src.hasPermission(2))
+                .requires(src -> src.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.literal("endrecipeitems")
                     .then(Commands.literal("status").executes(ctx -> status(ctx.getSource())))
                     .then(Commands.literal("on").executes(ctx -> set(ctx.getSource(), true)))
@@ -57,8 +57,8 @@ public class AirdropToggleCommands {
                     .then(Commands.literal("dump").executes(ctx -> dump(ctx.getSource())))
                     .then(Commands.literal("catalog").executes(ctx -> catalog(ctx.getSource())))
                     .then(Commands.literal("probe")
-                        .then(Commands.argument("id", ResourceLocationArgument.id())
-                            .executes(ctx -> probe(ctx.getSource(), ResourceLocationArgument.getId(ctx, "id")))))
+                        .then(Commands.argument("id", IdentifierArgument.id())
+                            .executes(ctx -> probe(ctx.getSource(), IdentifierArgument.getId(ctx, "id")))))
                     .then(Commands.literal("checklist").executes(ctx -> checklist(ctx.getSource())))
                     .then(Commands.literal("applytest").executes(ctx -> applyTest(ctx.getSource())))
                     .then(Commands.literal("restoredefaults").executes(ctx -> restore(ctx.getSource())))
@@ -179,7 +179,7 @@ public class AirdropToggleCommands {
         return 1;
     }
 
-    private static int probe(CommandSourceStack src, ResourceLocation id) {
+    private static int probe(CommandSourceStack src, Identifier id) {
         AirdropCatalog.invalidate();
         for (AirdropCatalog.Entry e : AirdropCatalog.getEntries()) {
             if (AirdropCatalog.catalogIdMatches(id, e)) {

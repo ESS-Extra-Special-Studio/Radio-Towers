@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.client.model;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.animation.KeyframeAnimation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -12,22 +12,25 @@ import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.EntityModel;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.mcreator.radiotowers.client.model.animations.planeAnimation;
+import net.mcreator.radiotowers.client.renderer.PlaneentityRenderState;
 
 // Made with Blockbench 5.0.7
 // Exported for Minecraft version 1.17 or later with Mojang mappings
 // Paste this class into your mod and generate all required imports
-public class Modelplane<T extends Entity> extends EntityModel<T> {
+public class Modelplane extends EntityModel<PlaneentityRenderState> {
 	// This layer location should be baked with EntityRendererProvider.Context in
 	// the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("radiotowers", "modelplane"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(Identifier.fromNamespaceAndPath("radiotowers", "modelplane"), "main");
 	public final ModelPart bone;
 	public final ModelPart bone2;
+	private final KeyframeAnimation flyIn;
 
 	public Modelplane(ModelPart root) {
+		super(root);
 		this.bone = root.getChild("bone");
 		this.bone2 = this.bone.getChild("bone2");
+		this.flyIn = planeAnimation.flyIn.bake(root);
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -59,11 +62,10 @@ public class Modelplane<T extends Entity> extends EntityModel<T> {
 	}
 
 	@Override
-	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-	}
-
-	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+	public void setupAnim(PlaneentityRenderState state) {
+		super.setupAnim(state);
+		if (!state.crashedWreck) {
+			this.flyIn.apply(state.flyIn, state.ageInTicks, 1.2f);
+		}
 	}
 }

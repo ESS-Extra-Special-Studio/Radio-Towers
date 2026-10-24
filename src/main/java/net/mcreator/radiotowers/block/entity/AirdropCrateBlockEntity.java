@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.Direction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import net.mcreator.radiotowers.airdrop.TaczAirdropIntegration;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import io.netty.buffer.Unpooled;
 
 public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity implements WorldlyContainer {
-	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = ResourceLocation.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
+	private static final Identifier STRUCTURE_OVERRUN_LOOT = Identifier.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
 
 	private NonNullList<ItemStack> stacks = NonNullList.withSize(27, ItemStack.EMPTY);
 	/** When true, crate was filled from player's airdrop selection — do not add Tacz ammo on open. */
@@ -51,43 +51,33 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	}
 
 	@Override
-	protected void loadAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.loadAdditional(compound, registries);
-		this.filledFromOrder = compound.getBoolean("FilledFromOrder");
-		this.structureLoot = compound.getBoolean("StructureLoot");
+	protected void loadAdditional(net.minecraft.world.level.storage.ValueInput input) {
+		super.loadAdditional(input);
+		this.filledFromOrder = input.getBooleanOr("FilledFromOrder", false);
+		this.structureLoot = input.getBooleanOr("StructureLoot", false);
 		allowedOpeners.clear();
-		if (compound.contains("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_LIST)) {
-			net.minecraft.nbt.ListTag list = compound.getList("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_STRING);
-			for (int i = 0; i < list.size(); i++) {
-				try {
-					allowedOpeners.add(java.util.UUID.fromString(list.get(i).getAsString()));
-				} catch (Exception ignored) {}
-			}
+		for (String s : input.listOrEmpty("AllowedOpenerStrings", com.mojang.serialization.Codec.STRING)) {
+			try {
+				allowedOpeners.add(java.util.UUID.fromString(s));
+			} catch (Exception ignored) {}
 		}
-		if (!this.tryLoadLootTable(compound))
-			this.stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
-		ContainerHelper.loadAllItems(compound, this.stacks, registries);
-		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", net.minecraft.nbt.Tag.TAG_STRING)) {
-			ResourceLocation table = ResourceLocation.tryParse(compound.getString("LootTable"));
-			if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
-				this.structureLoot = true;
-		}
+		this.stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+		ContainerHelper.loadAllItems(input, this.stacks);
+		if (!this.filledFromOrder && !this.structureLoot && this.lootTable != null && STRUCTURE_OVERRUN_LOOT.equals(this.lootTable.identifier()))
+			this.structureLoot = true;
 	}
 
 	@Override
-	protected void saveAdditional(CompoundTag compound, HolderLookup.Provider registries) {
-		super.saveAdditional(compound, registries);
-		compound.putBoolean("FilledFromOrder", this.filledFromOrder);
-		compound.putBoolean("StructureLoot", this.structureLoot);
+	protected void saveAdditional(net.minecraft.world.level.storage.ValueOutput output) {
+		super.saveAdditional(output);
+		output.putBoolean("FilledFromOrder", this.filledFromOrder);
+		output.putBoolean("StructureLoot", this.structureLoot);
 		if (!allowedOpeners.isEmpty()) {
-			net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
-			for (java.util.UUID u : allowedOpeners) {
-				list.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
-			}
-			compound.put("AllowedOpenerStrings", list);
+			var list = output.list("AllowedOpenerStrings", com.mojang.serialization.Codec.STRING);
+			for (java.util.UUID u : allowedOpeners) list.add(u.toString());
 		}
-		if (!this.trySaveLootTable(compound)) {
-			ContainerHelper.saveAllItems(compound, this.stacks, registries);
+		if (this.lootTable == null) {
+			ContainerHelper.saveAllItems(output, this.stacks);
 		}
 	}
 

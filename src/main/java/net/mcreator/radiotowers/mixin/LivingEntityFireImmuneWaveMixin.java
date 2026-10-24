@@ -21,9 +21,9 @@ public class LivingEntityFireImmuneWaveMixin {
     private void radiotowers$cancelFireDamageForWaveMobs(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
         boolean isWaveMob = WaveMobAggroHandler.isWaveSpawnedMob(self)
-            || self.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
-            || self.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
-            || self.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET);
+            || self.getPersistentData().getBooleanOr(WaveSpawnTag.WAVE_SPAWN_TAG, false)
+            || self.getPersistentData().getBooleanOr(WaveSpawnTag.REPLACEMENT_TAG, false)
+            || self.getPersistentData().getBooleanOr(WaveSpawnTag.RING_POSITION_SET, false);
         if (!isWaveMob) return;
         if (source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.ON_FIRE) || source.is(DamageTypes.LAVA) || source.is(DamageTypes.HOT_FLOOR)) {
             self.setRemainingFireTicks(0);

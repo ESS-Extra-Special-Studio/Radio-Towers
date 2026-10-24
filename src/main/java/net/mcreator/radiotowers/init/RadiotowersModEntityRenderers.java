@@ -12,7 +12,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.mcreator.radiotowers.client.renderer.PlaneentityRenderer;
 import net.mcreator.radiotowers.client.renderer.AirdropentityRenderer;
 
-@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = net.mcreator.radiotowers.RadiotowersMod.MODID, value = Dist.CLIENT)
 public class RadiotowersModEntityRenderers {
 	@SubscribeEvent
 	public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
