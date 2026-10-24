@@ -52,6 +52,10 @@ public final class RadiotowersClientHooks {
 		AirdropWaveHudData.setAirdropState(waveInProgress, cooldownEndGameTime);
 	}
 
+	public static void applyAirdropModeUnlockPacket(boolean bossModeUnlocked, boolean endlessModeUnlocked) {
+		AirdropWaveHudData.setModeUnlocks(bossModeUnlocked, endlessModeUnlocked);
+	}
+
 	public static void applyLobbySync(Object syncPacket) {
 		if (syncPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby sync) {
 			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applySync(sync);
@@ -66,6 +70,12 @@ public final class RadiotowersClientHooks {
 
 	public static void openLobbyScreen(java.util.UUID lobbyId, BlockPos panelPos) {
 		net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.openScreen(lobbyId, panelPos);
+	}
+
+	public static void applyLobbyClosed(Object closedPacket) {
+		if (closedPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Closed closed) {
+			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applyClosed(closed);
+		}
 	}
 
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {

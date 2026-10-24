@@ -28,6 +28,11 @@ public final class SafeClientCalls {
 		invokeVoid("applyAirdropStatePacket", new Class<?>[] { boolean.class, long.class }, new Object[] { waveInProgress, cooldownEndGameTime });
 	}
 
+	public static void applyAirdropModeUnlockPacket(boolean bossModeUnlocked, boolean endlessModeUnlocked) {
+		invokeVoid("applyAirdropModeUnlockPacket", new Class<?>[] { boolean.class, boolean.class },
+			new Object[] { bossModeUnlocked, endlessModeUnlocked });
+	}
+
 	public static void applyLobbySync(Object syncPacket) {
 		invokeVoid("applyLobbySync", new Class<?>[] { Object.class }, new Object[] { syncPacket });
 	}
@@ -38,6 +43,10 @@ public final class SafeClientCalls {
 
 	public static void openLobbyScreen(java.util.UUID lobbyId, BlockPos panelPos) {
 		invokeVoid("openLobbyScreen", new Class<?>[] { java.util.UUID.class, BlockPos.class }, new Object[] { lobbyId, panelPos });
+	}
+
+	public static void applyLobbyClosed(Object closedPacket) {
+		invokeVoid("applyLobbyClosed", new Class<?>[] { Object.class }, new Object[] { closedPacket });
 	}
 
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {

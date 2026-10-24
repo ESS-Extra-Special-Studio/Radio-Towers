@@ -19,6 +19,7 @@ public final class RadiotowersNetwork {
         reg.playToServer(DeactivatePanelMessage.TYPE, DeactivatePanelMessage.STREAM_CODEC, DeactivatePanelMessage::handle);
         reg.playToServer(MenuStateUpdateMessage.TYPE, MenuStateUpdateMessage.STREAM_CODEC, MenuStateUpdateMessage::handler);
         reg.playToClient(AirdropStatePacket.TYPE, AirdropStatePacket.STREAM_CODEC, AirdropStatePacket::handle);
+        reg.playToClient(AirdropModeUnlockPacket.TYPE, AirdropModeUnlockPacket.STREAM_CODEC, AirdropModeUnlockPacket::handle);
         reg.playToClient(WaveStatePacket.TYPE, WaveStatePacket.STREAM_CODEC, WaveStatePacket::handle);
         reg.playToClient(DefenseSessionSyncPacket.TYPE, DefenseSessionSyncPacket.STREAM_CODEC, DefenseSessionSyncPacket::handle);
         reg.playToClient(RadiotowersModVariables.SavedDataSyncMessage.TYPE, RadiotowersModVariables.SavedDataSyncMessage.STREAM_CODEC, RadiotowersModVariables.SavedDataSyncMessage::handleData);

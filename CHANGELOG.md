@@ -1,4 +1,21 @@
-﻿## 1.2.4 (1.2.4 NeoForge 1.21.1)
+## 1.3.0
+
+Update by: Extra_Special_K
+
+Added:
+Call Airdrop tabs for Boss Mode and Endless Mode. Both stay locked unless Dead Air reports the matching Listener progress (first encounter survived, then Listener defeated).
+Grounded wrecks use a crashed-plane pose on the same airplane model, nose in the dirt.
+Changed:
+Still requires ESL, ESC, and ESN. Dead Air stays optional.
+
+## 1.2.5
+
+Update by: Extra_Special_K
+
+Changed:
+ESN is now required (same as ESL/ESC). Lobby packets hard-import the ESN API, so packs must include Extra Special Network.
+
+## 1.2.4 (1.2.4 NeoForge 1.21.1)
 
 Update by: Extra_Special_K
 

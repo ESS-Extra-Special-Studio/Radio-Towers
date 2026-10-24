@@ -20,7 +20,9 @@ public final class AirdropLobbyNetwork {
     private AirdropLobbyNetwork() {}
 
     public static boolean isAvailable() {
-        return ModList.get().isLoaded("esn") && ModList.get().isLoaded("extraspeciallib");
+        return registered && channel != null
+            && ModList.get().isLoaded("esn")
+            && ModList.get().isLoaded("extraspeciallib");
     }
 
     public static EsnChannel channel() {
@@ -75,9 +77,14 @@ public final class AirdropLobbyNetwork {
             channel.register("lobby_open_screen", LobbyPackets.OpenScreen.class,
                 LobbyPackets.OpenScreen::encode, LobbyPackets.OpenScreen::decode,
                 (msg, ctx) -> net.mcreator.radiotowers.SafeClientCalls.openLobbyScreen(msg.lobbyId(), msg.panelPos()), null);
+            channel.register("lobby_closed", LobbyPackets.Closed.class,
+                LobbyPackets.Closed::encode, LobbyPackets.Closed::decode,
+                (msg, ctx) -> net.mcreator.radiotowers.SafeClientCalls.applyLobbyClosed(msg), null);
             registered = true;
             RadiotowersMod.LOGGER.info("[Lobby] ESN channel registered (protocol {})", PROTOCOL);
         } catch (Throwable t) {
+            channel = null;
+            registered = false;
             RadiotowersMod.LOGGER.warn("[Lobby] Failed to register ESN packets: {}", t.toString());
         }
     }

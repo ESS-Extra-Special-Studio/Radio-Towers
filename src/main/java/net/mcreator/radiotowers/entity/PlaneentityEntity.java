@@ -12,10 +12,12 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.world.phys.Vec3;
 
 import net.mcreator.radiotowers.procedures.PlaneentityOnInitialEntitySpawnProcedure;
 
@@ -26,6 +28,10 @@ import net.mcreator.radiotowers.init.RadiotowersModEntities;
 import javax.annotation.Nullable;
 
 public class PlaneentityEntity extends Monster {
+	/** Synced wreck pose for Dead Air EB crash sites (and future grounded wrecks). */
+	public static final EntityDataAccessor<Boolean> DATA_CRASHED = SynchedEntityData.defineId(PlaneentityEntity.class,
+		EntityDataSerializers.BOOLEAN);
+
 	public final AnimationState animationState0 = new AnimationState();
 	private List<String> airdropItemIds = new ArrayList<>();
 	private List<Integer> airdropQuantities = new ArrayList<>();
@@ -52,6 +58,25 @@ public class PlaneentityEntity extends Monster {
 		xpReward = 0;
 		setNoAi(true);
 		setPersistenceRequired();
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(DATA_CRASHED, false);
+	}
+
+	/** Grounded EB / story wreck — no fly-in, crash renderer pose. */
+	public void markAsCrashedWreck() {
+		this.entityData.set(DATA_CRASHED, true);
+		setNoAi(true);
+		setDeltaMovement(Vec3.ZERO);
+		setXRot(0f);
+		this.animationState0.stop();
+	}
+
+	public boolean isCrashedWreck() {
+		return this.entityData.get(DATA_CRASHED);
 	}
 
 	@Override
@@ -98,6 +123,7 @@ public class PlaneentityEntity extends Monster {
 	@Override
 	public void addAdditionalSaveData(CompoundTag compound) {
 		super.addAdditionalSaveData(compound);
+		compound.putBoolean("CrashedWreck", isCrashedWreck());
 		ListTag ids = new ListTag();
 		for (String s : airdropItemIds) ids.add(net.minecraft.nbt.StringTag.valueOf(s));
 		compound.put("AirdropItemIds", ids);
@@ -110,6 +136,9 @@ public class PlaneentityEntity extends Monster {
 	@Override
 	public void readAdditionalSaveData(CompoundTag compound) {
 		super.readAdditionalSaveData(compound);
+		if (compound.getBoolean("CrashedWreck")) {
+			markAsCrashedWreck();
+		}
 		airdropItemIds.clear();
 		ListTag ids = compound.getList("AirdropItemIds", 8);
 		for (int i = 0; i < ids.size(); i++) airdropItemIds.add(ids.get(i).getAsString());
@@ -122,6 +151,10 @@ public class PlaneentityEntity extends Monster {
 	@Override
 	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata) {
 		SpawnGroupData retval = super.finalizeSpawn(world, difficulty, reason, livingdata);
+		if (isCrashedWreck()) {
+			markAsCrashedWreck();
+			return retval;
+		}
 		try {
 			PlaneentityOnInitialEntitySpawnProcedure.execute(world, this.getX(), this.getZ(), this);
 		} catch (Throwable t) {
@@ -135,7 +168,14 @@ public class PlaneentityEntity extends Monster {
 	public void tick() {
 		super.tick();
 		if (this.level().isClientSide()) {
-			this.animationState0.animateWhen(true, this.tickCount);
+			if (isCrashedWreck()) {
+				this.animationState0.stop();
+			} else {
+				this.animationState0.animateWhen(true, this.tickCount);
+			}
+		}
+		if (isCrashedWreck() && !this.level().isClientSide()) {
+			setDeltaMovement(Vec3.ZERO);
 		}
 	}
 

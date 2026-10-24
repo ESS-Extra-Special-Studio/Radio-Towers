@@ -191,4 +191,15 @@ public final class LobbyPackets {
             return new OpenScreen(buf.readUUID(), buf.readBlockPos());
         }
     }
+
+    /** Lobby ended (Go finished, host left, cancel) — clients clear cache and close the screen. */
+    public record Closed(UUID lobbyId) {
+        public static void encode(Closed msg, FriendlyByteBuf buf) {
+            buf.writeUUID(msg.lobbyId);
+        }
+
+        public static Closed decode(FriendlyByteBuf buf) {
+            return new Closed(buf.readUUID());
+        }
+    }
 }

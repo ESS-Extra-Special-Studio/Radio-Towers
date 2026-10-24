@@ -10,6 +10,6 @@
     "absolute": 0
   },
   "project_start_to_heightmap": "OCEAN_FLOOR",
-  "biomes": "#forge:is_plains",
+  "biomes": "#c:is_plains",
   "use_expansion_hack": false
 }
