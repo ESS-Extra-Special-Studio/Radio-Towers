@@ -1,10 +1,10 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
 import net.mcreator.radiotowers.integration.WaveSpawnTag;
@@ -20,19 +20,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Exclude airdrop plane (radiotowers:planeentity) so it is never tagged or repositioned.
  * MUST be listed before LevelAddEntityMixin in radiotowers.mixins.json so tag is set at HEAD before position/clear run (see WAVE_MOB_MIXIN_RULES.md).
  */
-@Mixin(ServerLevel.class)
+@Mixin(ServerWorld.class)
 public class LevelTagWaveSpawnMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     /** Match {@link net.mcreator.radiotowers.events.WaveMobAggroHandler#WAVE_MOB_RANGE} so API spawns far from tower still get tagged. */
     private static final int TAG_HORIZONTAL_RANGE = 384;
 
-    private static void tagIfWaveSpawn(ServerLevel level, Entity entity) {
-        if (!(entity instanceof Monster)) return;
+    private static void tagIfWaveSpawn(ServerWorld level, Entity entity) {
+        if (!(entity instanceof MonsterEntity)) return;
         // Only tag zombie-family mobs for wave accounting; never tag ambient creepers/skeletons/etc.
-        if (!(entity instanceof Zombie)) return;
-        ResourceLocation typeId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        if (!(entity instanceof ZombieEntity)) return;
+        ResourceLocation typeId = ForgeRegistries.ENTITIES.getKey(entity.getType());
         if (PLANE_TYPE_ID.equals(typeId)) return; // never tag the airdrop plane
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         // Only tag spawns near an active wave anchor — never tag random overworld mobs during a pending airdrop.
@@ -40,18 +40,13 @@ public class LevelTagWaveSpawnMixin {
         entity.getPersistentData().putBoolean(WaveSpawnTag.WAVE_SPAWN_TAG, true);
     }
 
-    @Inject(method = "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), remap = true)
+    @Inject(method = "addFreshEntity(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), remap = true)
     private void radiotowers$tagWaveSpawnAddFresh(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        tagIfWaveSpawn((ServerLevel) (Object) this, entity);
+        tagIfWaveSpawn((ServerWorld) (Object) this, entity);
     }
 
-    @Inject(method = "addEntity(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), remap = true)
-    private void radiotowers$tagWaveSpawnAddEntity(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        tagIfWaveSpawn((ServerLevel) (Object) this, entity);
-    }
-
-    @Inject(method = "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), remap = true)
+    @Inject(method = "addWithUUID(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), remap = true)
     private void radiotowers$tagWaveSpawnAddWithUUID(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        tagIfWaveSpawn((ServerLevel) (Object) this, entity);
+        tagIfWaveSpawn((ServerWorld) (Object) this, entity);
     }
 }

@@ -1,9 +1,9 @@
 package net.mcreator.radiotowers.procedures;
 
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.potion.Effects;
+import net.minecraft.potion.EffectInstance;
 
 import net.mcreator.radiotowers.entity.AirdropentityEntity;
 
@@ -12,8 +12,10 @@ public class AirdropentityOnInitialEntitySpawnProcedure {
 		if (entity == null)
 			return false;
 		entity.setNoGravity(false);
-		if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-			_entity.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 120, 3, false, true));
-		return entity instanceof AirdropentityEntity _datEntL2 && _datEntL2.getEntityData().get(AirdropentityEntity.DATA_IsOpening);
+		LivingEntity _entity = (entity instanceof LivingEntity) ? (LivingEntity) entity : null;
+		if (_entity != null && !_entity.level.isClientSide())
+			_entity.addEffect(new EffectInstance(Effects.SLOW_FALLING, 120, 3, false, true));
+			AirdropentityEntity _datEntL2 = (entity instanceof AirdropentityEntity) ? (AirdropentityEntity) entity : null;
+		return _datEntL2 != null && _datEntL2.getEntityData().get(AirdropentityEntity.DATA_IsOpening);
 	}
 }

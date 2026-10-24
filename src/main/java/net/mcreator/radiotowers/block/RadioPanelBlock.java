@@ -1,71 +1,72 @@
 package net.mcreator.radiotowers.block;
 
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.Rotation;
-import net.minecraft.world.level.block.Mirror;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.SoundType;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.Mirror;
+import net.minecraft.block.HorizontalBlock;
+import net.minecraft.block.Block;
+import net.minecraft.world.World;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 
 import net.mcreator.radiotowers.SafeClientCalls;
 
 public class RadioPanelBlock extends Block {
 
-	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+	public static final DirectionProperty FACING = net.minecraft.block.HorizontalBlock.FACING;
 
 	public RadioPanelBlock() {
-		super(BlockBehaviour.Properties.of().sound(SoundType.METAL).strength(1f, 10f).requiresCorrectToolForDrops().noCollission().noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+		super(AbstractBlock.Properties.of(Material.METAL).sound(SoundType.METAL).strength(1f, 10f).requiresCorrectToolForDrops().noCollission().noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
 
 	@Override
-	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+	public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
 		return true;
 	}
 
 	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
+	public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
 		return 0;
 	}
 
 	@Override
-	public VoxelShape getVisualShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return Shapes.empty();
+	public VoxelShape getVisualShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		return VoxelShapes.empty();
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return switch (state.getValue(FACING)) {
-			default -> box(2, 0, 0, 14, 16, 2);
-			case NORTH -> box(2, 0, 14, 14, 16, 16);
-			case EAST -> box(0, 0, 2, 2, 16, 14);
-			case WEST -> box(14, 0, 2, 16, 16, 14);
-		};
+	public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		switch (state.getValue(FACING)) {
+			default: return box(2, 0, 0, 14, 16, 2);
+			case NORTH: return box(2, 0, 14, 14, 16, 16);
+			case EAST: return box(0, 0, 2, 2, 16, 14);
+			case WEST: return box(14, 0, 2, 16, 16, 14);
+		}
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(FACING);
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockPlaceContext context) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		if (context.getClickedFace().getAxis() == Direction.Axis.Y)
 			return super.getStateForPlacement(context).setValue(FACING, Direction.NORTH);
 		return super.getStateForPlacement(context).setValue(FACING, context.getClickedFace());
@@ -80,11 +81,11 @@ public class RadioPanelBlock extends Block {
 	}
 
 	@Override
-	public InteractionResult use(BlockState blockstate, Level world, BlockPos pos, Player entity, InteractionHand hand, BlockHitResult hit) {
+	public ActionResultType use(BlockState blockstate, World world, BlockPos pos, PlayerEntity entity, Hand hand, BlockRayTraceResult hit) {
 		super.use(blockstate, world, pos, entity, hand, hit);
 		if (world.isClientSide()) {
 			SafeClientCalls.openRadioPanel(pos);
 		}
-		return InteractionResult.sidedSuccess(world.isClientSide());
+		return ActionResultType.sidedSuccess(world.isClientSide());
 	}
 }

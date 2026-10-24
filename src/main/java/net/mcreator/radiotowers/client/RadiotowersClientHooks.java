@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.ModList;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.client.gui.CallAirdropScreen;
@@ -63,13 +63,15 @@ public final class RadiotowersClientHooks {
 	}
 
 	public static void applyLobbySync(Object syncPacket) {
-		if (syncPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby sync) {
+	net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby sync = (syncPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby) ? (net.mcreator.radiotowers.network.lobby.LobbyPackets.SyncLobby) syncPacket : null;
+		if (sync != null) {
 			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applySync(sync);
 		}
 	}
 
 	public static void applyLobbyCountdown(Object countdownPacket) {
-		if (countdownPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Countdown countdown) {
+	net.mcreator.radiotowers.network.lobby.LobbyPackets.Countdown countdown = (countdownPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Countdown) ? (net.mcreator.radiotowers.network.lobby.LobbyPackets.Countdown) countdownPacket : null;
+		if (countdown != null) {
 			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applyCountdown(countdown);
 		}
 	}
@@ -79,20 +81,23 @@ public final class RadiotowersClientHooks {
 	}
 
 	public static void applyLobbyClosed(Object closedPacket) {
-		if (closedPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Closed closed) {
+	net.mcreator.radiotowers.network.lobby.LobbyPackets.Closed closed = (closedPacket instanceof net.mcreator.radiotowers.network.lobby.LobbyPackets.Closed) ? (net.mcreator.radiotowers.network.lobby.LobbyPackets.Closed) closedPacket : null;
+		if (closed != null) {
 			net.mcreator.radiotowers.client.lobby.AirdropLobbyClient.applyClosed(closed);
 		}
 	}
 
 	public static void onClientSendMenuStateUpdate(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState, boolean needClientUpdate) {
-		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor && needClientUpdate) {
+	Object accessor$src = Minecraft.getInstance().screen; RadiotowersModScreens.ScreenAccessor accessor = (accessor$src instanceof RadiotowersModScreens.ScreenAccessor) ? (RadiotowersModScreens.ScreenAccessor) accessor$src : null;
+		if (accessor != null && needClientUpdate) {
 			accessor.updateMenuState(elementType, name, elementState);
 		}
 		RadiotowersMod.PACKET_HANDLER.sendToServer(new MenuStateUpdateMessage(elementType, name, elementState));
 	}
 
 	public static void applyMenuStateUpdateFromServer(RadiotowersModMenus.MenuAccessor menu, int elementType, String name, Object elementState) {
-		if (Minecraft.getInstance().screen instanceof RadiotowersModScreens.ScreenAccessor accessor) {
+	Object accessor$src = Minecraft.getInstance().screen; RadiotowersModScreens.ScreenAccessor accessor = (accessor$src instanceof RadiotowersModScreens.ScreenAccessor) ? (RadiotowersModScreens.ScreenAccessor) accessor$src : null;
+		if (accessor != null) {
 			accessor.updateMenuState(elementType, name, elementState);
 		}
 	}

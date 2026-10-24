@@ -1,14 +1,14 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.server.ServerWorld;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 
@@ -27,11 +27,11 @@ public class DeactivatePanelMessage {
         this.pos = pos;
     }
 
-    public DeactivatePanelMessage(FriendlyByteBuf buf) {
+    public DeactivatePanelMessage(PacketBuffer buf) {
         this.pos = buf.readBlockPos();
     }
 
-    public static void encode(DeactivatePanelMessage msg, FriendlyByteBuf buf) {
+    public static void encode(DeactivatePanelMessage msg, PacketBuffer buf) {
         buf.writeBlockPos(msg.pos);
     }
 
@@ -39,16 +39,16 @@ public class DeactivatePanelMessage {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
-            var sender = ctx.getSender();
+            net.minecraft.entity.player.ServerPlayerEntity sender = ctx.getSender();
             if (sender == null) return;
-            ServerLevel level = sender.serverLevel();
+            ServerWorld level = sender.getLevel();
             if (level == null) return;
             if (!ModList.get().isLoaded("dead_air")) return;
             try {
                 Class<?> api = Class.forName("uk.co.extraspecialstudio.dead_air.api.DeadAirAPI");
-                var method = api.getMethod("deactivatePanelAt", ServerLevel.class, BlockPos.class);
+                java.lang.reflect.Method method = api.getMethod("deactivatePanelAt", ServerWorld.class, BlockPos.class);
                 method.invoke(null, level, msg.pos);
-                var syncMethod = api.getMethod("syncKnownTowersToPlayer", net.minecraft.server.level.ServerPlayer.class);
+                java.lang.reflect.Method syncMethod = api.getMethod("syncKnownTowersToPlayer", net.minecraft.entity.player.ServerPlayerEntity.class);
                 syncMethod.invoke(null, sender);
             } catch (Throwable t) {
                 RadiotowersMod.LOGGER.error("Could not call Dead Air to deactivate panel at {}: {}", msg.pos, t.getMessage(), t);

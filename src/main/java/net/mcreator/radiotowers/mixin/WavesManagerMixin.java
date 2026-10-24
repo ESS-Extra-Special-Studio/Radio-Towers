@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 import net.mcreator.radiotowers.integration.ZombieWavesMixinContext;
 import net.minecraftforge.event.TickEvent;
 import org.spongepowered.asm.mixin.Mixin;
@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Mixin into Berezka's Zombie Waves API WavesManager.
+ * Mixin into Berezka's ZombieEntity Waves API WavesManager.
  * WavesManager has NO "level" field — onServerTick() uses berezka_api_main.getCurWorld() (static curWorld).
  * We: (1) consume pending level in start(BlockPos) for context; (2) at HEAD of onServerTick, if getCurWorld() is null, set curWorld from our context so the API never NPEs.
  */
@@ -26,13 +26,13 @@ public class WavesManagerMixin {
     @Inject(method = "onServerTick(Lnet/minecraftforge/event/TickEvent$ServerTickEvent;)V", at = @At("HEAD"), remap = false)
     private void radiotowers$ensureCurWorldSet(TickEvent.ServerTickEvent event, CallbackInfo ci) {
         try {
-            var opt = net.minecraftforge.fml.ModList.get().getModContainerById("berezka_api");
-            if (opt.isEmpty()) return;
-            Class<?> main = Class.forName("org.berezka.berezka_api.berezka_api_main", true, opt.get().getMod().getClass().getClassLoader());
+            java.util.Optional opt = net.minecraftforge.fml.ModList.get().getModContainerById("berezka_api");
+            if (!opt.isPresent()) return;
+            Class<?> main = Class.forName("org.berezka.berezka_api.berezka_api_main", true, opt.get().getClass().getClassLoader());
             java.lang.reflect.Field curWorldField = main.getField("curWorld");
             Object current = curWorldField.get(null);
             if (current != null) return;
-            ServerLevel level = ZombieWavesMixinContext.getCurrentLevel();
+            ServerWorld level = ZombieWavesMixinContext.getCurrentLevel();
             if (level == null) level = ZombieWavesMixinContext.getBerezkaCurWorld();
             if (level != null) {
                 curWorldField.set(null, level);

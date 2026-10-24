@@ -1,14 +1,14 @@
 package net.mcreator.radiotowers.events;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.world.World;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityLeaveWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -36,38 +36,41 @@ public final class WaveMobRemovalLogger {
     private static final Map<Integer, BlockPos> JOINED_POS = new ConcurrentHashMap<>();
 
     private static boolean isZombieFamily(Entity e) {
-        if (!(e instanceof LivingEntity le)) return false;
-        var t = le.getType();
-        return t == net.minecraft.world.entity.EntityType.ZOMBIE || t == net.minecraft.world.entity.EntityType.DROWNED;
+    LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+        if (!(le != null)) return false;
+        net.minecraft.entity.EntityType t = le.getType();
+        return t == net.minecraft.entity.EntityType.ZOMBIE || t == net.minecraft.entity.EntityType.DROWNED;
     }
 
-    private static PendingAirdropStorage.Pending getPending(Level lvl, Entity e) {
-        if (!(lvl instanceof ServerLevel sl)) return null;
-        var p = PendingAirdropStorage.getPendingNear(sl, e.blockPosition(), NEAR_WAVE_RANGE);
+    private static PendingAirdropStorage.Pending getPending(World lvl, Entity e) {
+    ServerWorld sl = (lvl instanceof ServerWorld) ? (ServerWorld) lvl : null;
+        if (!(sl != null)) return null;
+        net.mcreator.radiotowers.integration.PendingAirdropStorage.Pending p = PendingAirdropStorage.getPendingNear(sl, e.blockPosition(), NEAR_WAVE_RANGE);
         if (p == null) p = PendingAirdropStorage.getAnyPendingInLevel(sl);
         return p;
     }
 
     @SubscribeEvent
-    public static void onJoin(EntityJoinLevelEvent event) {
+    public static void onJoin(EntityJoinWorldEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getLevel().isClientSide()) return;
+        if (event.getWorld().isClientSide()) return;
         Entity e = event.getEntity();
         if (!isZombieFamily(e)) return;
-        PendingAirdropStorage.Pending p = getPending(event.getLevel(), e);
+        PendingAirdropStorage.Pending p = getPending(event.getWorld(), e);
         if (p == null) return;
-        long now = ((ServerLevel) event.getLevel()).getGameTime();
+        long now = ((ServerWorld) event.getWorld()).getGameTime();
         JOINED_AT.put(e.getId(), now);
         JOINED_POS.put(e.getId(), e.blockPosition());
     }
 
     @SubscribeEvent
-    public static void onLeave(EntityLeaveLevelEvent event) {
+    public static void onLeave(EntityLeaveWorldEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getLevel().isClientSide()) return;
+        if (event.getWorld().isClientSide()) return;
         Entity e = event.getEntity();
         if (!isZombieFamily(e)) return;
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
+        Object level$src = event.getWorld(); ServerWorld level = (level$src instanceof ServerWorld) ? (ServerWorld) level$src : null;
+        if (!(level != null)) return;
 
         Long joinedAt = JOINED_AT.get(e.getId());
         if (joinedAt == null) return;
@@ -78,23 +81,20 @@ public final class WaveMobRemovalLogger {
         PendingAirdropStorage.Pending p = getPending(level, e);
         BlockPos wavePos = p != null ? p.waveStartPos : null;
 
-        String reason = "unknown";
-        try {
-            Entity.RemovalReason rr = e.getRemovalReason();
-            reason = rr != null ? rr.name() : "null";
-        } catch (Throwable ignored) {
-        }
+        String reason = e.removed ? "removed" : "alive";
+        MobEntity mob = (e instanceof MobEntity) ? (MobEntity) e : null;
 
         boolean hasWaveTag =
             e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
                 || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
                 || e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
-                || (e instanceof Mob mob && WaveMobAggroHandler.isWaveSpawnedMob(mob));
+                || (mob != null && WaveMobAggroHandler.isWaveSpawnedMob(mob));
+                LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
 
         RadiotowersMod.LOGGER.warn(
             "[WaveRemovalDebug] id={} type={} ageTicks={} reason={} pos={} joinedPos={} nearWave={} wavePos={} hasWaveTag={} alive={} removed={}",
             e.getId(),
-            net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(e.getType()),
+            net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(e.getType()),
             age,
             reason,
             e.blockPosition(),
@@ -102,23 +102,23 @@ public final class WaveMobRemovalLogger {
             p != null,
             wavePos,
             hasWaveTag,
-            (e instanceof LivingEntity le && le.isAlive()),
-            e.isRemoved()
+            (le != null && le.isAlive()),
+            e.removed
         );
     }
 
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event) {
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        if (event.getEntity().level().isClientSide()) return;
-        LivingEntity e = event.getEntity();
+        if (event.getEntity().level.isClientSide()) return;
+        LivingEntity e = event.getEntityLiving();
         if (!isZombieFamily(e)) return;
-        PendingAirdropStorage.Pending p = getPending(e.level(), e);
+        PendingAirdropStorage.Pending p = getPending(e.level, e);
         if (p == null) return;
         RadiotowersMod.LOGGER.warn(
             "[WaveRemovalDebug] id={} type={} DEATH pos={} nearWave={} hasWaveTag={}",
             e.getId(),
-            net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(e.getType()),
+            net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(e.getType()),
             e.blockPosition(),
             true,
             e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)

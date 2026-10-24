@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.mixin;
 
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,15 +18,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class NoMindlessShootingTriggerHandlerMixin {
 
     @Inject(
-        method = "trigger(Lnet/minecraft/server/level/ServerPlayer;)V",
+        method = "trigger(Lnet/minecraft/server/level/ServerPlayerEntity;)V",
         at = @At("HEAD"),
         cancellable = true,
         remap = false
     )
-    private void radiotowers$skipNmsDuringDefense(ServerPlayer player, CallbackInfo ci) {
+    private void radiotowers$skipNmsDuringDefense(ServerPlayerEntity player, CallbackInfo ci) {
         if (player == null) return;
         try {
-            if (ZombieWavesAPILoader.isDefenseWaveActive(player.serverLevel())) {
+            if (ZombieWavesAPILoader.isDefenseWaveActive(player.getLevel())) {
                 ci.cancel();
             }
         } catch (Throwable ignored) {

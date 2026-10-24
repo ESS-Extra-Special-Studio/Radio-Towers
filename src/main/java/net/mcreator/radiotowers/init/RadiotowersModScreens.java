@@ -8,7 +8,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 
-import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.ScreenManager;
 
 import net.mcreator.radiotowers.client.gui.AirdropCrateguiScreen;
 
@@ -17,7 +17,7 @@ public class RadiotowersModScreens {
 	@SubscribeEvent
 	public static void clientLoad(FMLClientSetupEvent event) {
 		event.enqueueWork(() -> {
-			MenuScreens.register(RadiotowersModMenus.AIRDROP_CRATEGUI.get(), AirdropCrateguiScreen::new);
+			ScreenManager.register(RadiotowersModMenus.AIRDROP_CRATEGUI.get(), AirdropCrateguiScreen::new);
 		});
 	}
 

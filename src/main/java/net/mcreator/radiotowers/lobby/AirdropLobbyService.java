@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.lobby;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -12,24 +14,24 @@ import net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork;
 import net.mcreator.radiotowers.network.lobby.LobbyPackets;
 import net.mcreator.radiotowers.procedures.RadioPanelOnBlockRightClickedProcedure;
 import net.mcreator.radiotowers.init.RadiotowersModSounds;
-import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.ClickEvent;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.event.ClickEvent;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.event.HoverEvent;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.Style;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.world.gen.Heightmap;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 import uk.co.extraspecialstudio.esl.lobby.EslLobby;
 import uk.co.extraspecialstudio.esl.lobby.EslLobbyEvent;
 import uk.co.extraspecialstudio.esl.lobby.EslLobbyManager;
@@ -58,8 +60,25 @@ public final class AirdropLobbyService {
     private static final Map<UUID, PendingGo> PENDING_GO = new HashMap<>();
     private static final Map<UUID, Long> COUNTDOWN_END = new HashMap<>();
 
-    private record PendingGo(UUID hostUuid, BlockPos panelPos, int totalDifficulty,
-                             List<String> itemIds, List<Integer> quantities) {}
+    private static class PendingGo {
+        private final UUID hostUuid;
+        private final BlockPos panelPos;
+        private final int totalDifficulty;
+        private final List<String> itemIds;
+        private final List<Integer> quantities;
+        public PendingGo(UUID hostUuid, BlockPos panelPos, int totalDifficulty, List<String> itemIds, List<Integer> quantities) {
+            this.hostUuid = hostUuid;
+            this.panelPos = panelPos;
+            this.totalDifficulty = totalDifficulty;
+            this.itemIds = itemIds;
+            this.quantities = quantities;
+        }
+        public UUID hostUuid() { return this.hostUuid; }
+        public BlockPos panelPos() { return this.panelPos; }
+        public int totalDifficulty() { return this.totalDifficulty; }
+        public List<String> itemIds() { return this.itemIds; }
+        public List<Integer> quantities() { return this.quantities; }
+    }
 
     private AirdropLobbyService() {}
 
@@ -84,12 +103,12 @@ public final class AirdropLobbyService {
         return lobby.memberUuids().size() > 1;
     }
 
-    public static void applySharedCooldownWave(ServerLevel level, Collection<UUID> members) {
+    public static void applySharedCooldownWave(ServerWorld level, Collection<UUID> members) {
         if (level == null || members == null) return;
         for (UUID uuid : members) {
             if (uuid == null) continue;
             AirdropCooldown.setCooldownAfterWaveDelivery(level, uuid);
-            ServerPlayer player = level.getServer() != null
+            ServerPlayerEntity player = level.getServer() != null
                 ? level.getServer().getPlayerList().getPlayer(uuid) : null;
             if (player != null) {
                 long end = AirdropCooldown.getCooldownEndGameTime(level, uuid);
@@ -99,7 +118,7 @@ public final class AirdropLobbyService {
         }
     }
 
-    public static void handleOpen(ServerPlayer host, BlockPos panelPos) {
+    public static void handleOpen(ServerPlayerEntity host, BlockPos panelPos) {
         if (!isAvailable() || host == null || panelPos == null) return;
         ensureBus();
         EslLobby lobby = ensureLobby(host, panelPos);
@@ -111,53 +130,53 @@ public final class AirdropLobbyService {
         }
     }
 
-    public static void handleInvite(ServerPlayer host, UUID lobbyId, String targetName) {
+    public static void handleInvite(ServerPlayerEntity host, UUID lobbyId, String targetName) {
         if (!isAvailable() || host == null) return;
         ensureBus();
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
-        if (targetName == null || targetName.isBlank()) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
+        if (targetName == null || targetName.trim().isEmpty()) {
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.player_offline"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
-        ServerPlayer target = findOnlineByName(host.getServer(), targetName.trim());
+        ServerPlayerEntity target = findOnlineByName(host.getServer(), targetName.trim());
         if (target == null) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.player_offline"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.player_offline"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (target.getUUID().equals(host.getUUID())) return;
         EslLobby already = EslLobbyManager.findByMember(target.getUUID());
         if (already != null && already.state() != EslLobby.State.CLOSED) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.target_busy"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.target_busy"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (!lobby.invite(target.getUUID(), target.getGameProfile().getName())) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_failed"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.invite_failed"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         sendInviteChat(host, target, lobby);
         syncToLobby(lobby);
     }
 
-    public static void handleAccept(ServerPlayer player, UUID lobbyId) {
+    public static void handleAccept(ServerPlayerEntity player, UUID lobbyId) {
         if (!isAvailable() || player == null) return;
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
         if (lobby == null) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.no_invite"));
+            player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.no_invite"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (!lobby.join(player.getUUID())) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.accept_failed"));
+            player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.accept_failed"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         teleportNearPanel(player, lobby.anchor());
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.joined"));
+        player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.joined"), net.minecraft.util.Util.NIL_UUID);
         sendReadyHint(player);
         syncToLobby(lobby);
     }
 
-    public static void handleDecline(ServerPlayer player, UUID lobbyId) {
+    public static void handleDecline(ServerPlayerEntity player, UUID lobbyId) {
         if (!isAvailable() || player == null) return;
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
@@ -169,16 +188,16 @@ public final class AirdropLobbyService {
         } else {
             lobby.leave(player.getUUID());
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.declined"));
+        player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.declined"), net.minecraft.util.Util.NIL_UUID);
         syncToLobby(lobby);
     }
 
-    public static void handleReady(ServerPlayer player, UUID lobbyId, boolean ready) {
+    public static void handleReady(ServerPlayerEntity player, UUID lobbyId, boolean ready) {
         if (!isAvailable() || player == null) return;
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
         if (lobby == null) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_in_lobby"));
+            player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.not_in_lobby"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (!ready) {
@@ -187,40 +206,40 @@ public final class AirdropLobbyService {
             return;
         }
         if (!lobby.setReady(player.getUUID())) {
-            player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_failed"));
+            player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.ready_failed"), net.minecraft.util.Util.NIL_UUID);
             return;
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_ok"));
+        player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.ready_ok"), net.minecraft.util.Util.NIL_UUID);
         syncToLobby(lobby);
     }
 
-    public static void handleKick(ServerPlayer host, UUID lobbyId, UUID target) {
+    public static void handleKick(ServerPlayerEntity host, UUID lobbyId, UUID target) {
         if (!isAvailable() || host == null || target == null) return;
         ensureBus();
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
         if (!lobby.kick(target)) return;
-        ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
+        ServerPlayerEntity victim = host.getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
-            victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.kicked"));
+            victim.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.kicked"), net.minecraft.util.Util.NIL_UUID);
         }
         syncToLobby(lobby);
     }
 
-    public static void handleCancelInvite(ServerPlayer host, UUID lobbyId, UUID target) {
+    public static void handleCancelInvite(ServerPlayerEntity host, UUID lobbyId, UUID target) {
         if (!isAvailable() || host == null || target == null) return;
         ensureBus();
         EslLobby lobby = requireHostLobby(host, lobbyId);
         if (lobby == null) return;
         if (!lobby.cancelInvite(target)) return;
-        ServerPlayer victim = host.getServer().getPlayerList().getPlayer(target);
+        ServerPlayerEntity victim = host.getServer().getPlayerList().getPlayer(target);
         if (victim != null) {
-            victim.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_cancelled"));
+            victim.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.invite_cancelled"), net.minecraft.util.Util.NIL_UUID);
         }
         syncToLobby(lobby);
     }
 
-    public static void handleLeave(ServerPlayer player, UUID lobbyId) {
+    public static void handleLeave(ServerPlayerEntity player, UUID lobbyId) {
         if (!isAvailable() || player == null) return;
         ensureBus();
         EslLobby lobby = resolveLobby(player, lobbyId);
@@ -240,17 +259,17 @@ public final class AirdropLobbyService {
         } else {
             syncToLobby(lobby);
         }
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.left"));
+        player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.left"), net.minecraft.util.Util.NIL_UUID);
     }
 
-    public static void handleGo(ServerPlayer host, LobbyPackets.Go msg) {
+    public static void handleGo(ServerPlayerEntity host, LobbyPackets.Go msg) {
         if (!isAvailable() || host == null || msg == null) return;
         ensureBus();
         EslLobby lobby = requireHostLobby(host, msg.lobbyId());
         if (lobby == null) return;
         BlockPos panelPos = msg.panelPos() != null ? msg.panelPos() : lobby.anchor();
         if (hasPendingInvites(lobby) || !lobby.canStart()) {
-            host.sendSystemMessage(Component.literal(goBlockReason(lobby)));
+            host.sendMessage(new StringTextComponent(goBlockReason(lobby)), net.minecraft.util.Util.NIL_UUID);
             syncToLobby(lobby);
             return;
         }
@@ -265,15 +284,15 @@ public final class AirdropLobbyService {
             return;
         }
         if (!lobby.start()) {
-            host.sendSystemMessage(Component.literal(goBlockReason(lobby)));
+            host.sendMessage(new StringTextComponent(goBlockReason(lobby)), net.minecraft.util.Util.NIL_UUID);
             syncToLobby(lobby);
             return;
         }
         PENDING_GO.put(lobby.id(), new PendingGo(host.getUUID(), panelPos.immutable(), msg.totalDifficulty(),
-            new ArrayList<>(msg.itemIds() != null ? msg.itemIds() : List.of()),
-            new ArrayList<>(msg.quantities() != null ? msg.quantities() : List.of())));
+            new ArrayList<>(msg.itemIds() != null ? msg.itemIds() : java.util.Collections.emptyList()),
+            new ArrayList<>(msg.quantities() != null ? msg.quantities() : java.util.Collections.emptyList())));
         int seconds = AirdropConfig.getLobbyCountdownSeconds();
-        COUNTDOWN_END.put(lobby.id(), host.serverLevel().getGameTime() + seconds * 20L);
+        COUNTDOWN_END.put(lobby.id(), host.getLevel().getGameTime() + seconds * 20L);
         broadcastCountdown(lobby, seconds);
         syncToLobby(lobby);
     }
@@ -282,23 +301,23 @@ public final class AirdropLobbyService {
      * @param orderOwner player whose cooldown / pending slot owns this run (host UUID even if a
      *                   guest is the live {@code sender} after host disconnect mid-countdown)
      */
-    private static void startAirdrop(ServerPlayer sender, BlockPos panelPos, int totalDifficulty,
+    private static void startAirdrop(ServerPlayerEntity sender, BlockPos panelPos, int totalDifficulty,
                                      List<String> itemIds, List<Integer> quantities,
                                      Set<UUID> members, @Nullable UUID lobbyId, @Nullable UUID orderOwner) {
         List<String> ids = itemIds != null ? new ArrayList<>(itemIds) : new ArrayList<>();
         List<Integer> qty = quantities != null ? new ArrayList<>(quantities) : new ArrayList<>();
         boolean standardAirdrop = totalDifficulty == 0 && ids.isEmpty();
         if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
-            sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));
+            sender.sendMessage(new StringTextComponent("[RadioTowers] Standard airdrops are disabled in config."), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (!standardAirdrop && !AirdropConfig.ENABLE_CATALOG_AIRDROP.get()) {
-            sender.sendSystemMessage(Component.literal("[RadioTowers] Catalog airdrops are disabled in config."));
+            sender.sendMessage(new StringTextComponent("[RadioTowers] Catalog airdrops are disabled in config."), net.minecraft.util.Util.NIL_UUID);
             return;
         }
         if (!standardAirdrop && !AirdropDifficultyTier.canStart(totalDifficulty)) return;
 
-        ServerLevel level = sender.serverLevel();
+        ServerWorld level = sender.getLevel();
         UUID owner = orderOwner != null ? orderOwner : sender.getUUID();
         Set<UUID> party = new LinkedHashSet<>();
         party.add(owner);
@@ -344,10 +363,10 @@ public final class AirdropLobbyService {
                     PendingAirdropStorage.putNextDeliveryMembers(level.dimension(), party, true);
                 }
             } else {
-                level.playSound(null, panel, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
+                level.playSound(null, panel, RadiotowersModSounds.SIREN.get(), SoundCategory.NEUTRAL, 1.0f, 1.0f);
             }
             for (UUID uuid : party) {
-                ServerPlayer p = level.getServer().getPlayerList().getPlayer(uuid);
+                ServerPlayerEntity p = level.getServer().getPlayerList().getPlayer(uuid);
                 if (p != null) {
                     RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
                         new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, uuid)));
@@ -363,7 +382,7 @@ public final class AirdropLobbyService {
         }
         for (UUID uuid : party) {
             AirdropCooldown.setCooldownAfterStandardAirdrop(level, uuid);
-            ServerPlayer p = level.getServer().getPlayerList().getPlayer(uuid);
+            ServerPlayerEntity p = level.getServer().getPlayerList().getPlayer(uuid);
             if (p != null) {
                 RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
                     new AirdropStatePacket(false, AirdropCooldown.getCooldownEndGameTime(level, uuid)));
@@ -371,7 +390,7 @@ public final class AirdropLobbyService {
         }
     }
 
-    private static BlockPos groundForWave(ServerLevel level, BlockPos pos) {
+    private static BlockPos groundForWave(ServerWorld level, BlockPos pos) {
         int cx = pos.getX();
         int cz = pos.getZ();
         int o = 8;
@@ -386,16 +405,16 @@ public final class AirdropLobbyService {
         return new BlockPos(cx, samples[samples.length / 2], cz);
     }
 
-    private static int surfaceY(ServerLevel level, int x, int z) {
+    private static int surfaceY(ServerWorld level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
-        int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        int h = level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+        return Math.max(0, Math.min(h, level.getMaxBuildHeight() - 1));
     }
 
     @SubscribeEvent
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || !isAvailable()) return;
-        MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        MinecraftServer server = net.minecraftforge.fml.server.ServerLifecycleHooks.getCurrentServer();
         if (server == null) return;
         List<UUID> due = new ArrayList<>();
         for (Map.Entry<UUID, Long> e : COUNTDOWN_END.entrySet()) {
@@ -404,7 +423,7 @@ public final class AirdropLobbyService {
                 due.add(e.getKey());
                 continue;
             }
-            ServerLevel level = server.getLevel(lobby.dimension());
+            ServerWorld level = server.getLevel(lobby.dimension());
             if (level == null) continue;
             long remaining = e.getValue() - level.getGameTime();
             if (remaining <= 0) {
@@ -427,7 +446,7 @@ public final class AirdropLobbyService {
         lobby.markInProgress();
         Set<UUID> members = new LinkedHashSet<>(lobby.memberUuids());
         broadcastCountdown(lobby, 0);
-        ServerPlayer actor = server.getPlayerList().getPlayer(go.hostUuid());
+        ServerPlayerEntity actor = server.getPlayerList().getPlayer(go.hostUuid());
         if (actor == null) {
             // Host disconnected mid-countdown — start from any online member so the party is not wasted.
             for (UUID uuid : members) {
@@ -447,7 +466,8 @@ public final class AirdropLobbyService {
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (!isAvailable()) return;
-        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        Object player$src = event.getEntity(); ServerPlayerEntity player = (player$src instanceof ServerPlayerEntity) ? (ServerPlayerEntity) player$src : null;
+        if (!(player != null)) return;
         ensureBus();
         EslLobby lobby = EslLobbyManager.findByMember(player.getUUID());
         if (lobby == null || lobby.state() == EslLobby.State.CLOSED) return;
@@ -467,7 +487,8 @@ public final class AirdropLobbyService {
 
     @SubscribeEvent
     public static void onLobbyEvent(EslLobbyEvent event) {
-        if (event instanceof EslLobbyEvent.Closed closed) {
+    EslLobbyEvent.Closed closed = (event instanceof EslLobbyEvent.Closed) ? (EslLobbyEvent.Closed) event : null;
+        if (closed != null) {
             PENDING_GO.remove(closed.lobby().id());
             COUNTDOWN_END.remove(closed.lobby().id());
             MinecraftServer server = closed.lobby().level() != null ? closed.lobby().level().getServer() : null;
@@ -488,11 +509,11 @@ public final class AirdropLobbyService {
         }
     }
 
-    private static EslLobby ensureLobby(ServerPlayer host, BlockPos panelPos) {
-        EslLobby existing = findLobbyAt(host.serverLevel(), panelPos);
+    private static EslLobby ensureLobby(ServerPlayerEntity host, BlockPos panelPos) {
+        EslLobby existing = findLobbyAt(host.getLevel(), panelPos);
         if (existing != null) {
             if (!existing.hostUuid().equals(host.getUUID())) {
-                host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
+                host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.not_host"), net.minecraft.util.Util.NIL_UUID);
                 return null;
             }
             return existing;
@@ -502,16 +523,16 @@ public final class AirdropLobbyService {
             if (other.hostUuid().equals(host.getUUID()) && other.anchor().equals(panelPos.immutable())) {
                 return other;
             }
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.already_in_lobby"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.already_in_lobby"), net.minecraft.util.Util.NIL_UUID);
             return null;
         }
-        EslLobby lobby = EslLobbyManager.create(host.serverLevel(), panelPos.immutable(),
+        EslLobby lobby = EslLobbyManager.create(host.getLevel(), panelPos.immutable(),
             host.getUUID(), host.getGameProfile().getName(), AirdropConfig.getLobbyMaxPlayers());
         lobby.setInviteTimeoutTicks((int) AirdropConfig.getLobbyInviteTimeoutTicks());
         return lobby;
     }
 
-    private static @Nullable EslLobby findLobbyAt(ServerLevel level, BlockPos panelPos) {
+    private static @Nullable EslLobby findLobbyAt(ServerWorld level, BlockPos panelPos) {
         BlockPos key = panelPos.immutable();
         for (EslLobby lobby : EslLobbyManager.activeIn(level.dimension())) {
             if (lobby.anchor().equals(key)) return lobby;
@@ -519,20 +540,20 @@ public final class AirdropLobbyService {
         return null;
     }
 
-    private static @Nullable EslLobby requireHostLobby(ServerPlayer host, UUID lobbyId) {
+    private static @Nullable EslLobby requireHostLobby(ServerPlayerEntity host, UUID lobbyId) {
         EslLobby lobby = lobbyId != null ? EslLobbyManager.find(lobbyId) : EslLobbyManager.findByMember(host.getUUID());
         if (lobby == null || lobby.state() == EslLobby.State.CLOSED) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_in_lobby"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.not_in_lobby"), net.minecraft.util.Util.NIL_UUID);
             return null;
         }
         if (!lobby.hostUuid().equals(host.getUUID())) {
-            host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.not_host"));
+            host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.not_host"), net.minecraft.util.Util.NIL_UUID);
             return null;
         }
         return lobby;
     }
 
-    private static @Nullable EslLobby resolveLobby(ServerPlayer player, @Nullable UUID lobbyId) {
+    private static @Nullable EslLobby resolveLobby(ServerPlayerEntity player, @Nullable UUID lobbyId) {
         if (lobbyId != null) {
             EslLobby byId = EslLobbyManager.find(lobbyId);
             if (byId != null && byId.getMember(player.getUUID()) != null) return byId;
@@ -555,13 +576,13 @@ public final class AirdropLobbyService {
             else if (m.status() == EslLobbyMember.Status.JOINED) notReady++;
         }
         if (pending > 0) {
-            return Component.translatable("message.radiotowers.lobby.waiting_invites", pending).getString();
+            return new TranslationTextComponent("message.radiotowers.lobby.waiting_invites", pending).getString();
         }
         if (notReady > 0) {
-            return Component.translatable("message.radiotowers.lobby.waiting_ready", notReady).getString();
+            return new TranslationTextComponent("message.radiotowers.lobby.waiting_ready", notReady).getString();
         }
         if (lobby.state() == EslLobby.State.COUNTDOWN) {
-            return Component.translatable("message.radiotowers.lobby.counting_down").getString();
+            return new TranslationTextComponent("message.radiotowers.lobby.counting_down").getString();
         }
         return "";
     }
@@ -571,12 +592,12 @@ public final class AirdropLobbyService {
         MinecraftServer server = lobby.level().getServer();
         if (server == null) return;
         for (UUID uuid : lobby.allMemberUuids()) {
-            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+            ServerPlayerEntity p = server.getPlayerList().getPlayer(uuid);
             if (p != null) syncTo(p, lobby);
         }
     }
 
-    private static void syncTo(ServerPlayer viewer, EslLobby lobby) {
+    private static void syncTo(ServerPlayerEntity viewer, EslLobby lobby) {
         if (!AirdropLobbyNetwork.isAvailable() || viewer == null || lobby == null) return;
         List<LobbyPackets.MemberSnapshot> members = new ArrayList<>();
         for (EslLobbyMember m : lobby.members()) {
@@ -596,11 +617,11 @@ public final class AirdropLobbyService {
         MinecraftServer server = lobby.level().getServer();
         if (server == null) return;
         for (UUID uuid : lobby.memberUuids()) {
-            ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+            ServerPlayerEntity p = server.getPlayerList().getPlayer(uuid);
             if (p != null) {
                 AirdropLobbyNetwork.channel().sendTo(p, pkt);
                 if (seconds > 0) {
-                    p.sendSystemMessage(Component.translatable("message.radiotowers.lobby.countdown", seconds));
+                    p.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.countdown", seconds), net.minecraft.util.Util.NIL_UUID);
                 }
             }
         }
@@ -611,69 +632,69 @@ public final class AirdropLobbyService {
         LobbyPackets.Closed pkt = new LobbyPackets.Closed(lobbyId);
         if (members != null) {
             for (UUID uuid : members) {
-                ServerPlayer p = server.getPlayerList().getPlayer(uuid);
+                ServerPlayerEntity p = server.getPlayerList().getPlayer(uuid);
                 if (p != null) AirdropLobbyNetwork.channel().sendTo(p, pkt);
             }
         }
     }
 
-    private static void sendInviteChat(ServerPlayer host, ServerPlayer target, EslLobby lobby) {
+    private static void sendInviteChat(ServerPlayerEntity host, ServerPlayerEntity target, EslLobby lobby) {
         String id = lobby.id().toString();
-        MutableComponent msg = Component.translatable("message.radiotowers.lobby.invite",
+        IFormattableTextComponent msg = new TranslationTextComponent("message.radiotowers.lobby.invite",
                 host.getGameProfile().getName())
-            .append(Component.literal(" "))
-            .append(Component.translatable("message.radiotowers.lobby.invite_tp_warn")
-                .withStyle(ChatFormatting.YELLOW))
-            .append(Component.literal(" "));
-        MutableComponent accept = Component.literal("[Accept]")
-            .withStyle(Style.EMPTY.withColor(ChatFormatting.GREEN).withBold(true)
+            .append(new StringTextComponent(" "))
+            .append(new TranslationTextComponent("message.radiotowers.lobby.invite_tp_warn")
+                .withStyle(TextFormatting.YELLOW))
+            .append(new StringTextComponent(" "));
+        IFormattableTextComponent accept = new StringTextComponent("[Accept]")
+            .withStyle(Style.EMPTY.withColor(TextFormatting.GREEN).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby accept " + id))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.accept_hover"))));
-        MutableComponent decline = Component.literal("[Decline]")
-            .withStyle(Style.EMPTY.withColor(ChatFormatting.RED).withBold(true)
+                    new TranslationTextComponent("message.radiotowers.lobby.accept_hover"))));
+        IFormattableTextComponent decline = new StringTextComponent("[Decline]")
+            .withStyle(Style.EMPTY.withColor(TextFormatting.RED).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby decline " + id))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.decline_hover"))));
-        target.sendSystemMessage(msg.append(accept).append(Component.literal(" ")).append(decline));
-        host.sendSystemMessage(Component.translatable("message.radiotowers.lobby.invite_sent",
-            target.getGameProfile().getName()));
+                    new TranslationTextComponent("message.radiotowers.lobby.decline_hover"))));
+        target.sendMessage(msg.append(accept).append(new StringTextComponent(" ")).append(decline), net.minecraft.util.Util.NIL_UUID);
+        host.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.invite_sent",
+            target.getGameProfile().getName()), net.minecraft.util.Util.NIL_UUID);
     }
 
-    private static void sendReadyHint(ServerPlayer player) {
-        MutableComponent ready = Component.literal("[Ready]")
-            .withStyle(Style.EMPTY.withColor(ChatFormatting.AQUA).withBold(true)
+    private static void sendReadyHint(ServerPlayerEntity player) {
+        IFormattableTextComponent ready = new StringTextComponent("[Ready]")
+            .withStyle(Style.EMPTY.withColor(TextFormatting.AQUA).withBold(true)
                 .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/radiotowers lobby ready"))
                 .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    Component.translatable("message.radiotowers.lobby.ready_hover"))));
-        player.sendSystemMessage(Component.translatable("message.radiotowers.lobby.ready_hint")
-            .append(Component.literal(" ")).append(ready)
-            .append(Component.literal(" "))
-            .append(Component.translatable("message.radiotowers.lobby.ready_cmd_fallback")));
+                    new TranslationTextComponent("message.radiotowers.lobby.ready_hover"))));
+        player.sendMessage(new TranslationTextComponent("message.radiotowers.lobby.ready_hint")
+            .append(new StringTextComponent(" ")).append(ready)
+            .append(new StringTextComponent(" "))
+            .append(new TranslationTextComponent("message.radiotowers.lobby.ready_cmd_fallback")), net.minecraft.util.Util.NIL_UUID);
     }
 
-    public static void teleportNearPanel(ServerPlayer player, BlockPos panel) {
-        ServerLevel level = player.serverLevel();
+    public static void teleportNearPanel(ServerPlayerEntity player, BlockPos panel) {
+        ServerWorld level = player.getLevel();
         int x = panel.getX();
         int z = panel.getZ() + 2;
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        y = Math.max(level.getMinBuildHeight() + 1, Math.min(y, level.getMaxBuildHeight() - 2));
+        int y = level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+        y = Math.max(0 + 1, Math.min(y, level.getMaxBuildHeight() - 2));
         BlockPos dest = new BlockPos(x, y, z);
         if (!level.getBlockState(dest).isAir() || !level.getBlockState(dest.above()).isAir()) {
             dest = panel.above();
         }
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
-            player.getYRot(), player.getXRot());
+            player.yRot, player.xRot);
     }
 
     @Nullable
-    private static ServerPlayer findOnlineByName(MinecraftServer server, String name) {
+    private static ServerPlayerEntity findOnlineByName(MinecraftServer server, String name) {
         if (server == null || name == null) return null;
         String needle = name.toLowerCase(Locale.ROOT);
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity p : server.getPlayerList().getPlayers()) {
             if (p.getGameProfile().getName().equalsIgnoreCase(name)) return p;
         }
-        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity p : server.getPlayerList().getPlayers()) {
             if (p.getGameProfile().getName().toLowerCase(Locale.ROOT).startsWith(needle)) return p;
         }
         return null;

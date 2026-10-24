@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,7 +34,7 @@ public class WaveStatePacket {
         this.nmsSuppressActive = nmsSuppressActive;
     }
 
-    public WaveStatePacket(FriendlyByteBuf buf) {
+    public WaveStatePacket(PacketBuffer buf) {
         this.currentWave = buf.readVarInt();
         this.totalWaves = buf.readVarInt();
         this.zombiesRemaining = buf.readVarInt();
@@ -42,7 +42,7 @@ public class WaveStatePacket {
         this.nmsSuppressActive = buf.readBoolean();
     }
 
-    public static void encode(WaveStatePacket msg, FriendlyByteBuf buf) {
+    public static void encode(WaveStatePacket msg, PacketBuffer buf) {
         buf.writeVarInt(msg.currentWave);
         buf.writeVarInt(msg.totalWaves);
         buf.writeVarInt(msg.zombiesRemaining);

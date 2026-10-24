@@ -1,23 +1,5 @@
-/*
- *    MCreator note: This file will be REGENERATED on each build.
- */
 package net.mcreator.radiotowers.init;
 
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.api.distmarker.Dist;
-
-import net.mcreator.radiotowers.client.model.Modelplane;
-import net.mcreator.radiotowers.client.model.Modelplanecrashed;
-import net.mcreator.radiotowers.client.model.Modelairdropcrate_Converted;
-
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+/** 1.16.5 bakes entity models in the renderer. No layer-definition event. */
 public class RadiotowersModModels {
-	@SubscribeEvent
-	public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-		event.registerLayerDefinition(Modelairdropcrate_Converted.LAYER_LOCATION, Modelairdropcrate_Converted::createBodyLayer);
-		event.registerLayerDefinition(Modelplane.LAYER_LOCATION, Modelplane::createBodyLayer);
-		event.registerLayerDefinition(Modelplanecrashed.LAYER_LOCATION, Modelplanecrashed::createBodyLayer);
-	}
 }

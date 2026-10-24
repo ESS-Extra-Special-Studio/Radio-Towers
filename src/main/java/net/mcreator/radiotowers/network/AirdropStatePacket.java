@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,12 +25,12 @@ public class AirdropStatePacket {
         this.cooldownEndGameTime = cooldownEndGameTime;
     }
 
-    public AirdropStatePacket(FriendlyByteBuf buf) {
+    public AirdropStatePacket(PacketBuffer buf) {
         this.waveInProgress = buf.readBoolean();
         this.cooldownEndGameTime = buf.readVarLong();
     }
 
-    public static void encode(AirdropStatePacket msg, FriendlyByteBuf buf) {
+    public static void encode(AirdropStatePacket msg, PacketBuffer buf) {
         buf.writeBoolean(msg.waveInProgress);
         buf.writeVarLong(msg.cooldownEndGameTime);
     }

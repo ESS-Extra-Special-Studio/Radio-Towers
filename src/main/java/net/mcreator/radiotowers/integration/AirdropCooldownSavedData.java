@@ -1,11 +1,11 @@
 package net.mcreator.radiotowers.integration;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.World;
+import net.minecraft.world.storage.WorldSavedData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,34 +13,35 @@ import java.util.UUID;
 
 /**
  * Persists per-player airdrop cooldown end times (world game time) so they survive disconnect, menu exit, and full restart.
- * Stored on the overworld for a single consistent {@link ServerLevel#getGameTime()} clock.
+ * Stored on the overworld for a single consistent {@link ServerWorld#getGameTime()} clock.
  */
-public class AirdropCooldownSavedData extends SavedData {
+public class AirdropCooldownSavedData extends WorldSavedData {
 
     public static final String DATA_NAME = "radiotowers_airdrop_cooldowns";
 
     private final Map<UUID, Long> cooldownEndGameTimeByPlayer = new HashMap<>();
 
     public AirdropCooldownSavedData() {
-    }
-
-    public static AirdropCooldownSavedData load(CompoundTag tag) {
-        AirdropCooldownSavedData data = new AirdropCooldownSavedData();
-        ListTag list = tag.getList("players", Tag.TAG_COMPOUND);
-        for (int i = 0; i < list.size(); i++) {
-            CompoundTag c = list.getCompound(i);
-            if (c.hasUUID("player") && c.contains("end")) {
-                data.cooldownEndGameTimeByPlayer.put(c.getUUID("player"), c.getLong("end"));
-            }
-        }
-        return data;
+        super(DATA_NAME);
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
-        ListTag list = new ListTag();
+    public void load(CompoundNBT tag) {
+        cooldownEndGameTimeByPlayer.clear();
+        ListNBT list = tag.getList("players", 10);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundNBT c = list.getCompound(i);
+            if (c.hasUUID("player") && c.contains("end")) {
+                cooldownEndGameTimeByPlayer.put(c.getUUID("player"), c.getLong("end"));
+            }
+        }
+    }
+
+    @Override
+    public CompoundNBT save(CompoundNBT tag) {
+        ListNBT list = new ListNBT();
         for (Map.Entry<UUID, Long> e : cooldownEndGameTimeByPlayer.entrySet()) {
-            CompoundTag c = new CompoundTag();
+            CompoundNBT c = new CompoundNBT();
             c.putUUID("player", e.getKey());
             c.putLong("end", e.getValue());
             list.add(c);
@@ -52,13 +53,13 @@ public class AirdropCooldownSavedData extends SavedData {
     /**
      * Saved data lives on the overworld so cooldown uses one game-time line across dimensions.
      */
-    public static AirdropCooldownSavedData get(ServerLevel level) {
+    public static AirdropCooldownSavedData get(ServerWorld level) {
         if (level == null || level.getServer() == null) {
             throw new IllegalStateException("AirdropCooldownSavedData.get requires a server level");
         }
-        ServerLevel storage = level.getServer().getLevel(Level.OVERWORLD);
+        ServerWorld storage = level.getServer().overworld();
         if (storage == null) storage = level;
-        return storage.getDataStorage().computeIfAbsent(AirdropCooldownSavedData::load, AirdropCooldownSavedData::new, DATA_NAME);
+        return storage.getDataStorage().computeIfAbsent(AirdropCooldownSavedData::new, DATA_NAME);
     }
 
     /** Game time when cooldown ends, or 0 if none / expired (expired entries are removed). */

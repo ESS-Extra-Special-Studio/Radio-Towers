@@ -1,10 +1,10 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.client.gui.CallAirdropScreen;
 
@@ -21,12 +21,12 @@ public class BaseStatusPacket {
         this.isThisPanel = isThisPanel;
     }
 
-    public BaseStatusPacket(FriendlyByteBuf buf) {
+    public BaseStatusPacket(PacketBuffer buf) {
         this.statusLine = buf.readUtf(512);
         this.isThisPanel = buf.readBoolean();
     }
 
-    public static void encode(BaseStatusPacket msg, FriendlyByteBuf buf) {
+    public static void encode(BaseStatusPacket msg, PacketBuffer buf) {
         buf.writeUtf(msg.statusLine, 512);
         buf.writeBoolean(msg.isThisPanel);
     }

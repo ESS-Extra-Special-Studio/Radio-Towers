@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.events;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -26,14 +26,15 @@ public class DrownedKillCountsHandler {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity().level() instanceof ServerLevel level)) return;
-        LivingEntity dead = event.getEntity();
+        if (event.getEntity().level.isClientSide()) return;
+        Object level$src = event.getEntity().level; ServerWorld level = (level$src instanceof ServerWorld) ? (ServerWorld) level$src : null;
+        if (!(level != null)) return;
+        LivingEntity dead = event.getEntityLiving();
 
         // In nuclear baseline mode we disabled all wave tags/mixins.
         if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) {
-            boolean isZombieFamily = dead.getType() == net.minecraft.world.entity.EntityType.ZOMBIE
-                || dead.getType() == net.minecraft.world.entity.EntityType.DROWNED;
+            boolean isZombieFamily = dead.getType() == net.minecraft.entity.EntityType.ZOMBIE
+                || dead.getType() == net.minecraft.entity.EntityType.DROWNED;
             if (!isZombieFamily) return;
 
             // Only count actual wave mobs; otherwise leftover ambient/vanilla zombies can decrement
@@ -46,7 +47,7 @@ public class DrownedKillCountsHandler {
             if (!looksLikeWaveMob) return;
 
             if (!DEATH_COUNTED_ENTITY_IDS.add(dead.getId())) return;
-            var pending = PendingAirdropStorage.getPendingNear(level, dead.blockPosition(), WAVE_MOB_RANGE);
+            net.mcreator.radiotowers.integration.PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, dead.blockPosition(), WAVE_MOB_RANGE);
             if (pending == null) pending = PendingAirdropStorage.getAnyPendingInLevel(level);
             if (pending == null || pending.isEslManaged()) return;
 
@@ -64,7 +65,7 @@ public class DrownedKillCountsHandler {
 
         // Count death once per entity id.
         if (!DEATH_COUNTED_ENTITY_IDS.add(dead.getId())) return;
-        var pending = PendingAirdropStorage.getPendingNear(level, dead.blockPosition(), WAVE_MOB_RANGE);
+        net.mcreator.radiotowers.integration.PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, dead.blockPosition(), WAVE_MOB_RANGE);
         if (pending == null) pending = PendingAirdropStorage.getAnyPendingInLevel(level);
         if (pending == null || pending.isEslManaged()) return;
         pending.killedCountThisWave = Math.max(0, Math.min(pending.maxZombiesPerWave, pending.killedCountThisWave + 1));

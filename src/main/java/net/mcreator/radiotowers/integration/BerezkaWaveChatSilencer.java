@@ -20,7 +20,7 @@ public final class BerezkaWaveChatSilencer {
 
     private BerezkaWaveChatSilencer() {}
 
-    /** @return true if the Zombie Waves API mod is loaded */
+    /** @return true if the ZombieEntity Waves API mod is loaded */
     public static boolean isZombieWavesApiPresent() {
         for (String id : WAVE_MOD_IDS) {
             if (ModList.get().isLoaded(id)) return true;
@@ -50,9 +50,9 @@ public final class BerezkaWaveChatSilencer {
         if (chatMessagesField != null) return;
         ClassLoader loader = null;
         for (String id : WAVE_MOD_IDS) {
-            var opt = ModList.get().getModContainerById(id);
+            java.util.Optional opt = ModList.get().getModContainerById(id);
             if (opt.isPresent()) {
-                loader = opt.get().getMod().getClass().getClassLoader();
+                loader = opt.get().getClass().getClassLoader();
                 break;
             }
         }

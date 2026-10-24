@@ -1,13 +1,13 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.integration.AirdropCooldown;
@@ -31,11 +31,11 @@ public class RequestAirdropStatePacket {
         this.panelPos = panelPos != null ? panelPos.immutable() : BlockPos.ZERO;
     }
 
-    public RequestAirdropStatePacket(FriendlyByteBuf buf) {
+    public RequestAirdropStatePacket(PacketBuffer buf) {
         this.panelPos = buf.readBlockPos();
     }
 
-    public static void encode(RequestAirdropStatePacket msg, FriendlyByteBuf buf) {
+    public static void encode(RequestAirdropStatePacket msg, PacketBuffer buf) {
         buf.writeBlockPos(msg.panelPos);
     }
 
@@ -43,9 +43,9 @@ public class RequestAirdropStatePacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
-            ServerPlayer player = ctx.getSender();
-            if (player == null || player.serverLevel() == null) return;
-            var serverLevel = player.serverLevel();
+            ServerPlayerEntity player = ctx.getSender();
+            if (player == null || player.getLevel() == null) return;
+            net.minecraft.world.server.ServerWorld serverLevel = player.getLevel();
             long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(serverLevel, player.getUUID());
             // Always sync Boss / Endless unlock flags (soft-dep Dead Air; both false without DA).
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
@@ -60,7 +60,7 @@ public class RequestAirdropStatePacket {
                 return;
             }
             // Only show "called in" at this tower if this exact panel has a pending airdrop for this player
-            var pending = PendingAirdropStorage.getPendingForPanel(serverLevel, msg.panelPos);
+            net.mcreator.radiotowers.integration.PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingForPanel(serverLevel, msg.panelPos);
             boolean waveInProgress = pending != null && (player.getUUID().equals(pending.playerWhoStarted)
                 || pending.effectiveMembers().contains(player.getUUID()));
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),

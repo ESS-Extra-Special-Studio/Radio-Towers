@@ -1,26 +1,26 @@
 package net.mcreator.radiotowers.events;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.SectionPos;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.RayTraceContext;
+import net.minecraft.world.gen.Heightmap;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -41,7 +41,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * When Zombie Waves API spawns mobs: (1) cap total spawns per wave to our tier max,
+ * When ZombieEntity Waves API spawns mobs: (1) cap total spawns per wave to our tier max,
  * (2) place them on a ring around the tower on solid ground so they can close in,
  * (3) make them aggro the player. Re-snaps only mobs that are stuck (in air, lava, inside blocks, inside tower) — not normal swimming.
  * We run at LOWEST priority so we execute after the API (and any other mod) sets spawn position,
@@ -123,27 +123,27 @@ public class WaveMobAggroHandler {
     private static final Map<Integer, Long> LAST_NO_LINE_OF_SIGHT_RESPAWN_AT = new ConcurrentHashMap<>();
 
     /** Top solid Y to start {@link #findGroundY} from at this column (heightmap; works on high terrain, unlike old Y<=80 cap). */
-    private static int columnTopSolidForGroundScan(ServerLevel level, int x, int z) {
-        int minY = level.getMinBuildHeight();
-        int airAbove = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    private static int columnTopSolidForGroundScan(ServerWorld level, int x, int z) {
+        int minY = 0;
+        int airAbove = level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
         return Math.max(minY, Math.min(airAbove - 1, level.getMaxBuildHeight() - 1));
     }
 
     /** Feet Y clearly above this column's outdoor surface — typical bogus API sky spawn (not a mountain surface). */
-    private static boolean isFloatingAboveColumnSurface(ServerLevel level, int x, int z, double feetY) {
-        int hm = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+    private static boolean isFloatingAboveColumnSurface(ServerWorld level, int x, int z, double feetY) {
+        int hm = level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
         return feetY > (double) hm + 12;
     }
 
-    private static boolean mobYSuggestsBrokenApiSkySpawn(ServerLevel level, Mob mob) {
+    private static boolean mobYSuggestsBrokenApiSkySpawn(ServerWorld level, MobEntity mob) {
         BlockPos p = mob.blockPosition();
-        return mob.getY() > (double) level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) + 24;
+        return mob.getY() > (double) level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) + 24;
     }
 
     /** Pre-add mixin: Y clearly above local outdoor surface (not valid mountain ground). */
-    public static boolean entityYLooksLikeSkyHighApiSpawn(ServerLevel level, net.minecraft.world.entity.Entity entity) {
+    public static boolean entityYLooksLikeSkyHighApiSpawn(ServerWorld level, net.minecraft.entity.Entity entity) {
         BlockPos p = entity.blockPosition();
-        return entity.getY() > (double) level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) + 16;
+        return entity.getY() > (double) level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, p.getX(), p.getZ()) + 16;
     }
 
     /** True if this entity was spawned by the current wave (used by mixins e.g. fire immunity). */
@@ -161,20 +161,22 @@ public class WaveMobAggroHandler {
      * but never died (e.g. stuck on leaves), which {@link net.mcreator.radiotowers.integration.ZombieWavesAPILoader}
      * would otherwise miss when completing waves.
      */
-    public static int discardAllTrackedWaveMobsStillAlive(ServerLevel level) {
+    public static int discardAllTrackedWaveMobsStillAlive(ServerWorld level) {
         if (level == null || level.isClientSide()) return 0;
         int removed = 0;
         for (int id : new ArrayList<>(WAVE_SPAWNED_ENTITY_IDS)) {
             Entity e = level.getEntity(id);
-            if (e == null || e.isRemoved() || !(e instanceof LivingEntity le) || !le.isAlive()) {
+            MobEntity mob = (e instanceof MobEntity) ? (MobEntity) e : null;
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            if (e == null || e.removed || !(le != null) || !le.isAlive()) {
                 WAVE_SPAWNED_ENTITY_IDS.remove(id);
                 continue;
             }
-            if (!(e instanceof Mob mob) || !(mob instanceof Monster)) {
+            if (!(mob != null) || !(mob instanceof MonsterEntity)) {
                 WAVE_SPAWNED_ENTITY_IDS.remove(id);
                 continue;
             }
-            mob.discard();
+            mob.remove();
             WAVE_SPAWNED_ENTITY_IDS.remove(id);
             removed++;
         }
@@ -182,23 +184,24 @@ public class WaveMobAggroHandler {
     }
 
     /** Count of wave mobs in WAVE_SPAWNED_ENTITY_IDS that are alive in this level. Use to avoid ending the wave while we still have mobs. */
-    public static int countAliveWaveMobsInLevel(ServerLevel level) {
+    public static int countAliveWaveMobsInLevel(ServerWorld level) {
         if (level == null || level.isClientSide()) return 0;
         int count = 0;
         for (Integer id : WAVE_SPAWNED_ENTITY_IDS) {
             Entity e = level.getEntity(id);
-            if (e != null && !e.isRemoved() && e instanceof LivingEntity le && le.isAlive()) count++;
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            if (e != null && !e.removed && le != null && le.isAlive()) count++;
         }
         return count;
     }
 
     /** Count of living Monsters in this level that have RING_POSITION_SET (wave mobs), when there is a pending wave. Use so we never deliver while any wave mob exists even if not in WAVE_SPAWNED_ENTITY_IDS (e.g. ghosts). */
-    public static int countAliveWaveMobsInLevelByTag(ServerLevel level) {
+    public static int countAliveWaveMobsInLevelByTag(ServerWorld level) {
         if (level == null || level.isClientSide()) return 0;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return 0;
         int[] count = {0};
-        LoadedEntityScan.forEach(level, Monster.class, mob -> {
-            if (mob.isAlive() && !mob.isRemoved()
+        LoadedEntityScan.forEach(level, MonsterEntity.class, mob -> {
+            if (mob.isAlive() && !mob.removed
                 && (mob.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
                     || mob.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)))
                 count[0]++;
@@ -209,13 +212,13 @@ public class WaveMobAggroHandler {
     /** Call from ServerTickEvent.END every tick: force unfreeze all Monsters in levels with a pending wave. Runs after all entity ticks so we overwrite any invuln/NoAI set by the API. */
     public static void forceUnfreezeAllWaveMonsters(net.minecraft.server.MinecraftServer server) {
         if (server == null) return;
-        for (ServerLevel level : server.getAllLevels()) {
+        for (ServerWorld level : server.getAllLevels()) {
             if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) continue;
-            LoadedEntityScan.forEach(level, Monster.class, mob -> {
-                if (mob.isRemoved()) return;
+            LoadedEntityScan.forEach(level, MonsterEntity.class, mob -> {
+                if (mob.removed) return;
                 if (mob.getType() == RadiotowersModEntities.PLANEENTITY.get()) return;
                 if (mob.getType() == RadiotowersModEntities.AIRDROPENTITY.get()) return;
-                if (mob.getMobType() != net.minecraft.world.entity.MobType.UNDEAD) return;
+                if (mob.getMobType() != net.minecraft.entity.CreatureAttribute.UNDEAD) return;
                 mob.setInvulnerable(false);
                 mob.setNoAi(false);
                 WaveMobFieldForce.forceOff(mob);
@@ -224,7 +227,7 @@ public class WaveMobAggroHandler {
     }
 
     /** Called when a level unloads: discard all wave mobs in that level (so they don't persist on save) and clear tracking. */
-    public static void onLevelUnload(ServerLevel level) {
+    public static void onLevelUnload(ServerWorld level) {
         if (level == null || level.isClientSide()) return;
         List<Entity> toDiscard = new ArrayList<>();
         LoadedEntityScan.forEach(level, Entity.class, e -> {
@@ -232,7 +235,7 @@ public class WaveMobAggroHandler {
         });
         for (Entity e : toDiscard) {
             int id = e.getId();
-            e.discard();
+            e.remove();
             WAVE_SPAWNED_ENTITY_IDS.remove(id);
             FIRST_SEEN_AT.remove(id);
             LAST_RESNAP_AT.remove(id);
@@ -249,19 +252,21 @@ public class WaveMobAggroHandler {
 
     /** Run during each living entity's tick — clear invuln/NoAI first (HIGHEST so we run before entity logic), then resnap sky; set target to player or tower. */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onLivingTick(LivingEvent.LivingTickEvent event) {
-        LivingEntity entity = event.getEntity();
-        if (entity.level().isClientSide()) return;
-        if (!(entity.level() instanceof ServerLevel level)) return;
-        if (entity instanceof Player) return;
-        if (!(entity instanceof Monster mob)) return;
+    public void onLivingTick(LivingEvent.LivingUpdateEvent event) {
+        LivingEntity entity = event.getEntityLiving();
+        if (entity.level.isClientSide()) return;
+        ServerWorld level = (entity.level instanceof ServerWorld) ? (ServerWorld) entity.level : null;
+        if (!(level != null)) return;
+        if (entity instanceof PlayerEntity) return;
+        MonsterEntity mob = (entity instanceof MonsterEntity) ? (MonsterEntity) entity : null;
+        if (!(mob != null)) return;
         if (AirdropConfig.isWaveAggroExcluded(mob.getType())) return;
         // Only apply wave mob handling to undead (prevents touching creepers, witches, endermen, etc.).
-        if (mob.getMobType() != net.minecraft.world.entity.MobType.UNDEAD) return;
-        // Adopt any Monster with wave tags that we didn't register (e.g. added via path we don't hook) so we clear invuln/NoAI and count their death
+        if (mob.getMobType() != net.minecraft.entity.CreatureAttribute.UNDEAD) return;
+        // Adopt any MonsterEntity with wave tags that we didn't register (e.g. added via path we don't hook) so we clear invuln/NoAI and count their death
         boolean inSet = WAVE_SPAWNED_ENTITY_IDS.contains(entity.getId());
         if (!inSet && (mob.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG) || mob.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET))) {
-            if (net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(mob.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+            if (net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(mob.getType()).equals(new net.minecraft.util.ResourceLocation("radiotowers:planeentity"))) return;
             PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, mob.blockPosition(), WAVE_MOB_RANGE);
             if (pending == null) pending = PendingAirdropStorage.getAnyPendingInLevel(level);
             if (pending != null) {
@@ -272,7 +277,7 @@ public class WaveMobAggroHandler {
             }
         }
         if (!WAVE_SPAWNED_ENTITY_IDS.contains(entity.getId())) {
-            // Every tick: unfreeze ANY Monster near a pending wave (catches API spawns that never got our tag)
+            // Every tick: unfreeze ANY MonsterEntity near a pending wave (catches API spawns that never got our tag)
             PendingAirdropStorage.Pending near = PendingAirdropStorage.getPendingNear(level, mob.blockPosition(), 64);
             if (near != null) {
                 mob.setInvulnerable(false);
@@ -313,17 +318,18 @@ public class WaveMobAggroHandler {
 
     /** Run at LOWEST so we run after the API and any other mod that sets invuln/NoAI. Force unfreeze every tick so ghost zombies never persist. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLivingTickLowest(LivingEvent.LivingTickEvent event) {
+    public void onLivingTickLowest(LivingEvent.LivingUpdateEvent event) {
         // Nuclear baseline: do not run global unfreeze ticks; we only want initial placement + minimal bookkeeping.
         if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
-        LivingEntity entity = event.getEntity();
-        if (entity.level().isClientSide()) return;
-        if (!(entity.level() instanceof ServerLevel level)) return;
-        if (!(entity instanceof Monster)) return;
-        if (entity instanceof Player) return;
-        if (net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+        LivingEntity entity = event.getEntityLiving();
+        if (entity.level.isClientSide()) return;
+        ServerWorld level = (entity.level instanceof ServerWorld) ? (ServerWorld) entity.level : null;
+        if (!(level != null)) return;
+        if (!(entity instanceof MonsterEntity)) return;
+        if (entity instanceof PlayerEntity) return;
+        if (net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(entity.getType()).equals(new net.minecraft.util.ResourceLocation("radiotowers:planeentity"))) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
-        Mob mob = (Mob) entity;
+        MobEntity mob = (MobEntity) entity;
         mob.setInvulnerable(false);
         mob.setNoAi(false);
         WaveMobFieldForce.forceOff(mob);
@@ -332,11 +338,13 @@ public class WaveMobAggroHandler {
 
     /** LOWEST = run after the API and other mods. Capture likely wave spawns close to the active wave, not every monster in the dimension. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onEntityJoinLevel(EntityJoinLevelEvent event) {
-        if (event.getLevel().isClientSide()) return;
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
-        if (!(event.getEntity() instanceof Mob mob)) return;
-        if (!(mob instanceof Monster)) return;
+    public void onEntityJoinLevel(EntityJoinWorldEvent event) {
+        if (event.getWorld().isClientSide()) return;
+        Object level$src = event.getWorld(); ServerWorld level = (level$src instanceof ServerWorld) ? (ServerWorld) level$src : null;
+        if (!(level != null)) return;
+        Object mob$src = event.getEntity(); MobEntity mob = (mob$src instanceof MobEntity) ? (MobEntity) mob$src : null;
+        if (!(mob != null)) return;
+        if (!(mob instanceof MonsterEntity)) return;
 
         // Restart-safe cleanup: if an old wave-tagged mob is loaded from disk while no wave is pending,
         // discard it immediately so "ghost" leftovers cannot survive into the next session's wave.
@@ -347,12 +355,12 @@ public class WaveMobAggroHandler {
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) {
             if (hasWaveTag || isWaveSpawnedMob(mob)) {
                 WaveMobFieldForce.forceOff(mob);
-                mob.discard();
+                mob.remove();
             }
             return;
         }
 
-        // Our replacement vanilla Zombie: register and place, do not increment spawn count again
+        // Our replacement vanilla ZombieEntity: register and place, do not increment spawn count again
         if (mob.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) {
             mob.getPersistentData().remove(WaveSpawnTag.REPLACEMENT_TAG);
             PendingAirdropStorage.Pending pending = PendingAirdropStorage.getAnyPendingInLevel(level);
@@ -369,8 +377,8 @@ public class WaveMobAggroHandler {
         if (pending == null) return;
         long waveAge = level.getGameTime() - pending.currentWaveStartedAtGameTime;
         if (waveAge < 0 || waveAge > UNTRACKED_CAPTURE_WINDOW_TICKS) return;
-        var mobTypeId = net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(mob.getType());
-        if (mobTypeId != null && mobTypeId.equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+        net.minecraft.util.ResourceLocation mobTypeId = net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(mob.getType());
+        if (mobTypeId != null && mobTypeId.equals(new net.minecraft.util.ResourceLocation("radiotowers:planeentity"))) return;
         if (AirdropConfig.isWaveAggroExcluded(mob.getType())) return;
         // Only capture zombie-family wave mobs; ignore ambient creepers/skeletons around the area.
         if (mob.getType() != EntityType.ZOMBIE && mob.getType() != EntityType.DROWNED) return;
@@ -387,7 +395,7 @@ public class WaveMobAggroHandler {
             net.mcreator.radiotowers.RadiotowersMod.LOGGER.warn(
                 "[WaveDebug] over-cap discard id={} type={} pos={} pendingPos={} spawnCount={} max={}",
                 mob.getId(),
-                net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(mob.getType()),
+                net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(mob.getType()),
                 mob.blockPosition(),
                 pending.waveStartPos,
                 pending.spawnCountThisWave,
@@ -398,7 +406,7 @@ public class WaveMobAggroHandler {
         }
         pending.spawnCountThisWave = nextSpawnCount;
 
-        // Always replace with vanilla Zombie we create so no API entity (and no API-set invuln/NoAI) ever stays in the world
+        // Always replace with vanilla ZombieEntity we create so no API entity (and no API-set invuln/NoAI) ever stays in the world
         // Do not treat water as "broken" here — swimming is valid; LevelAddEntityMixin still replaces API spawns that join already underwater.
         boolean likelyBrokenApiSpawn = WaveMobFieldForce.isInvulnerableRaw(mob)
             || WaveMobFieldForce.isNoAiRaw(mob)
@@ -406,18 +414,18 @@ public class WaveMobAggroHandler {
             || mobYSuggestsBrokenApiSkySpawn(level, mob);
         if (REPLACE_WAVE_MOBS_WITH_VANILLA && likelyBrokenApiSpawn) {
             int index = pending.spawnCountThisWave - 1;
-            Vec3 pos = getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-            Zombie vanilla = EntityType.ZOMBIE.create(level);
+            Vector3d pos = getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
+            ZombieEntity vanilla = EntityType.ZOMBIE.create(level);
             if (vanilla != null) {
                 vanilla.setPos(pos.x, pos.y, pos.z);
-                vanilla.setDeltaMovement(Vec3.ZERO);
+                vanilla.setDeltaMovement(Vector3d.ZERO);
                 vanilla.setInvulnerable(false);
                 vanilla.setNoAi(false);
                 WaveMobFieldForce.forceOff(vanilla);
                 vanilla.getPersistentData().putBoolean(WaveSpawnTag.REPLACEMENT_TAG, true);
                 vanilla.getPersistentData().putBoolean(WaveSpawnTag.RING_POSITION_SET, true); // so LevelAddEntityMixin skips and does not re-increment
                 if (level.addFreshEntity(vanilla)) {
-                    mob.discard();
+                    mob.remove();
                     // Replacement will be handled in the next EntityJoinLevel for vanilla (REPLACEMENT_TAG branch)
                     return;
                 }
@@ -431,7 +439,7 @@ public class WaveMobAggroHandler {
     }
 
     /** Register a wave mob: place on ring, deferred placements for sky resnap, target player/tower. Clear invuln/NoAI immediately (setters + reflection) so API-spawned mobs never start frozen/unkillable. Mark so only we decrement on death. */
-    private static void registerWaveMob(ServerLevel level, Mob mob, PendingAirdropStorage.Pending pending) {
+    private static void registerWaveMob(ServerWorld level, MobEntity mob, PendingAirdropStorage.Pending pending) {
         WAVE_SPAWNED_ENTITY_IDS.add(mob.getId());
         mob.setInvulnerable(false);
         mob.setNoAi(false);
@@ -439,6 +447,7 @@ public class WaveMobAggroHandler {
         long now = level.getGameTime();
         LAST_PROGRESS_TOWARD_GOAL_AT.put(mob.getId(), now);
         LAST_DIST_SQ_TO_TOWER.put(mob.getId(), mob.distanceToSqr(pending.waveStartPos.getX() + 0.5, pending.waveStartPos.getY(), pending.waveStartPos.getZ() + 0.5));
+        MonsterEntity mon = (mob instanceof MonsterEntity) ? (MonsterEntity) mob : null;
         if (RESNAP_ENABLED) {
             FIRST_SEEN_AT.put(mob.getId(), now);
             int index = pending.spawnCountThisWave - 1;
@@ -457,13 +466,14 @@ public class WaveMobAggroHandler {
                 }
             }
         }
-        if (AGRO_AND_STUCK_RESPAWN_ENABLED && mob instanceof Monster mon) setTargetToActivatingPlayerOrTower(level, mon, pending);
+        if (AGRO_AND_STUCK_RESPAWN_ENABLED && mon != null) setTargetToActivatingPlayerOrTower(level, mon, pending);
     }
 
     /** Process deferred placements (sky resnap only) at START of tick. Run at LOWEST so we run after API. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLevelTickStart(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || event.level.isClientSide() || !(event.level instanceof ServerLevel level)) return;
+    public void onLevelTickStart(TickEvent.WorldTickEvent event) {
+    ServerWorld level = (event.world instanceof ServerWorld) ? (ServerWorld) event.world : null;
+        if (event.phase != TickEvent.Phase.START || event.world.isClientSide() || !(level != null)) return;
         if (!AGRO_AND_STUCK_RESPAWN_ENABLED || !RESNAP_ENABLED) return;
         long now = level.getGameTime();
         processDeferredPlacements(level, now);
@@ -472,8 +482,9 @@ public class WaveMobAggroHandler {
             for (DeferredResnap r : DEFERRED_RESNAPS) {
                 if (r.level != level || r.runAtTick != now) continue;
                 resnapToRemove.add(r);
-                var entity = level.getEntity(r.entityId);
-                if (entity instanceof Monster mob && mob.isAlive() && !mob.isRemoved() && isWayAboveAndFloating(level, mob, r.waveStartPos)) {
+                net.minecraft.entity.Entity entity = level.getEntity(r.entityId);
+                MonsterEntity mob = (entity instanceof MonsterEntity) ? (MonsterEntity) entity : null;
+                if (mob != null && mob.isAlive() && !mob.removed && isWayAboveAndFloating(level, mob, r.waveStartPos)) {
                     placeOnRingAtGround(level, mob, r.waveStartPos, false);
                 }
             }
@@ -482,14 +493,15 @@ public class WaveMobAggroHandler {
     }
 
     /** Run deferred placements when mob is in sky (placement only, no invuln/NoAI). */
-    private static void processDeferredPlacements(ServerLevel level, long now) {
+    private static void processDeferredPlacements(ServerWorld level, long now) {
         List<PendingPlacement> toRemove = new ArrayList<>();
         synchronized (DEFERRED_PLACEMENTS) {
             for (PendingPlacement p : DEFERRED_PLACEMENTS) {
                 if (p.level != level || p.runAtTick != now) continue;
                 toRemove.add(p);
-                var entity = level.getEntity(p.entityId);
-                if (!(entity instanceof Monster mob) || !mob.isAlive() || mob.isRemoved()) continue;
+                net.minecraft.entity.Entity entity = level.getEntity(p.entityId);
+                MonsterEntity mob = (entity instanceof MonsterEntity) ? (MonsterEntity) entity : null;
+                if (!(mob != null) || !mob.isAlive() || mob.removed) continue;
                 if (isWayAboveAndFloating(level, mob, p.waveStartPos)) {
                     boolean placed = tryPlaceOnRingAtGround(level, mob, p.waveStartPos, p.index, p.maxZombies);
                     if (!placed) {
@@ -503,14 +515,14 @@ public class WaveMobAggroHandler {
     }
 
     private static final class PendingPlacement {
-        final ServerLevel level;
+        final ServerWorld level;
         final int entityId;
         final BlockPos waveStartPos;
         final int index;
         final int maxZombies;
         final UUID playerUuid;
         final long runAtTick;
-        PendingPlacement(ServerLevel level, int entityId, BlockPos waveStartPos, int index, int maxZombies, UUID playerUuid, long runAtTick) {
+        PendingPlacement(ServerWorld level, int entityId, BlockPos waveStartPos, int index, int maxZombies, UUID playerUuid, long runAtTick) {
             this.level = level;
             this.entityId = entityId;
             this.waveStartPos = waveStartPos;
@@ -522,11 +534,11 @@ public class WaveMobAggroHandler {
     }
 
     private static final class DeferredResnap {
-        final ServerLevel level;
+        final ServerWorld level;
         final int entityId;
         final BlockPos waveStartPos;
         final long runAtTick;
-        DeferredResnap(ServerLevel level, int entityId, BlockPos waveStartPos, long runAtTick) {
+        DeferredResnap(ServerWorld level, int entityId, BlockPos waveStartPos, long runAtTick) {
             this.level = level;
             this.entityId = entityId;
             this.waveStartPos = waveStartPos;
@@ -536,8 +548,9 @@ public class WaveMobAggroHandler {
 
     /** Every tick at END: process deferred placements and resnap. LOWEST so we run after API. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLevelTickEnd(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.level.isClientSide() || !(event.level instanceof ServerLevel level)) return;
+    public void onLevelTickEnd(TickEvent.WorldTickEvent event) {
+    ServerWorld level = (event.world instanceof ServerWorld) ? (ServerWorld) event.world : null;
+        if (event.phase != TickEvent.Phase.END || event.world.isClientSide() || !(level != null)) return;
         long now = level.getGameTime();
         if (AGRO_AND_STUCK_RESPAWN_ENABLED && RESNAP_ENABLED) processDeferredPlacements(level, now);
         if (now % TICK_INTERVAL != 0) return;
@@ -546,23 +559,24 @@ public class WaveMobAggroHandler {
 
     /** Also run at START of tick. LOWEST so we run after API. */
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onLevelTickStartResnap(TickEvent.LevelTickEvent event) {
-        if (event.phase != TickEvent.Phase.START || event.level.isClientSide() || !(event.level instanceof ServerLevel level)) return;
+    public void onLevelTickStartResnap(TickEvent.WorldTickEvent event) {
+    ServerWorld level = (event.world instanceof ServerWorld) ? (ServerWorld) event.world : null;
+        if (event.phase != TickEvent.Phase.START || event.world.isClientSide() || !(level != null)) return;
         if (!AGRO_AND_STUCK_RESPAWN_ENABLED) return;
         if (level.getGameTime() % TICK_INTERVAL != 0) return;
         processWaveMobs(level);
     }
 
     /** Shared logic: find wave mobs in WAVE_MOB_RANGE, resnap sky/stuck, set target to player or tower. No invuln/NoAI clearing. */
-    private static void processWaveMobs(ServerLevel level) {
+    private static void processWaveMobs(ServerWorld level) {
         PendingAirdropStorage.forEachPendingIn(level, (waveStartPos, pending) -> {
-            AABB box = new AABB(
-                waveStartPos.getX() - WAVE_MOB_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_MOB_RANGE,
+            AxisAlignedBB box = new AxisAlignedBB(
+                waveStartPos.getX() - WAVE_MOB_RANGE, 0, waveStartPos.getZ() - WAVE_MOB_RANGE,
                 waveStartPos.getX() + WAVE_MOB_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_MOB_RANGE);
             int[] counts = new int[3];
             long now = level.getGameTime();
-            for (Monster mob : level.getEntitiesOfClass(Monster.class, box)) {
-                if (mob.isRemoved() || !mob.isAlive()) continue;
+            for (MonsterEntity mob : level.getEntitiesOfClass(MonsterEntity.class, box)) {
+                if (mob.removed || !mob.isAlive()) continue;
                 int mobId = mob.getId();
                 if (!WAVE_SPAWNED_ENTITY_IDS.contains(mob.getId())) {
                     // Adopt wave-tagged mobs that slipped through (e.g. different spawn path) so they get unfrozen and counted
@@ -584,7 +598,7 @@ public class WaveMobAggroHandler {
                         // Deleting them here causes "spawn then instant despawn" and under-filled waves.
                         continue;
                     }
-                    if (net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(mob.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) continue;
+                    if (net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(mob.getType()).equals(new net.minecraft.util.ResourceLocation("radiotowers:planeentity"))) continue;
                     WAVE_SPAWNED_ENTITY_IDS.add(mob.getId());
                     // Ensure this adopted wave mob is always counted for HUD + wave completion.
                     mob.getPersistentData().putBoolean(WaveSpawnTag.RING_POSITION_SET, true);
@@ -649,14 +663,15 @@ public class WaveMobAggroHandler {
                 // remainEnemysCount / spawns when we discard, so this caused a spawn→despawn loop.
             int aliveWaveMobs = 0;
             for (Integer id : WAVE_SPAWNED_ENTITY_IDS) {
-                var e = level.getEntity(id);
-                if (e != null && !e.isRemoved() && e instanceof LivingEntity le && le.isAlive()) aliveWaveMobs++;
+                net.minecraft.entity.Entity e = level.getEntity(id);
+                LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+                if (e != null && !e.removed && le != null && le.isAlive()) aliveWaveMobs++;
             }
             if (now % 20 == 0) {
                 long waveAge = now - pending.currentWaveStartedAtGameTime;
                 if (waveAge >= 80) {
-                    ServerPlayer activatingPlayer = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
-                    boolean playerInRange = activatingPlayer != null && activatingPlayer.level() == level
+                    ServerPlayerEntity activatingPlayer = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
+                    boolean playerInRange = activatingPlayer != null && activatingPlayer.level == level
                         && activatingPlayer.distanceToSqr(waveStartPos.getX() + 0.5, waveStartPos.getY(), waveStartPos.getZ() + 0.5) <= 384 * 384;
                     // Only sync when ALL wave mobs are dead (our set AND tag count), AND wave has run at least 60s.
                     // Requiring tag count 0 prevents count dropping without kills when mobs exist but aren't in our set (e.g. not yet adopted).
@@ -667,48 +682,59 @@ public class WaveMobAggroHandler {
             }
         });
         TICKS_IN_SKY.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_RESNAP_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         FIRST_SEEN_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_SAW_PLAYER_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_PATH_TO_TOWER_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_PATH_TO_PLAYER_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_DIST_SQ_TO_TOWER.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_PROGRESS_TOWARD_GOAL_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         WAVE_SPAWNED_ENTITY_IDS.removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         SKY_POSITION_ALREADY_FIXED.removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
         LAST_NO_LINE_OF_SIGHT_RESPAWN_AT.keySet().removeIf(id -> {
-            var e = level.getEntity(id);
-            return e == null || e.isRemoved() || (e instanceof LivingEntity le && !le.isAlive());
+            net.minecraft.entity.Entity e = level.getEntity(id);
+            LivingEntity le = (e instanceof LivingEntity) ? (LivingEntity) e : null;
+            return e == null || e.removed || (le != null && !le.isAlive());
         });
     }
 
@@ -733,8 +759,8 @@ public class WaveMobAggroHandler {
         }
     }
 
-    /** Replace a non-vanilla wave mob with a vanilla Zombie at same position so kill @e[type=zombie] finds them all. */
-    private static void replaceWithVanillaZombie(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending, BlockPos waveStartPos, int oldId, long now) {
+    /** Replace a non-vanilla wave mob with a vanilla ZombieEntity at same position so kill @e[type=zombie] finds them all. */
+    private static void replaceWithVanillaZombie(ServerWorld level, MonsterEntity mob, PendingAirdropStorage.Pending pending, BlockPos waveStartPos, int oldId, long now) {
         double x = mob.getX(), y = mob.getY(), z = mob.getZ();
         WAVE_SPAWNED_ENTITY_IDS.remove(oldId);
         FIRST_SEEN_AT.remove(oldId);
@@ -747,11 +773,11 @@ public class WaveMobAggroHandler {
         TICKS_IN_SKY.remove(oldId);
         SKY_POSITION_ALREADY_FIXED.remove(oldId);
         LAST_NO_LINE_OF_SIGHT_RESPAWN_AT.remove(oldId);
-        mob.discard();
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        mob.remove();
+        ZombieEntity vanilla = EntityType.ZOMBIE.create(level);
         if (vanilla != null) {
             vanilla.setPos(x, y, z);
-            vanilla.setDeltaMovement(Vec3.ZERO);
+            vanilla.setDeltaMovement(Vector3d.ZERO);
             vanilla.setInvulnerable(false);
             vanilla.setNoAi(false);
             WaveMobFieldForce.forceOff(vanilla);
@@ -769,16 +795,16 @@ public class WaveMobAggroHandler {
     }
 
     /** If mob has no line of sight to player or tower AND is physically stuck, respawn to ring. Avoid respawning moving mobs that are just behind a corner. */
-    private static void checkNoLineOfSightAndRespawn(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending, BlockPos waveStartPos, long now) {
+    private static void checkNoLineOfSightAndRespawn(ServerWorld level, MonsterEntity mob, PendingAirdropStorage.Pending pending, BlockPos waveStartPos, long now) {
         if (!needsResnap(level, mob, waveStartPos)) return;
-        ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
+        ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
         boolean inRange = player != null && player.isAlive() && mob.distanceTo(player) <= TARGET_PLAYER_RANGE;
-        boolean canSeePlayer = inRange && mob.hasLineOfSight(player);
-        Vec3 towerVec = new Vec3(waveStartPos.getX() + 0.5, waveStartPos.getY() + 1, waveStartPos.getZ() + 0.5);
-        Vec3 from = mob.getEyePosition(1.0F);
-        BlockHitResult hit = level.clip(new ClipContext(from, towerVec, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mob));
+        boolean canSeePlayer = inRange && mob.canSee(player);
+        Vector3d towerVec = new Vector3d(waveStartPos.getX() + 0.5, waveStartPos.getY() + 1, waveStartPos.getZ() + 0.5);
+        Vector3d from = mob.getEyePosition(1.0F);
+        BlockRayTraceResult hit = level.clip(new RayTraceContext(from, towerVec, RayTraceContext.BlockMode.COLLIDER, RayTraceContext.FluidMode.NONE, mob));
         double distToTower = from.distanceTo(towerVec);
-        boolean canSeeTower = hit.getType() == HitResult.Type.MISS || from.distanceTo(hit.getLocation()) >= distToTower - 0.5;
+        boolean canSeeTower = hit.getType() == RayTraceResult.Type.MISS || from.distanceTo(hit.getLocation()) >= distToTower - 0.5;
         if (canSeePlayer || canSeeTower) return;
         int mobId = mob.getId();
         Long last = LAST_NO_LINE_OF_SIGHT_RESPAWN_AT.get(mobId);
@@ -789,42 +815,42 @@ public class WaveMobAggroHandler {
     }
 
     /** True when mob is floating above ground or frozen (invulnerable/NoAI), so we resnap stuck/frozen mobs. */
-    private static boolean isWayAboveAndFloating(ServerLevel level, Monster mob, BlockPos waveStartPos) {
+    private static boolean isWayAboveAndFloating(ServerWorld level, MonsterEntity mob, BlockPos waveStartPos) {
         if (mob.isInvulnerable() || mob.isNoAi()) return true;
         return isTrulyInSky(level, mob, waveStartPos);
         //’s start (e.g. airdrop spawn height)
     }
 
     /** True only when mob has no solid below and is high up — never true for mobs standing on ground. */
-    private static boolean isTrulyInSky(ServerLevel level, Monster mob, BlockPos waveStartPos) {
+    private static boolean isTrulyInSky(ServerWorld level, MonsterEntity mob, BlockPos waveStartPos) {
         return isTrulyInSkyLiving(level, mob, waveStartPos);
     }
 
     /** Same as isTrulyInSky but for any LivingEntity. Conservative: only "in sky" when clearly floating (Y > 100 and no solid within 5 below). */
-    private static boolean isTrulyInSkyLiving(ServerLevel level, LivingEntity entity, BlockPos waveStartPos) {
+    private static boolean isTrulyInSkyLiving(ServerWorld level, LivingEntity entity, BlockPos waveStartPos) {
         BlockPos pos = entity.blockPosition();
-        if (level.getBlockState(pos.below()).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(2)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(3)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(4)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(5)).blocksMotion()) return false;
+        if (level.getBlockState(pos.below()).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(2)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(3)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(4)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(5)).getMaterial().blocksMotion()) return false;
         double y = entity.getY();
         if (y <= 100) return false; // only treat as sky when clearly high (e.g. mis-spawned in void)
         return true;
     }
 
     /** True when entity has no solid within 5 below and is above wave ground + 15. Used to discard stray API sky spawns we didn't replace. */
-    private static boolean isInSkyForStrayCleanup(ServerLevel level, LivingEntity entity, BlockPos waveStartPos) {
+    private static boolean isInSkyForStrayCleanup(ServerWorld level, LivingEntity entity, BlockPos waveStartPos) {
         BlockPos pos = entity.blockPosition();
-        if (level.getBlockState(pos.below()).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(2)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(3)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(4)).blocksMotion()) return false;
-        if (level.getBlockState(pos.below(5)).blocksMotion()) return false;
+        if (level.getBlockState(pos.below()).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(2)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(3)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(4)).getMaterial().blocksMotion()) return false;
+        if (level.getBlockState(pos.below(5)).getMaterial().blocksMotion()) return false;
         return entity.getY() > waveStartPos.getY() + 15;
     }
 
-    private static boolean isWaveMobNear(ServerLevel level, Monster mob, BlockPos waveStartPos) {
+    private static boolean isWaveMobNear(ServerWorld level, MonsterEntity mob, BlockPos waveStartPos) {
         PendingAirdropStorage.Pending p = PendingAirdropStorage.getPendingNear(level, mob.blockPosition(), WAVE_MOB_RANGE);
         return p != null && p.waveStartPos.equals(waveStartPos);
     }
@@ -841,13 +867,13 @@ public class WaveMobAggroHandler {
      * When a wave starts, apply agro to monsters already in the area (not spawned by the wave).
      * Call once from ZombieWavesAPILoader.startWaveAt after the wave has started.
      */
-    public static void applyAgroToPreExistingMobs(ServerLevel level, BlockPos waveStartPos, PendingAirdropStorage.Pending pending) {
+    public static void applyAgroToPreExistingMobs(ServerWorld level, BlockPos waveStartPos, PendingAirdropStorage.Pending pending) {
         if (level == null || waveStartPos == null || pending == null) return;
-        AABB box = new AABB(
-            waveStartPos.getX() - PREEXISTING_AGRO_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - PREEXISTING_AGRO_RANGE,
+        AxisAlignedBB box = new AxisAlignedBB(
+            waveStartPos.getX() - PREEXISTING_AGRO_RANGE, 0, waveStartPos.getZ() - PREEXISTING_AGRO_RANGE,
             waveStartPos.getX() + PREEXISTING_AGRO_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + PREEXISTING_AGRO_RANGE);
-        for (Monster mob : level.getEntitiesOfClass(Monster.class, box)) {
-            if (!mob.isAlive() || mob.isRemoved()) continue;
+        for (MonsterEntity mob : level.getEntitiesOfClass(MonsterEntity.class, box)) {
+            if (!mob.isAlive() || mob.removed) continue;
             if (AirdropConfig.isWaveAggroExcluded(mob.getType())) continue;
             if (WAVE_SPAWNED_ENTITY_IDS.contains(mob.getId())) continue; // API-spawned; they get targeting elsewhere
             setTargetToActivatingPlayerOrTower(level, mob, pending);
@@ -860,16 +886,16 @@ public class WaveMobAggroHandler {
     /**
      * Home on any lobby member in range (nearest preferred); if none visible, attract to the tower.
      */
-    private static void setTargetToActivatingPlayerOrTower(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending) {
+    private static void setTargetToActivatingPlayerOrTower(ServerWorld level, MonsterEntity mob, PendingAirdropStorage.Pending pending) {
         if (level.getServer() == null) return;
         if (AirdropConfig.isWaveAggroExcluded(mob.getType())) return;
-        ServerPlayer player = pickAggroTarget(level, mob, pending);
+        ServerPlayerEntity player = pickAggroTarget(level, mob, pending);
         BlockPos tower = pending.waveStartPos;
         long now = level.getGameTime();
         int mobId = mob.getId();
         double distSqToTower = mob.distanceToSqr(tower.getX() + 0.5, tower.getY(), tower.getZ() + 0.5);
         boolean inRange = player != null && player.isAlive() && mob.distanceTo(player) <= TARGET_PLAYER_RANGE;
-        boolean canSeePlayer = inRange && mob.hasLineOfSight(player);
+        boolean canSeePlayer = inRange && mob.canSee(player);
         if (inRange) {
             if (canSeePlayer) LAST_SAW_PLAYER_AT.put(mobId, now);
             LAST_PATH_TO_TOWER_AT.remove(mobId);
@@ -878,7 +904,7 @@ public class WaveMobAggroHandler {
             Long lastPathToPlayer = LAST_PATH_TO_PLAYER_AT.get(mobId);
             boolean pathToPlayerStale = lastPathToPlayer == null || (now - lastPathToPlayer) >= PATH_TO_PLAYER_INTERVAL_TICKS;
             if (pathToPlayerStale) {
-                var nav = mob.getNavigation();
+                net.minecraft.pathfinding.PathNavigator nav = mob.getNavigation();
                 nav.moveTo(player, MOVE_TO_TOWER_SPEED);
                 LAST_PATH_TO_PLAYER_AT.put(mobId, now);
             }
@@ -896,7 +922,7 @@ public class WaveMobAggroHandler {
         if (prevDistSq == null || distSqToTower < prevDistSq - 1.0)
             LAST_PROGRESS_TOWARD_GOAL_AT.put(mobId, now);
         mob.setTarget(null);
-        var nav = mob.getNavigation();
+        net.minecraft.pathfinding.PathNavigator nav = mob.getNavigation();
         Long lastPathAt = LAST_PATH_TO_TOWER_AT.get(mobId);
         boolean pathStale = lastPathAt == null || (now - lastPathAt) >= PATH_TO_TOWER_INTERVAL_TICKS;
         if (pathStale) {
@@ -907,12 +933,12 @@ public class WaveMobAggroHandler {
     }
 
     /** Nearest alive lobby member within aggro range, else host if online. */
-    private static ServerPlayer pickAggroTarget(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending) {
-        ServerPlayer best = null;
+    private static ServerPlayerEntity pickAggroTarget(ServerWorld level, MonsterEntity mob, PendingAirdropStorage.Pending pending) {
+        ServerPlayerEntity best = null;
         double bestDist = Double.MAX_VALUE;
         for (UUID memberId : pending.effectiveMembers()) {
-            ServerPlayer p = level.getServer().getPlayerList().getPlayer(memberId);
-            if (p == null || !p.isAlive() || p.level() != level) continue;
+            ServerPlayerEntity p = level.getServer().getPlayerList().getPlayer(memberId);
+            if (p == null || !p.isAlive() || p.level != level) continue;
             double d = mob.distanceToSqr(p);
             if (d < bestDist) {
                 bestDist = d;
@@ -924,7 +950,7 @@ public class WaveMobAggroHandler {
     }
 
     /** If mob is physically stuck (sky/block/fluid) AND has made no progress for STUCK_NO_PROGRESS_TICKS, respawn to ring. Never respawn moving mobs just for "no progress". */
-    private static void checkStuckAndRespawnToRing(ServerLevel level, Monster mob, PendingAirdropStorage.Pending pending) {
+    private static void checkStuckAndRespawnToRing(ServerWorld level, MonsterEntity mob, PendingAirdropStorage.Pending pending) {
         int mobId = mob.getId();
         long now = level.getGameTime();
         if (!needsResnap(level, mob, pending.waveStartPos)) return;
@@ -937,7 +963,7 @@ public class WaveMobAggroHandler {
         BlockPos tower = pending.waveStartPos;
         double distSqToTower = mob.distanceToSqr(tower.getX() + 0.5, tower.getY(), tower.getZ() + 0.5);
         if (distSqToTower < 12 * 12) return;
-        ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
+        ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(pending.playerWhoStarted) : null;
         if (player != null && player.isAlive() && mob.distanceToSqr(player) < 10 * 10) return;
         placeOnRingAtGround(level, mob, tower, true);
         LAST_PROGRESS_TOWARD_GOAL_AT.put(mobId, now);
@@ -947,15 +973,15 @@ public class WaveMobAggroHandler {
     }
 
     /** True only when mob is actually stuck: in lava, inside a solid (both feet and head), or clearly in sky. Never true for mobs on ground or swimming in water. */
-    private static boolean needsResnap(ServerLevel level, Monster mob, BlockPos waveStartPos) {
+    private static boolean needsResnap(ServerWorld level, MonsterEntity mob, BlockPos waveStartPos) {
         if (mob.isInLava()) return true;
         BlockPos pos = mob.blockPosition();
         BlockState support = level.getBlockState(pos.below());
         // Standing on SOLID leaves/logs counts as "bad support" → resnap off treetops/branches.
-        if (support.blocksMotion() && !isBadWaveSpawnSupport(support)) return false; // standing on good ground — never resnap
-        if (support.blocksMotion() && isBadWaveSpawnSupport(support)) return true;
-        boolean feetInSolid = level.getBlockState(pos).blocksMotion();
-        boolean headInSolid = level.getBlockState(pos.above()).blocksMotion();
+        if (support.getMaterial().blocksMotion() && !isBadWaveSpawnSupport(support)) return false; // standing on good ground — never resnap
+        if (support.getMaterial().blocksMotion() && isBadWaveSpawnSupport(support)) return true;
+        boolean feetInSolid = level.getBlockState(pos).getMaterial().blocksMotion();
+        boolean headInSolid = level.getBlockState(pos.above()).getMaterial().blocksMotion();
         if (feetInSolid && headInSolid) return true;
         return isTrulyInSky(level, mob, waveStartPos);
     }
@@ -964,11 +990,11 @@ public class WaveMobAggroHandler {
      * Y of the top solid block to stand on, scanning from maxStartY down.
      * Skips leaves and logs so ring spawns land on terrain under trees instead of treetops.
      */
-    private static int findGroundY(ServerLevel level, int x, int z, int maxStartY) {
-        int minY = level.getMinBuildHeight();
+    private static int findGroundY(ServerWorld level, int x, int z, int maxStartY) {
+        int minY = 0;
         for (int y = Math.min(maxStartY, level.getMaxBuildHeight() - 1); y >= minY; y--) {
             BlockState st = level.getBlockState(new BlockPos(x, y, z));
-            if (!st.blocksMotion()) continue;
+            if (!st.getMaterial().blocksMotion()) continue;
             if (isBadWaveSpawnSupport(st)) continue;
             return y;
         }
@@ -984,7 +1010,7 @@ public class WaveMobAggroHandler {
      * First Y above ground where the block is air, so the mob isn't placed inside leaves.
      * Returns groundY+1 if that block is already air; otherwise scans up to STANDING_SEARCH_UP.
      */
-    private static double findStandingY(ServerLevel level, int x, int z, int groundY) {
+    private static double findStandingY(ServerWorld level, int x, int z, int groundY) {
         int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxBuildHeight() - 1);
         for (int y = groundY + 1; y <= maxY; y++) {
             if (level.getBlockState(new BlockPos(x, y, z)).isAir())
@@ -994,8 +1020,8 @@ public class WaveMobAggroHandler {
     }
 
     /** Same as findStandingY but requires the block above (y+1) to be air and the block below feet (y-1) to not be fluid (no spawn in/on water or lava). */
-    private static double findStandingYWithHeadroom(ServerLevel level, int x, int z, int groundY) {
-        int minY = level.getMinBuildHeight();
+    private static double findStandingYWithHeadroom(ServerWorld level, int x, int z, int groundY) {
+        int minY = 0;
         int maxY = Math.min(groundY + STANDING_SEARCH_UP, level.getMaxBuildHeight() - 2);
         for (int y = groundY + 1; y <= maxY; y++) {
             if (y - 1 < minY) continue;
@@ -1008,8 +1034,8 @@ public class WaveMobAggroHandler {
     }
 
     /** True if the block at (x, y, z) or the block below is fluid (water/lava) — used to reject spawns in/over water. */
-    private static boolean isFeetOrBelowFluid(ServerLevel level, int x, int y, int z) {
-        if (y <= level.getMinBuildHeight()) return true;
+    private static boolean isFeetOrBelowFluid(ServerWorld level, int x, int y, int z) {
+        if (y <= 0) return true;
         return !level.getBlockState(new BlockPos(x, y, z)).getFluidState().isEmpty()
             || !level.getBlockState(new BlockPos(x, y - 1, z)).getFluidState().isEmpty();
     }
@@ -1022,10 +1048,10 @@ public class WaveMobAggroHandler {
      * Tries multiple angles to avoid water; uses Math.round so the ring is symmetric around the tower.
      * Caller must not increment pending.spawnCountThisWave before calling — EntityJoinLevel does that.
      */
-    public static Vec3 getRingSpawnPosition(ServerLevel level, BlockPos towerCenter, int spawnIndex, int maxZombies) {
+    public static Vector3d getRingSpawnPosition(ServerWorld level, BlockPos towerCenter, int spawnIndex, int maxZombies) {
         double centerX = towerCenter.getX() + 0.5;
         double centerZ = towerCenter.getZ() + 0.5;
-        double baseAngle = maxZombies > 0 ? (2 * Math.PI * spawnIndex) / maxZombies : level.getRandom().nextDouble() * 2 * Math.PI;
+        double baseAngle = maxZombies > 0 ? (2 * Math.PI * spawnIndex) / maxZombies : level.random.nextDouble() * 2 * Math.PI;
         for (int k = 0; k < RING_ANGLE_ATTEMPTS; k++) {
             double angle = baseAngle + (k * 2 * Math.PI / RING_ANGLE_ATTEMPTS);
             int useX = (int) Math.round(centerX + SPAWN_RING_RADIUS * Math.cos(angle));
@@ -1035,24 +1061,24 @@ public class WaveMobAggroHandler {
             int groundY = findGroundY(level, useX, useZ, maxGroundY);
             double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
             int feetY = (int) Math.floor(surfaceY);
-            if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-                for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
-                    if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
+            if (feetY > 0 && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).getMaterial().blocksMotion()) {
+                for (int y = feetY - 1; y >= 0; y--) {
+                    if (level.getBlockState(new BlockPos(useX, y, useZ)).getMaterial().blocksMotion()) {
                         surfaceY = y + 1.0;
                         break;
                     }
                 }
             }
             feetY = (int) Math.floor(surfaceY);
-            if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+            if ((groundY <= 0 && surfaceY <= 0 + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
                 level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
                 int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
                 surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
                 feetY = (int) Math.floor(surfaceY);
             }
-            if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ))
+            if (feetY > 0 && isFeetOrBelowFluid(level, useX, feetY, useZ))
                 continue; // in water, try next angle
-            return new Vec3(useX + 0.5, surfaceY, useZ + 0.5);
+            return new Vector3d(useX + 0.5, surfaceY, useZ + 0.5);
         }
         // Fallback: tower ground, keep ring X/Z from first angle
         int useX = (int) Math.round(centerX + SPAWN_RING_RADIUS * Math.cos(baseAngle));
@@ -1060,11 +1086,11 @@ public class WaveMobAggroHandler {
         level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
         int fallbackGround = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
         double surfaceY = findStandingYWithHeadroom(level, useX, useZ, fallbackGround);
-        return new Vec3(useX + 0.5, surfaceY, useZ + 0.5);
+        return new Vector3d(useX + 0.5, surfaceY, useZ + 0.5);
     }
 
     /** Stable ring position for an entity by id (deterministic). Used by EntitySetPosMixin once per entity so we don't keep re-teleporting. */
-    public static Vec3 getStableRingPositionForEntity(ServerLevel level, int entityId) {
+    public static Vector3d getStableRingPositionForEntity(ServerWorld level, int entityId) {
         PendingAirdropStorage.Pending pending = PendingAirdropStorage.getAnyPendingInLevel(level);
         if (pending == null) return null;
         int maxZ = Math.max(1, pending.maxZombiesPerWave);
@@ -1073,14 +1099,14 @@ public class WaveMobAggroHandler {
     }
 
     /** Returns true if placement was done, false if chunk not loaded (caller can defer). */
-    private static boolean tryPlaceOnRingAtGround(ServerLevel level, Mob mob, BlockPos towerCenter, int spawnIndex, int maxZombies) {
-        double angle = maxZombies > 0 ? (2 * Math.PI * spawnIndex) / maxZombies : level.getRandom().nextDouble() * 2 * Math.PI;
+    private static boolean tryPlaceOnRingAtGround(ServerWorld level, MobEntity mob, BlockPos towerCenter, int spawnIndex, int maxZombies) {
+        double angle = maxZombies > 0 ? (2 * Math.PI * spawnIndex) / maxZombies : level.random.nextDouble() * 2 * Math.PI;
         // Avoid spawning in/on water/lava or holes during initial placement.
         return placeOnRingAtGroundWithAngle(level, mob, towerCenter, angle, true);
     }
 
-    private static void placeOnRingAtGround(ServerLevel level, Mob mob, BlockPos towerCenter, int spawnIndex, int totalSpawns) {
-        double angle = totalSpawns > 0 ? (2 * Math.PI * spawnIndex) / totalSpawns : level.getRandom().nextDouble() * 2 * Math.PI;
+    private static void placeOnRingAtGround(ServerWorld level, MobEntity mob, BlockPos towerCenter, int spawnIndex, int totalSpawns) {
+        double angle = totalSpawns > 0 ? (2 * Math.PI * spawnIndex) / totalSpawns : level.random.nextDouble() * 2 * Math.PI;
         placeOnRingAtGroundWithAngle(level, mob, towerCenter, angle, false);
     }
 
@@ -1093,18 +1119,18 @@ public class WaveMobAggroHandler {
      * Place mob on the spawn ring: random angle (initial) or preserve current angle (resnap).
      * Tries multiple radii and angles to avoid water and holes.
      */
-    private static void placeOnRingAtGround(ServerLevel level, Mob mob, BlockPos towerCenter, boolean randomAngle) {
+    private static void placeOnRingAtGround(ServerWorld level, MobEntity mob, BlockPos towerCenter, boolean randomAngle) {
         int cx = towerCenter.getX();
         int cz = towerCenter.getZ();
         double baseAngle;
         if (randomAngle) {
-            baseAngle = level.getRandom().nextDouble() * 2 * Math.PI;
+            baseAngle = level.random.nextDouble() * 2 * Math.PI;
         } else {
             double dx = mob.getX() - (cx + 0.5);
             double dz = mob.getZ() - (cz + 0.5);
             double dist = Math.sqrt(dx * dx + dz * dz);
             if (dist < 0.01) {
-                baseAngle = level.getRandom().nextDouble() * 2 * Math.PI;
+                baseAngle = level.random.nextDouble() * 2 * Math.PI;
             } else {
                 baseAngle = Math.atan2(dz, dx);
             }
@@ -1122,11 +1148,11 @@ public class WaveMobAggroHandler {
      * Spawn mob at ground level: force-load chunk, find solid ground at or below tower height, place feet on it.
      * If skipBadSpots is true, returns false when position is in fluid or a hole (so caller can try another angle).
      */
-    private static boolean placeOnRingAtGroundWithAngle(ServerLevel level, Mob mob, BlockPos towerCenter, double angle, boolean skipBadSpots) {
+    private static boolean placeOnRingAtGroundWithAngle(ServerWorld level, MobEntity mob, BlockPos towerCenter, double angle, boolean skipBadSpots) {
         return placeOnRingAtGroundWithAngle(level, mob, towerCenter, angle, skipBadSpots, SPAWN_RING_RADIUS);
     }
 
-    private static boolean placeOnRingAtGroundWithAngle(ServerLevel level, Mob mob, BlockPos towerCenter, double angle, boolean skipBadSpots, int radius) {
+    private static boolean placeOnRingAtGroundWithAngle(ServerWorld level, MobEntity mob, BlockPos towerCenter, double angle, boolean skipBadSpots, int radius) {
         double centerX = towerCenter.getX() + 0.5;
         double centerZ = towerCenter.getZ() + 0.5;
         int useX = (int) Math.round(centerX + radius * Math.cos(angle));
@@ -1136,22 +1162,22 @@ public class WaveMobAggroHandler {
         int groundY = findGroundY(level, useX, useZ, maxGroundY);
         double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
         int feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-            for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
-                if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
+        if (feetY > 0 && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).getMaterial().blocksMotion()) {
+            for (int y = feetY - 1; y >= 0; y--) {
+                if (level.getBlockState(new BlockPos(useX, y, useZ)).getMaterial().blocksMotion()) {
                     surfaceY = y + 1.0;
                     break;
                 }
             }
         }
-        if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+        if ((groundY <= 0 && surfaceY <= 0 + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
             if (skipBadSpots) return false;
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
         }
         feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
+        if (feetY > 0 && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
             if (skipBadSpots) return false;
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
@@ -1167,25 +1193,25 @@ public class WaveMobAggroHandler {
     }
 
     /** True if block at feet or feet+1 is fluid, or no solid below (hole). */
-    private static boolean isInHoleOrWater(ServerLevel level, int x, int feetY, int z) {
-        if (feetY <= level.getMinBuildHeight()) return true;
+    private static boolean isInHoleOrWater(ServerWorld level, int x, int feetY, int z) {
+        if (feetY <= 0) return true;
         if (level.getBlockState(new BlockPos(x, feetY, z)).getFluidState().isEmpty()
             && level.getBlockState(new BlockPos(x, feetY + 1, z)).getFluidState().isEmpty()
-            && level.getBlockState(new BlockPos(x, feetY - 1, z)).blocksMotion())
+            && level.getBlockState(new BlockPos(x, feetY - 1, z)).getMaterial().blocksMotion())
             return false;
         return true;
     }
 
     /** Place any LivingEntity on the ring. preserveAngle: true = keep same angle (resnap in place), false = random (initial). */
-    private static void placeLivingOnRingAtGround(ServerLevel level, LivingEntity entity, BlockPos towerCenter, boolean preserveAngle) {
+    private static void placeLivingOnRingAtGround(ServerWorld level, LivingEntity entity, BlockPos towerCenter, boolean preserveAngle) {
         double angle;
         if (preserveAngle) {
             double dx = entity.getX() - (towerCenter.getX() + 0.5);
             double dz = entity.getZ() - (towerCenter.getZ() + 0.5);
             double dist = Math.sqrt(dx * dx + dz * dz);
-            angle = dist < 0.01 ? level.getRandom().nextDouble() * 2 * Math.PI : Math.atan2(dz, dx);
+            angle = dist < 0.01 ? level.random.nextDouble() * 2 * Math.PI : Math.atan2(dz, dx);
         } else {
-            angle = level.getRandom().nextDouble() * 2 * Math.PI;
+            angle = level.random.nextDouble() * 2 * Math.PI;
         }
         int cx = towerCenter.getX();
         int cz = towerCenter.getZ();
@@ -1196,22 +1222,22 @@ public class WaveMobAggroHandler {
         int groundY = findGroundY(level, useX, useZ, maxGroundY);
         double surfaceY = findStandingYWithHeadroom(level, useX, useZ, groundY);
         int feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).blocksMotion()) {
-            for (int y = feetY - 1; y >= level.getMinBuildHeight(); y--) {
-                if (level.getBlockState(new BlockPos(useX, y, useZ)).blocksMotion()) {
+        if (feetY > 0 && !level.getBlockState(new BlockPos(useX, feetY - 1, useZ)).getMaterial().blocksMotion()) {
+            for (int y = feetY - 1; y >= 0; y--) {
+                if (level.getBlockState(new BlockPos(useX, y, useZ)).getMaterial().blocksMotion()) {
                     surfaceY = y + 1.0;
                     break;
                 }
             }
         }
-        if ((groundY <= level.getMinBuildHeight() && surfaceY <= level.getMinBuildHeight() + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
+        if ((groundY <= 0 && surfaceY <= 0 + 1) || isFloatingAboveColumnSurface(level, useX, useZ, surfaceY)) {
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);
         }
         // Never place in/on water or lava: use tower ground Y but keep ring X/Z
         feetY = (int) Math.floor(surfaceY);
-        if (feetY > level.getMinBuildHeight() && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
+        if (feetY > 0 && isFeetOrBelowFluid(level, useX, feetY, useZ)) {
             level.getChunk(SectionPos.blockToSectionCoord(useX), SectionPos.blockToSectionCoord(useZ));
             int reground = findGroundY(level, useX, useZ, columnTopSolidForGroundScan(level, useX, useZ));
             surfaceY = findStandingYWithHeadroom(level, useX, useZ, reground);

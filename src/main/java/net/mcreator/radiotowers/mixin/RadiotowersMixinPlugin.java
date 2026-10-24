@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Skips {@link WavesManagerMixin} when Berezka Zombie Waves API is not installed — the target class is absent
+ * Skips {@link WavesManagerMixin} when Berezka ZombieEntity Waves API is not installed — the target class is absent
  * and Mixin would fail. Registers {@code NoMindlessShootingTacZListenerMixin} only when TaCZ is on the classpath
  * so dedicated servers without TaCZ do not link {@code GunShootEvent}.
  */

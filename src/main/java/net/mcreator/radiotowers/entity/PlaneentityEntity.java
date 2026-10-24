@@ -1,28 +1,27 @@
 package net.mcreator.radiotowers.entity;
 
-import net.minecraftforge.network.PlayMessages;
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.fml.network.FMLPlayMessages;
+import net.minecraftforge.fml.network.NetworkHooks;
 
-import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.projectile.ThrownPotion;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.*;
-import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.IServerWorld;
+import net.minecraft.world.World;
+import net.minecraft.entity.projectile.PotionEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.AttributeModifierMap;
+import net.minecraft.entity.*;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.network.play.IServerPlayNetHandler;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.ListNBT;
+import net.minecraft.util.math.vector.Vector3d;
 
 import net.mcreator.radiotowers.procedures.PlaneentityOnInitialEntitySpawnProcedure;
 
@@ -32,12 +31,11 @@ import net.mcreator.radiotowers.init.RadiotowersModEntities;
 
 import javax.annotation.Nullable;
 
-public class PlaneentityEntity extends Monster {
+public class PlaneentityEntity extends MonsterEntity {
 	/** Synced wreck pose for Dead Air EB crash sites (and future grounded wrecks). */
-	public static final EntityDataAccessor<Boolean> DATA_CRASHED = SynchedEntityData.defineId(PlaneentityEntity.class,
-		EntityDataSerializers.BOOLEAN);
+	public static final DataParameter<Boolean> DATA_CRASHED = EntityDataManager.defineId(PlaneentityEntity.class,
+		DataSerializers.BOOLEAN);
 
-	public final AnimationState animationState0 = new AnimationState();
 	private List<String> airdropItemIds = new ArrayList<>();
 	private List<Integer> airdropQuantities = new ArrayList<>();
 	private int airdropDifficulty;
@@ -58,13 +56,13 @@ public class PlaneentityEntity extends Monster {
 	public void setAirdropDifficulty(int difficulty) { this.airdropDifficulty = Math.max(0, difficulty); }
 	public int getAirdropDifficulty() { return airdropDifficulty; }
 
-	public PlaneentityEntity(PlayMessages.SpawnEntity packet, Level world) {
+	public PlaneentityEntity(FMLPlayMessages.SpawnEntity packet, World world) {
 		this(RadiotowersModEntities.PLANEENTITY.get(), world);
 	}
 
-	public PlaneentityEntity(EntityType<PlaneentityEntity> type, Level world) {
+	public PlaneentityEntity(EntityType<PlaneentityEntity> type, World world) {
 		super(type, world);
-		setMaxUpStep(0.6f);
+		maxUpStep = 0.6f;
 		xpReward = 0;
 		setNoAi(true);
 		setPersistenceRequired();
@@ -80,9 +78,8 @@ public class PlaneentityEntity extends Monster {
 	public void markAsCrashedWreck() {
 		this.entityData.set(DATA_CRASHED, true);
 		setNoAi(true);
-		setDeltaMovement(Vec3.ZERO);
-		setXRot(0f);
-		this.animationState0.stop();
+		setDeltaMovement(Vector3d.ZERO);
+		xRot = 0f;
 	}
 
 	public boolean isCrashedWreck() {
@@ -90,13 +87,13 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public Packet<ClientGamePacketListener> getAddEntityPacket() {
+	public IPacket<?> getAddEntityPacket() {
 		return NetworkHooks.getEntitySpawningPacket(this);
 	}
 
 	@Override
-	public MobType getMobType() {
-		return MobType.UNDEFINED;
+	public CreatureAttribute getMobType() {
+		return CreatureAttribute.UNDEFINED;
 	}
 
 	@Override
@@ -106,31 +103,31 @@ public class PlaneentityEntity extends Monster {
 
 	@Override
 	public boolean hurt(DamageSource damagesource, float amount) {
-		if (damagesource.is(DamageTypes.IN_FIRE))
+		if (damagesource == DamageSource.IN_FIRE)
 			return false;
-		if (damagesource.getDirectEntity() instanceof AbstractArrow)
+		if (damagesource.getDirectEntity() instanceof AbstractArrowEntity)
 			return false;
-		if (damagesource.getDirectEntity() instanceof Player)
+		if (damagesource.getDirectEntity() instanceof PlayerEntity)
 			return false;
-		if (damagesource.getDirectEntity() instanceof ThrownPotion || damagesource.getDirectEntity() instanceof AreaEffectCloud)
+		if (damagesource.getDirectEntity() instanceof PotionEntity || damagesource.getDirectEntity() instanceof AreaEffectCloudEntity)
 			return false;
-		if (damagesource.is(DamageTypes.FALL))
+		if (damagesource == net.minecraft.util.DamageSource.FALL)
 			return false;
-		if (damagesource.is(DamageTypes.CACTUS))
+		if (damagesource == DamageSource.CACTUS)
 			return false;
-		if (damagesource.is(DamageTypes.DROWN))
+		if (damagesource == DamageSource.DROWN)
 			return false;
-		if (damagesource.is(DamageTypes.LIGHTNING_BOLT))
+		if (damagesource == DamageSource.LIGHTNING_BOLT)
 			return false;
-		if (damagesource.is(DamageTypes.EXPLOSION) || damagesource.is(DamageTypes.PLAYER_EXPLOSION))
+		if (damagesource.isExplosion())
 			return false;
-		if (damagesource.is(DamageTypes.TRIDENT))
+		if ("trident".equals(damagesource.getMsgId()))
 			return false;
-		if (damagesource.is(DamageTypes.FALLING_ANVIL))
+		if (damagesource == DamageSource.ANVIL)
 			return false;
-		if (damagesource.is(DamageTypes.DRAGON_BREATH))
+		if (damagesource == DamageSource.DRAGON_BREATH)
 			return false;
-		if (damagesource.is(DamageTypes.WITHER) || damagesource.is(DamageTypes.WITHER_SKULL))
+		if (damagesource == DamageSource.WITHER || "witherSkull".equals(damagesource.getMsgId()))
 			return false;
 		return super.hurt(damagesource, amount);
 	}
@@ -141,36 +138,36 @@ public class PlaneentityEntity extends Monster {
 	}
 
 	@Override
-	public void addAdditionalSaveData(CompoundTag compound) {
+	public void addAdditionalSaveData(CompoundNBT compound) {
 		super.addAdditionalSaveData(compound);
 		compound.putBoolean("CrashedWreck", isCrashedWreck());
-		ListTag ids = new ListTag();
-		for (String s : airdropItemIds) ids.add(net.minecraft.nbt.StringTag.valueOf(s));
+		ListNBT ids = new ListNBT();
+		for (String s : airdropItemIds) ids.add(net.minecraft.nbt.StringNBT.valueOf(s));
 		compound.put("AirdropItemIds", ids);
-		ListTag qty = new ListTag();
-		for (Integer i : airdropQuantities) qty.add(net.minecraft.nbt.IntTag.valueOf(i));
+		ListNBT qty = new ListNBT();
+		for (Integer i : airdropQuantities) qty.add(net.minecraft.nbt.IntNBT.valueOf(i));
 		compound.put("AirdropQuantities", qty);
 		compound.putInt("AirdropDifficulty", airdropDifficulty);
 	}
 
 	@Override
-	public void readAdditionalSaveData(CompoundTag compound) {
+	public void readAdditionalSaveData(CompoundNBT compound) {
 		super.readAdditionalSaveData(compound);
 		if (compound.getBoolean("CrashedWreck")) {
 			markAsCrashedWreck();
 		}
 		airdropItemIds.clear();
-		ListTag ids = compound.getList("AirdropItemIds", 8);
+		ListNBT ids = compound.getList("AirdropItemIds", 8);
 		for (int i = 0; i < ids.size(); i++) airdropItemIds.add(ids.getString(i));
 		airdropQuantities.clear();
-		ListTag qty = compound.getList("AirdropQuantities", 3);
+		ListNBT qty = compound.getList("AirdropQuantities", 3);
 		for (int i = 0; i < qty.size(); i++) airdropQuantities.add(qty.getInt(i));
 		if (compound.contains("AirdropDifficulty", 3)) airdropDifficulty = compound.getInt("AirdropDifficulty");
 	}
 
 	@Override
-	public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType reason, @Nullable SpawnGroupData livingdata, @Nullable CompoundTag tag) {
-		SpawnGroupData retval = super.finalizeSpawn(world, difficulty, reason, livingdata, tag);
+	public ILivingEntityData finalizeSpawn(IServerWorld world, DifficultyInstance difficulty, SpawnReason reason, @Nullable ILivingEntityData livingdata, @Nullable CompoundNBT tag) {
+		ILivingEntityData retval = super.finalizeSpawn(world, difficulty, reason, livingdata, tag);
 		if (isCrashedWreck() || (tag != null && tag.getBoolean("CrashedWreck"))) {
 			markAsCrashedWreck();
 			return retval;
@@ -187,23 +184,16 @@ public class PlaneentityEntity extends Monster {
 	@Override
 	public void tick() {
 		super.tick();
-		if (this.level().isClientSide()) {
-			if (isCrashedWreck()) {
-				this.animationState0.stop();
-			} else {
-				this.animationState0.animateWhen(true, this.tickCount);
-			}
-		}
-		if (isCrashedWreck() && !this.level().isClientSide()) {
-			setDeltaMovement(Vec3.ZERO);
+		if (isCrashedWreck() && !this.level.isClientSide()) {
+			setDeltaMovement(Vector3d.ZERO);
 		}
 	}
 
 	public static void init() {
 	}
 
-	public static AttributeSupplier.Builder createAttributes() {
-		AttributeSupplier.Builder builder = Mob.createMobAttributes();
+	public static AttributeModifierMap.MutableAttribute createAttributes() {
+		AttributeModifierMap.MutableAttribute builder = MobEntity.createMobAttributes();
 		builder = builder.add(Attributes.MOVEMENT_SPEED, 0);
 		builder = builder.add(Attributes.MAX_HEALTH, 10);
 		builder = builder.add(Attributes.ARMOR, 0);

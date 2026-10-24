@@ -1,26 +1,27 @@
 package net.mcreator.radiotowers.procedures;
+import net.minecraft.util.text.StringTextComponent;
 
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.CommandSource;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.math.vector.Vector2f;
+import net.minecraft.world.IWorld;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.potion.Effects;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.Direction;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.CommandSource;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.block.BlockState;
 
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -35,11 +36,12 @@ import java.util.List;
 public class AirdropentityOnEntityTickUpdateProcedure {
 
 	/** Fill crate at pos from order next tick so the block entity exists. */
-	private static void fillCrateFromOrder(ServerLevel level, BlockPos pos, List<String> ids, List<Integer> qty,
+	private static void fillCrateFromOrder(ServerWorld level, BlockPos pos, List<String> ids, List<Integer> qty,
 			java.util.Collection<java.util.UUID> memberUuids) {
 		try {
-			BlockEntity be = level.getBlockEntity(pos);
-			if (!(be instanceof AirdropCrateBlockEntity crate)) return;
+			TileEntity be = level.getBlockEntity(pos);
+			AirdropCrateBlockEntity crate = (be instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) be : null;
+			if (!(crate != null)) return;
 			if (crate.isStructureLoot()) return;
 			for (int i = 0; i < crate.getContainerSize(); i++)
 				crate.setItem(i, ItemStack.EMPTY);
@@ -50,7 +52,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 					try {
 						String idStr = ids.get(i);
 						if (idStr == null || idStr.isEmpty()) continue;
-						ResourceLocation id = ResourceLocation.parse(idStr);
+						ResourceLocation id = new ResourceLocation(idStr);
 						ItemStack stack = ItemStack.EMPTY;
 						int unitsPerStack = 1;
 						String path = id.getPath();
@@ -65,7 +67,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 								if (stack.isEmpty())
 									stack = TaczAirdropIntegration.createAmmoDisplayStack(id);
 								if (stack.isEmpty() || (TaczAirdropIntegration.isAmmoBoxStack(stack) && !TaczAirdropIntegration.hasAmmoIdTag(stack))) {
-									for (var e : AirdropCatalog.getEntries()) {
+									for (net.mcreator.radiotowers.airdrop.AirdropCatalog.Entry e : AirdropCatalog.getEntries()) {
 										if (e.getItemId().equals(id)) {
 											stack = e.createStack();
 											if (!stack.isEmpty() && TaczAirdropIntegration.isAmmoBoxStack(stack) && !TaczAirdropIntegration.hasAmmoIdTag(stack))
@@ -82,7 +84,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 								if (cached != null && !cached.isEmpty() && TaczAirdropIntegration.hasGunIdTag(cached))
 									stack = cached;
 								if (stack.isEmpty()) {
-									for (var e : AirdropCatalog.getEntries()) {
+									for (net.mcreator.radiotowers.airdrop.AirdropCatalog.Entry e : AirdropCatalog.getEntries()) {
 										if (e.getItemId().equals(id)) {
 											stack = e.createStack();
 											if (!stack.isEmpty()) break;
@@ -102,11 +104,11 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 							if (TaczAirdropIntegration.isTaczContentId(id) && (path.startsWith("ammo/") || path.startsWith("gun/"))) {
 								// Never use registry lookup for tacz content IDs (no such registry key); skip to avoid iron ammo box
 							} else {
-								var item = ForgeRegistries.ITEMS.getValue(id);
+								net.minecraft.item.Item item = ForgeRegistries.ITEMS.getValue(id);
 								if (item != null && item != Items.AIR) {
 									stack = new ItemStack(item);
 								} else {
-									for (var e : AirdropCatalog.getEntries()) {
+									for (net.mcreator.radiotowers.airdrop.AirdropCatalog.Entry e : AirdropCatalog.getEntries()) {
 										if (e.getItemId().equals(id)) {
 											stack = e.createStack();
 											unitsPerStack = e.getDefaultStackSize();
@@ -164,76 +166,81 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		}
 	}
 
-	private static boolean touchesWater(LevelAccessor world, double x, double y, double z, Entity entity) {
-		if (!entity.isAlive() || entity.isRemoved()) return false;
+	private static boolean touchesWater(IWorld world, double x, double y, double z, Entity entity) {
+		if (!entity.isAlive() || entity.removed) return false;
 		if (entity.isInWater()) return true;
-		BlockPos pos = BlockPos.containing(x, y, z);
+		BlockPos pos = new BlockPos(x, y, z);
 		if (world.getFluidState(pos).is(FluidTags.WATER)) return true;
 		if (world.getFluidState(pos.below()).is(FluidTags.WATER)) return true;
 		return world.getFluidState(pos.above()).is(FluidTags.WATER);
 	}
 
 	/** Block position for the crate (one block above first solid column below the entity). */
-	private static BlockPos findSeafloorCratePos(LevelAccessor world, double x, double y, double z) {
-		int bx = Mth.floor(x);
-		int bz = Mth.floor(z);
-		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+	private static BlockPos findSeafloorCratePos(IWorld world, double x, double y, double z) {
+		int bx = MathHelper.floor(x);
+		int bz = MathHelper.floor(z);
+		int startY = MathHelper.floor(y);
+		int minY = 0;
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
 			BlockState st = world.getBlockState(p);
-			if (st.blocksMotion())
+			if (st.getMaterial().blocksMotion())
 				return p.above();
 		}
 		return null;
 	}
 
-	private static BlockPos resolveDeliveryCratePos(LevelAccessor world, BlockPos preferred) {
+	private static BlockPos resolveDeliveryCratePos(IWorld world, BlockPos preferred) {
 		if (world.isClientSide()) return preferred;
-		BlockEntity be = world.getBlockEntity(preferred);
-		if (!(be instanceof AirdropCrateBlockEntity crate) || !crate.isStructureLoot())
+		TileEntity be = world.getBlockEntity(preferred);
+		AirdropCrateBlockEntity crate = (be instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) be : null;
+		if (!(crate != null) || !crate.isStructureLoot())
 			return preferred;
 		for (Direction dir : new Direction[] { Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST, Direction.UP }) {
 			BlockPos alt = preferred.relative(dir);
-			BlockEntity altBe = world.getBlockEntity(alt);
-			if (altBe instanceof AirdropCrateBlockEntity altCrate && altCrate.isStructureLoot())
+			TileEntity altBe = world.getBlockEntity(alt);
+			AirdropCrateBlockEntity altCrate = (altBe instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) altBe : null;
+			if (altCrate != null && altCrate.isStructureLoot())
 				continue;
-			if (world.isEmptyBlock(alt) || world.getBlockState(alt).canBeReplaced())
+			if (world.isEmptyBlock(alt) || world.getBlockState(alt).getMaterial().isReplaceable())
 				return alt;
 		}
 		return preferred;
 	}
 
-	private static void placeCrateAndDiscard(LevelAccessor world, Entity entity, BlockPos cratePos) {
+	private static void placeCrateAndDiscard(IWorld world, Entity entity, BlockPos cratePos) {
 		BlockPos deliveryPos = resolveDeliveryCratePos(world, cratePos);
 		world.setBlock(deliveryPos, RadiotowersModBlocks.AIRDROP_CRATE.get().defaultBlockState(), 3);
 		if (!world.isClientSide()) {
-			boolean hasOrder = entity instanceof AirdropentityEntity airdrop && airdrop.hasAirdropOrder();
-			if (hasOrder && entity instanceof AirdropentityEntity airdrop && world instanceof ServerLevel _level) {
+			AirdropentityEntity airdrop = (entity instanceof AirdropentityEntity) ? (AirdropentityEntity) entity : null;
+			boolean hasOrder = airdrop != null && airdrop.hasAirdropOrder();
+			ServerWorld _level = (world instanceof ServerWorld) ? (ServerWorld) world : null;
+			if (hasOrder && airdrop != null && _level != null) {
 				List<String> ids = airdrop.getAirdropItemIds();
 				List<Integer> qty = airdrop.getAirdropQuantities();
-				java.util.Set<java.util.UUID> members = airdrop.isMembersOnlyCrate() ? airdrop.getLobbyMembers() : java.util.Set.of();
+				java.util.Set<java.util.UUID> members = airdrop.isMembersOnlyCrate() ? airdrop.getLobbyMembers() : java.util.Collections.emptySet();
 				BlockPos posFinal = deliveryPos.immutable();
 				fillCrateFromOrder(_level, posFinal, ids, qty, members);
 				// Retry once only if the BE wasn't ready; never clear+refill an already-filled order crate
 				// (opening mid-refill caused ghost slots / click reshuffles with TaCZ).
 				net.mcreator.radiotowers.RadiotowersMod.queueServerWork(1, () -> {
-					BlockEntity be = _level.getBlockEntity(posFinal);
-					if (be instanceof AirdropCrateBlockEntity crate && crate.isFilledFromOrder())
+					TileEntity be = _level.getBlockEntity(posFinal);
+					AirdropCrateBlockEntity crate = (be instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) be : null;
+					if (crate != null && crate.isFilledFromOrder())
 						return;
 					fillCrateFromOrder(_level, posFinal, ids, qty, members);
 				});
-			} else if (!hasOrder && world instanceof ServerLevel _level && _level.getServer() != null) {
+			} else if (!hasOrder && _level != null && _level.getServer() != null) {
 				double cx = deliveryPos.getX() + 0.5;
 				double cy = deliveryPos.getY();
 				double cz = deliveryPos.getZ() + 0.5;
 				String lootTableId = net.mcreator.radiotowers.config.AirdropConfig.getStandardAirdropLootTable().toString();
-				_level.getServer().getCommands().performPrefixedCommand(new CommandSourceStack(CommandSource.NULL, new Vec3(cx, cy, cz), Vec2.ZERO, _level, 4, "", Component.literal(""), _level.getServer(), null).withSuppressedOutput(),
+				_level.getServer().getCommands().performCommand(new CommandSource(_level.getServer(), new Vector3d(cx, cy, cz), net.minecraft.util.math.vector.Vector2f.ZERO, _level, 4, "", new StringTextComponent(""), _level.getServer(), null).withSuppressedOutput(),
 						"data merge block ~ ~ ~ {LootTable:\"" + lootTableId + "\"}");
 			}
 		}
-		if (entity.level() != null && !entity.level().isClientSide())
-			entity.discard();
+		if (entity.level != null && !entity.level.isClientSide())
+			entity.remove();
 	}
 
 	/** Blocks descended per tick — positional fall, ignores gravity mods / NoAI physics quirks. */
@@ -243,30 +250,32 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 	private static final double LAND_CLEARANCE = 1.15;
 
 	/** First solid block under the entity, or null if none in build height. */
-	private static BlockPos findGroundBelow(LevelAccessor world, double x, double y, double z) {
-		int bx = Mth.floor(x);
-		int bz = Mth.floor(z);
-		int startY = Mth.floor(y);
-		int minY = world.getMinBuildHeight();
+	private static BlockPos findGroundBelow(IWorld world, double x, double y, double z) {
+		int bx = MathHelper.floor(x);
+		int bz = MathHelper.floor(z);
+		int startY = MathHelper.floor(y);
+		int minY = 0;
 		for (int yy = startY; yy >= minY; yy--) {
 			BlockPos p = new BlockPos(bx, yy, bz);
-			if (world.getBlockState(p).blocksMotion())
+			if (world.getBlockState(p).getMaterial().blocksMotion())
 				return p;
 		}
 		return null;
 	}
 
-	public static void execute(LevelAccessor world, double x, double y, double z, Entity entity) {
+	public static void execute(IWorld world, double x, double y, double z, Entity entity) {
 		if (entity == null || world.isClientSide())
 			return;
-		if (!(entity instanceof AirdropentityEntity airdropEnt))
+			AirdropentityEntity airdropEnt = (entity instanceof AirdropentityEntity) ? (AirdropentityEntity) entity : null;
+		if (!(airdropEnt != null))
 			return;
-		if (!(entity instanceof LivingEntity living))
+			LivingEntity living = (entity instanceof LivingEntity) ? (LivingEntity) entity : null;
+		if (!(living != null))
 			return;
 
 		// Do not trust entity physics in large packs — move the crate down ourselves.
 		entity.setNoGravity(true);
-		entity.setDeltaMovement(Vec3.ZERO);
+		entity.setDeltaMovement(Vector3d.ZERO);
 
 		if (touchesWater(world, x, y, z, entity)) {
 			living.removeAllEffects();
@@ -286,9 +295,9 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 		}
 
 		// Parachute VFX only (amp 0). Descent is positional below.
-		MobEffectInstance slow = living.getEffect(MobEffects.SLOW_FALLING);
+		EffectInstance slow = living.getEffect(Effects.SLOW_FALLING);
 		if (slow == null || slow.getDuration() < 40 || slow.getAmplifier() > 0) {
-			living.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 80, 0, false, false));
+			living.addEffect(new EffectInstance(Effects.SLOW_FALLING, 80, 0, false, false));
 		}
 
 		double nextY = y - FALL_STEP;

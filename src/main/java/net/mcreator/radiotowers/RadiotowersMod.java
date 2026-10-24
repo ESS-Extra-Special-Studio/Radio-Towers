@@ -3,32 +3,31 @@ package net.mcreator.radiotowers;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
-import net.minecraftforge.network.simple.SimpleChannel;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.fml.util.thread.SidedThreadGroups;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.event.server.ServerAboutToStartEvent;
+import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
+import net.minecraftforge.fml.event.server.FMLServerAboutToStartEvent;
 import net.minecraftforge.common.MinecraftForge;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.ResourceLocation;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import net.mcreator.radiotowers.airdrop.AirdropCatalog;
@@ -58,40 +57,46 @@ public class RadiotowersMod {
 	/** Nuclear baseline mode for wave debugging: disable custom wave patches/mixins behavior. */
 	public static final boolean WAVE_PATCH_NUCLEAR_MODE = true;
 
-	public RadiotowersMod(FMLJavaModLoadingContext context) {
+	public RadiotowersMod() {
 		// Start of user code block mod constructor
 		// End of user code block mod constructor
 		MinecraftForge.EVENT_BUS.register(this);
-		IEventBus bus = context.getModEventBus();
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 		bus.addListener(this::commonSetup);
 		RadiotowersModSounds.REGISTRY.register(bus);
 		RadiotowersModBlocks.REGISTRY.register(bus);
 		RadiotowersModBlockEntities.REGISTRY.register(bus);
 		RadiotowersModItems.REGISTRY.register(bus);
 		RadiotowersModEntities.REGISTRY.register(bus);
-		RadiotowersModTabs.REGISTRY.register(bus);
 		RadiotowersModMenus.REGISTRY.register(bus);
+		net.mcreator.radiotowers.worldgen.RadiotowersModStructures.STRUCTURES.register(bus);
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, AirdropConfig.SPEC, "radiotowers-common.toml");
 		bus.addListener(this::onModConfig);
 		// Start of user code block mod init
 		// End of user code block mod init
 	}
 
-	private void onModConfig(ModConfigEvent event) {
+	private void onModConfig(ModConfig.Loading event) {
 		if (event.getConfig().getSpec() == AirdropConfig.SPEC) {
 			AirdropCatalog.invalidate();
 		}
 	}
 
 	private void commonSetup(final FMLCommonSetupEvent event) {
+		event.enqueueWork(new Runnable() {
+			@Override
+			public void run() {
+				net.mcreator.radiotowers.worldgen.RadiotowersModStructures.registerPoolsAndConfigured();
+			}
+		});
 		// Re-enabled: needed for ground-ring placement (prevents treetop spawns).
 		// Note: in nuclear baseline mode, WaveMobAggroHandler is internally gated to avoid aggressive tick-time resnap/unfreeze.
 		MinecraftForge.EVENT_BUS.register(new net.mcreator.radiotowers.events.WaveMobAggroHandler());
 
 		// RadioTowers special blocks in airdrop loot catalog: metal bars 5, trash 2.5 (3), airdrop crate 5
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:metal_bars"), 5));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:trashblock"), 1));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:airdrop_crate"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:metal_bars"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:trashblock"), 1));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:airdrop_crate"), 5));
 
 		// Vanilla music discs in airdrop loot selection, 30 points each
 		int discPoints = 30;
@@ -103,7 +108,7 @@ public class RadiotowersMod {
 			"minecraft:music_disc_otherside", "minecraft:music_disc_pigstep", "minecraft:music_disc_5",
 			"minecraft:music_disc_relic"
 		}) {
-			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse(id), discPoints));
+			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation(id), discPoints));
 		}
 	}
 
@@ -113,7 +118,7 @@ public class RadiotowersMod {
 	public static final SimpleChannel PACKET_HANDLER = NetworkRegistry.newSimpleChannel(new ResourceLocation(MODID, MODID), () -> PROTOCOL_VERSION, PROTOCOL_VERSION::equals, PROTOCOL_VERSION::equals);
 	private static int messageID = 0;
 
-	public static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, FriendlyByteBuf> encoder, Function<FriendlyByteBuf, T> decoder, BiConsumer<T, Supplier<NetworkEvent.Context>> messageConsumer) {
+	public static <T> void addNetworkMessage(Class<T> messageType, BiConsumer<T, PacketBuffer> encoder, Function<PacketBuffer, T> decoder, BiConsumer<T, Supplier<NetworkEvent.Context>> messageConsumer) {
 		PACKET_HANDLER.registerMessage(messageID, messageType, encoder, decoder, messageConsumer);
 		messageID++;
 	}
@@ -130,16 +135,16 @@ public class RadiotowersMod {
 
 	/** Before the first world tick: mute Berezka wave chat so only RadioTowers sends wave lines. */
 	@SubscribeEvent
-	public void onServerAboutToStart(ServerAboutToStartEvent event) {
+	public void onServerAboutToStart(FMLServerAboutToStartEvent event) {
 		BerezkaWaveChatSilencer.apply();
 	}
 
 	/** After worlds are ready: ensure a STANDARD tower near spawn (once per overworld). */
 	@SubscribeEvent
-	public void onServerStarted(ServerStartedEvent event) {
-		ServerLevel overworld = event.getServer().overworld();
+	public void onServerStarted(FMLServerStartedEvent event) {
+		ServerWorld overworld = event.getServer().overworld();
 		net.mcreator.radiotowers.worldgen.GuaranteedSpawnTower.schedule(overworld);
-		for (ServerLevel level : event.getServer().getAllLevels()) {
+		for (ServerWorld level : event.getServer().getAllLevels()) {
 			net.mcreator.radiotowers.integration.AirdropCooldown.purgeAllIfDisabled(level);
 		}
 	}
@@ -147,28 +152,30 @@ public class RadiotowersMod {
 	/** Sync defense-session flag so client-side NMS (TacZ listener) matches server after join/relog. */
 	@SubscribeEvent
 	public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-		if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+	Object sp$src = event.getEntity(); ServerPlayerEntity sp = (sp$src instanceof ServerPlayerEntity) ? (ServerPlayerEntity) sp$src : null;
+		if (!(sp != null)) return;
 		ZombieWavesAPILoader.pushDefenseSessionStateToPlayer(sp);
 		// Testing: when both cooldown configs are 0, clear any persisted cooldown from older sessions.
 		if (net.mcreator.radiotowers.config.AirdropConfig.getStandardAirdropCooldownTicks() == 0
 				&& net.mcreator.radiotowers.config.AirdropConfig.getWaveDeliveryCooldownTicks() == 0) {
-			AirdropCooldownSavedData.get(sp.serverLevel()).clearPlayer(sp.getUUID());
+			AirdropCooldownSavedData.get(sp.getLevel()).clearPlayer(sp.getUUID());
 		}
-		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.serverLevel(), sp.getUUID());
-		PACKET_HANDLER.send(net.minecraftforge.network.PacketDistributor.PLAYER.with(() -> sp),
+		long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(sp.getLevel(), sp.getUUID());
+		PACKET_HANDLER.send(net.minecraftforge.fml.network.PacketDistributor.PLAYER.with(() -> sp),
 				new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
 		// Place spawn tower into already-loaded chunks only (never force-gen).
 		net.mcreator.radiotowers.worldgen.GuaranteedSpawnTower.scheduleForPlayer(sp);
 		// Chunks (and straggler mobs) often finish loading after level load; sweep again when the player is in-world.
-		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.serverLevel())) {
-			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.serverLevel());
+		if (ZombieWavesAPILoader.hasReconnectStragglerQueue(sp.getLevel())) {
+			ZombieWavesAPILoader.runReconnectStragglerCleanupPass(sp.getLevel());
 		}
 	}
 
 	/** On world load: clear pending and wave state immediately so no wave runs on rejoin; sweep ghost mobs with delays. */
 	@SubscribeEvent
-	public void onLevelLoad(LevelEvent.Load event) {
-		if (!(event.getLevel() instanceof ServerLevel serverLevel) || serverLevel.isClientSide()) return;
+	public void onLevelLoad(WorldEvent.Load event) {
+	Object serverLevel$src = event.getWorld(); ServerWorld serverLevel = (serverLevel$src instanceof ServerWorld) ? (ServerWorld) serverLevel$src : null;
+		if (!(serverLevel != null) || serverLevel.isClientSide()) return;
 		boolean berezka = ZombieWavesAPILoader.isZombieWavesAPILoaded();
 		boolean esl = net.mcreator.radiotowers.integration.EslWaveIntegration.isEslWaveAvailable();
 		if (!berezka && !esl && PendingAirdropStorage.getAnyPendingInLevel(serverLevel) == null) return;
@@ -203,8 +210,9 @@ public class RadiotowersMod {
 
 	/** On world unload: discard all wave mobs in this level so they are not saved (no zombies left after quit/rejoin). */
 	@SubscribeEvent
-	public void onLevelUnload(LevelEvent.Unload event) {
-		if (!(event.getLevel() instanceof ServerLevel level) || level.isClientSide()) return;
+	public void onLevelUnload(WorldEvent.Unload event) {
+	Object level$src = event.getWorld(); ServerWorld level = (level$src instanceof ServerWorld) ? (ServerWorld) level$src : null;
+		if (!(level != null) || level.isClientSide()) return;
 		ZombieWavesAPILoader.clearDefenseWaveSession(level);
 		// Discard all tagged wave mobs (our replacements / API-tagged)
 		WaveMobAggroHandler.onLevelUnload(level);
@@ -216,11 +224,11 @@ public class RadiotowersMod {
 	}
 
 	/** Discard any airdrop plane entities in the level so a saved-in-flight plane doesn't appear when rejoining. */
-	private static void discardSavedPlanesInLevel(ServerLevel level) {
-		ResourceLocation planeId = ResourceLocation.parse("radiotowers:planeentity");
+	private static void discardSavedPlanesInLevel(ServerWorld level) {
+		ResourceLocation planeId = new ResourceLocation("radiotowers:planeentity");
 		for (Entity e : level.getAllEntities()) {
-			if (planeId.equals(ForgeRegistries.ENTITY_TYPES.getKey(e.getType())))
-				e.discard();
+			if (planeId.equals(ForgeRegistries.ENTITIES.getKey(e.getType())))
+				e.remove();
 		}
 	}
 

@@ -1,32 +1,38 @@
 package net.mcreator.radiotowers.block;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.fml.network.NetworkHooks;
 
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.Containers;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.material.Material;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.block.Block;
+import net.minecraft.block.*;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
+import net.minecraft.world.World;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.inventory.InventoryHelper;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 
 import net.mcreator.radiotowers.world.inventory.AirdropCrateguiMenu;
 import net.mcreator.radiotowers.procedures.AirdropCrateOnBlockRightClickedProcedure;
@@ -34,47 +40,47 @@ import net.mcreator.radiotowers.block.entity.AirdropCrateBlockEntity;
 
 import io.netty.buffer.Unpooled;
 
-public class AirdropCrateBlock extends Block implements EntityBlock {
-	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+public class AirdropCrateBlock extends Block {
+	public static final DirectionProperty FACING = net.minecraft.block.HorizontalBlock.FACING;
 
 	public AirdropCrateBlock() {
-		super(BlockBehaviour.Properties.of().sound(SoundType.WOOD).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+		super(AbstractBlock.Properties.of(Material.WOOD).sound(SoundType.WOOD).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
 	}
 
 	@Override
-	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+	public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
 		return true;
 	}
 
 	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
+	public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
 		return 0;
 	}
 
 	@Override
-	public VoxelShape getVisualShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return Shapes.empty();
+	public VoxelShape getVisualShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		return VoxelShapes.empty();
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return switch (state.getValue(FACING)) {
-			default -> box(-5.25, 0, 0, 22, 16, 16);
-			case NORTH -> box(-6, 0, 0, 21.25, 16, 16);
-			case EAST -> box(0, 0, -6, 16, 16, 21.25);
-			case WEST -> box(0, 0, -5.25, 16, 16, 22);
-		};
+	public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		switch (state.getValue(FACING)) {
+			default: return box(-5.25, 0, 0, 22, 16, 16);
+			case NORTH: return box(-6, 0, 0, 21.25, 16, 16);
+			case EAST: return box(0, 0, -6, 16, 16, 21.25);
+			case WEST: return box(0, 0, -5.25, 16, 16, 22);
+		}
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(FACING);
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockPlaceContext context) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		return super.getStateForPlacement(context).setValue(FACING, context.getHorizontalDirection().getOpposite());
 	}
 
@@ -87,23 +93,25 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 	}
 
 	@Override
-	public InteractionResult use(BlockState blockstate, Level world, BlockPos pos, Player entity, InteractionHand hand, BlockHitResult hit) {
+	public ActionResultType use(BlockState blockstate, World world, BlockPos pos, PlayerEntity entity, Hand hand, BlockRayTraceResult hit) {
 		super.use(blockstate, world, pos, entity, hand, hit);
-		if (entity instanceof ServerPlayer player) {
-			BlockEntity be = world.getBlockEntity(pos);
-			if (be instanceof AirdropCrateBlockEntity crate && !crate.canPlayerOpen(player.getUUID())) {
-				player.sendSystemMessage(Component.literal("[RadioTowers] This airdrop crate is for lobby members only."));
-				return InteractionResult.FAIL;
+		ServerPlayerEntity player = (entity instanceof ServerPlayerEntity) ? (ServerPlayerEntity) entity : null;
+		if (player != null) {
+			TileEntity be = world.getBlockEntity(pos);
+			AirdropCrateBlockEntity crate = (be instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) be : null;
+			if (crate != null && !crate.canPlayerOpen(player.getUUID())) {
+				player.sendMessage(new StringTextComponent("[RadioTowers] This airdrop crate is for lobby members only."), net.minecraft.util.Util.NIL_UUID);
+				return ActionResultType.FAIL;
 			}
-			NetworkHooks.openScreen(player, new MenuProvider() {
+			NetworkHooks.openGui(player, new INamedContainerProvider() {
 				@Override
-				public Component getDisplayName() {
-					return Component.translatable("block.radiotowers.airdrop_crate");
+				public ITextComponent getDisplayName() {
+					return new TranslationTextComponent("block.radiotowers.airdrop_crate");
 				}
 
 				@Override
-				public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-					return new AirdropCrateguiMenu(id, inventory, new FriendlyByteBuf(Unpooled.buffer()).writeBlockPos(pos));
+				public Container createMenu(int id, PlayerInventory inventory, PlayerEntity player) {
+					return new AirdropCrateguiMenu(id, inventory, new PacketBuffer(Unpooled.buffer()).writeBlockPos(pos));
 				}
 			}, pos);
 		}
@@ -115,33 +123,39 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 		double hitZ = hit.getLocation().z;
 		Direction direction = hit.getDirection();
 		AirdropCrateOnBlockRightClickedProcedure.execute(world, x, y, z);
-		return InteractionResult.SUCCESS;
+		return ActionResultType.SUCCESS;
+	}
+
+	public INamedContainerProvider getMenuProvider(BlockState state, World worldIn, BlockPos pos) {
+		TileEntity tileEntity = worldIn.getBlockEntity(pos);
+		INamedContainerProvider menuProvider = (tileEntity instanceof INamedContainerProvider) ? (INamedContainerProvider) tileEntity : null;
+		return menuProvider != null ? menuProvider : null;
 	}
 
 	@Override
-	public MenuProvider getMenuProvider(BlockState state, Level worldIn, BlockPos pos) {
-		BlockEntity tileEntity = worldIn.getBlockEntity(pos);
-		return tileEntity instanceof MenuProvider menuProvider ? menuProvider : null;
+	public boolean hasTileEntity(BlockState state) {
+		return true;
 	}
 
 	@Override
-	public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-		return new AirdropCrateBlockEntity(pos, state);
+	public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+		return new AirdropCrateBlockEntity();
 	}
 
 	@Override
-	public boolean triggerEvent(BlockState state, Level world, BlockPos pos, int eventID, int eventParam) {
+	public boolean triggerEvent(BlockState state, World world, BlockPos pos, int eventID, int eventParam) {
 		super.triggerEvent(state, world, pos, eventID, eventParam);
-		BlockEntity blockEntity = world.getBlockEntity(pos);
+		TileEntity blockEntity = world.getBlockEntity(pos);
 		return blockEntity != null && blockEntity.triggerEvent(eventID, eventParam);
 	}
 
 	@Override
-	public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
+	public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
 		if (state.getBlock() != newState.getBlock()) {
-			BlockEntity blockEntity = world.getBlockEntity(pos);
-			if (blockEntity instanceof AirdropCrateBlockEntity be) {
-				Containers.dropContents(world, pos, be);
+			TileEntity blockEntity = world.getBlockEntity(pos);
+			AirdropCrateBlockEntity be = (blockEntity instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) blockEntity : null;
+			if (be != null) {
+				net.minecraft.inventory.InventoryHelper.dropContents(world, pos, be);
 				world.updateNeighbourForOutputSignal(pos, this);
 			}
 			super.onRemove(state, world, pos, newState, isMoving);
@@ -154,10 +168,11 @@ public class AirdropCrateBlock extends Block implements EntityBlock {
 	}
 
 	@Override
-	public int getAnalogOutputSignal(BlockState blockState, Level world, BlockPos pos) {
-		BlockEntity tileentity = world.getBlockEntity(pos);
-		if (tileentity instanceof AirdropCrateBlockEntity be)
-			return AbstractContainerMenu.getRedstoneSignalFromContainer(be);
+	public int getAnalogOutputSignal(BlockState blockState, World world, BlockPos pos) {
+		TileEntity tileentity = world.getBlockEntity(pos);
+		AirdropCrateBlockEntity be = (tileentity instanceof AirdropCrateBlockEntity) ? (AirdropCrateBlockEntity) tileentity : null;
+		if (be != null)
+			return Container.getRedstoneSignalFromContainer(be);
 		else
 			return 0;
 	}

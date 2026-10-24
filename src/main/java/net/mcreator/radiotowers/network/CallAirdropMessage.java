@@ -1,12 +1,13 @@
 package net.mcreator.radiotowers.network;
+import net.minecraft.util.text.StringTextComponent;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.world.gen.Heightmap;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -20,7 +21,7 @@ import net.mcreator.radiotowers.procedures.RadioPanelOnBlockRightClickedProcedur
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.init.RadiotowersModSounds;
 
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,8 +31,8 @@ import java.util.function.Supplier;
 /**
  * Sent when the player clicks START in the Call Airdrop GUI.
  * totalDifficulty = sum of selected items' difficulty points (catalog total); this value is used directly
- * as the zombie wave difficulty when the Zombie Waves API is present.
- * With Zombie Waves API: start wave at tower ground, store pending airdrop; plane spawns when wave completes.
+ * as the zombie wave difficulty when the ZombieEntity Waves API is present.
+ * With ZombieEntity Waves API: start wave at tower ground, store pending airdrop; plane spawns when wave completes.
  * Without API: spawn plane at panel immediately.
  */
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -50,7 +51,7 @@ public class CallAirdropMessage {
         this.quantities = quantities != null ? new ArrayList<>(quantities) : new ArrayList<>();
     }
 
-    public CallAirdropMessage(FriendlyByteBuf buf) {
+    public CallAirdropMessage(PacketBuffer buf) {
         this.pos = buf.readBlockPos();
         this.totalDifficulty = buf.readVarInt();
         int n = buf.readVarInt();
@@ -60,7 +61,7 @@ public class CallAirdropMessage {
         for (int i = 0; i < n; i++) quantities.add(buf.readVarInt());
     }
 
-    public static void encode(CallAirdropMessage msg, FriendlyByteBuf buf) {
+    public static void encode(CallAirdropMessage msg, PacketBuffer buf) {
         buf.writeBlockPos(msg.pos);
         buf.writeVarInt(msg.totalDifficulty);
         buf.writeVarInt(msg.itemIds.size());
@@ -72,24 +73,24 @@ public class CallAirdropMessage {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
-            var sender = ctx.getSender();
-            if (sender == null || sender.serverLevel() == null) return;
+            net.minecraft.entity.player.ServerPlayerEntity sender = ctx.getSender();
+            if (sender == null || sender.getLevel() == null) return;
             if (net.mcreator.radiotowers.lobby.AirdropLobbyService.hasGuestsBlockingSoloStart(sender.getUUID())) {
-                sender.sendSystemMessage(Component.literal(
-                    "[RadioTowers] Guests are in your airdrop lobby — use Lobby → Go (everyone must be ready)."));
+                sender.sendMessage(new StringTextComponent(
+                    "[RadioTowers] Guests are in your airdrop lobby — use Lobby → Go (everyone must be ready)."), net.minecraft.util.Util.NIL_UUID);
                 return;
             }
             boolean standardAirdrop = (msg.totalDifficulty == 0 && (msg.itemIds == null || msg.itemIds.isEmpty()));
             if (standardAirdrop && !AirdropConfig.ENABLE_STANDARD_AIRDROP.get()) {
-                sender.sendSystemMessage(Component.literal("[RadioTowers] Standard airdrops are disabled in config."));
+                sender.sendMessage(new StringTextComponent("[RadioTowers] Standard airdrops are disabled in config."), net.minecraft.util.Util.NIL_UUID);
                 return;
             }
             if (!standardAirdrop && !AirdropConfig.ENABLE_CATALOG_AIRDROP.get()) {
-                sender.sendSystemMessage(Component.literal("[RadioTowers] Catalog airdrops are disabled in config."));
+                sender.sendMessage(new StringTextComponent("[RadioTowers] Catalog airdrops are disabled in config."), net.minecraft.util.Util.NIL_UUID);
                 return;
             }
             if (!standardAirdrop && !AirdropDifficultyTier.canStart(msg.totalDifficulty)) return; // require 10-point increments unless standard airdrop (loot table)
-            ServerLevel level = sender.serverLevel();
+            ServerWorld level = sender.getLevel();
             // Wave integration priority: ESL > Berezka > immediate
             boolean hasWaveBackend = !standardAirdrop
                     && net.mcreator.radiotowers.config.AirdropConfig.shouldUseZombieWavesForAirdrop()
@@ -133,7 +134,7 @@ public class CallAirdropMessage {
                     RadioPanelOnBlockRightClickedProcedure.execute(level, msg.pos.getX(), msg.pos.getY(), msg.pos.getZ(), msg.itemIds, msg.quantities, msg.totalDifficulty);
                 } else {
                     // Alarm at the tower panel the player used (same X/Z as wave anchor; Y is the actual block on the structure).
-                    level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
+                    level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundCategory.NEUTRAL, 1.0f, 1.0f);
                 }
                 RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
                     new AirdropStatePacket(true, AirdropCooldown.getCooldownEndGameTime(level, sender.getUUID())));
@@ -165,10 +166,10 @@ public class CallAirdropMessage {
     }
 
     /** Outdoor surface air Y at this column (same notion as vanilla spawn / getHeight). */
-    private static int surfaceAirYFromHeightmap(ServerLevel level, int x, int z) {
+    private static int surfaceAirYFromHeightmap(ServerWorld level, int x, int z) {
         level.getChunk(x >> 4, z >> 4);
-        int h = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        return Math.max(level.getMinBuildHeight(), Math.min(h, level.getMaxBuildHeight() - 1));
+        int h = level.getHeight(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, x, z);
+        return Math.max(0, Math.min(h, level.getMaxBuildHeight() - 1));
     }
 
     /**
@@ -177,7 +178,7 @@ public class CallAirdropMessage {
      * Median of center + cardinals at {@link #SURFACE_SAMPLE_OFFSET} avoids one column reading only the tower roof
      * while staying near the structure.
      */
-    private static GroundResult getGroundPositionForWave(ServerLevel level, BlockPos pos) {
+    private static GroundResult getGroundPositionForWave(ServerWorld level, BlockPos pos) {
         int cx = pos.getX();
         int cz = pos.getZ();
         int o = SURFACE_SAMPLE_OFFSET;

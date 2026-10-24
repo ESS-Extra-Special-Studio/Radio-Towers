@@ -1,9 +1,9 @@
 package net.mcreator.radiotowers.events;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
+import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -22,14 +22,15 @@ public class WaveZombieWaterSpeedHandler {
     private static final int SPEED_AMPLIFIER = 1; // Speed II
 
     @SubscribeEvent
-    public static void onLivingTick(LivingEvent.LivingTickEvent event) {
-        if (event.getEntity() == null || event.getEntity().level().isClientSide()) return;
-        if (!(event.getEntity().level() instanceof ServerLevel)) return;
-        if (!(event.getEntity() instanceof Zombie zombie)) return;
+    public static void onLivingTick(LivingEvent.LivingUpdateEvent event) {
+        if (event.getEntity() == null || event.getEntity().level.isClientSide()) return;
+        if (!(event.getEntity().level instanceof ServerWorld)) return;
+        Object zombie$src = event.getEntity(); ZombieEntity zombie = (zombie$src instanceof ZombieEntity) ? (ZombieEntity) zombie$src : null;
+        if (!(zombie != null)) return;
         if (!zombie.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
             && !zombie.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG))
             return;
         if (!zombie.isInWater()) return;
-        zombie.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, SPEED_DURATION_TICKS, SPEED_AMPLIFIER));
+        zombie.addEffect(new EffectInstance(Effects.MOVEMENT_SPEED, SPEED_DURATION_TICKS, SPEED_AMPLIFIER));
     }
 }

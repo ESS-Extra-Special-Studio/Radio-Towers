@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,12 +26,12 @@ public class AirdropModeUnlockPacket {
         this.endlessModeUnlocked = endlessModeUnlocked;
     }
 
-    public AirdropModeUnlockPacket(FriendlyByteBuf buf) {
+    public AirdropModeUnlockPacket(PacketBuffer buf) {
         this.bossModeUnlocked = buf.readBoolean();
         this.endlessModeUnlocked = buf.readBoolean();
     }
 
-    public static void encode(AirdropModeUnlockPacket msg, FriendlyByteBuf buf) {
+    public static void encode(AirdropModeUnlockPacket msg, PacketBuffer buf) {
         buf.writeBoolean(msg.bossModeUnlocked);
         buf.writeBoolean(msg.endlessModeUnlocked);
     }

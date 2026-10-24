@@ -54,7 +54,7 @@ public final class AirdropProfiles {
         List<String> out = new ArrayList<>();
         Path dir = directory();
         if (!Files.isDirectory(dir)) return out;
-        try (var stream = Files.list(dir)) {
+        try (java.util.stream.Stream<Path> stream = Files.list(dir)) {
             stream.filter(p -> p.getFileName().toString().endsWith(".json"))
                 .map(p -> p.getFileName().toString().replaceFirst("\\.json$", ""))
                 .sorted()
@@ -109,7 +109,7 @@ public final class AirdropProfiles {
     }
 
     public static void apply(Data d) {
-        if (d.standardAirdropLootTable != null && !d.standardAirdropLootTable.isBlank()) {
+        if (d.standardAirdropLootTable != null && !d.standardAirdropLootTable.trim().isEmpty()) {
             AirdropConfig.STANDARD_AIRDROP_LOOT_TABLE.set(d.standardAirdropLootTable.trim());
         }
         if (d.enableStandardAirdrop != null) AirdropConfig.ENABLE_STANDARD_AIRDROP.set(d.enableStandardAirdrop);
@@ -127,7 +127,12 @@ public final class AirdropProfiles {
 
     private static List<String> copyStrings(List<? extends String> in) {
         List<String> out = new ArrayList<>();
-        if (in != null) for (Object o : in) if (o instanceof String s) out.add(s);
+        if (in != null) {
+            for (Object o : in) {
+                String s = (o instanceof String) ? (String) o : null;
+                if (s != null) out.add(s);
+            }
+        }
         return out;
     }
 }

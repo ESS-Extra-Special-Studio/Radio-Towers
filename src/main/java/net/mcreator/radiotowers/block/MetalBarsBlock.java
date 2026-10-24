@@ -1,65 +1,68 @@
 package net.mcreator.radiotowers.block;
 
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.shapes.VoxelShapes;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.fluid.Fluids;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.BooleanProperty;
+import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.state.StateContainer;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.material.Material;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
+import net.minecraft.block.*;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
 
-public class MetalBarsBlock extends Block implements SimpleWaterloggedBlock {
-	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+public class MetalBarsBlock extends Block implements IWaterLoggable {
+	public static final DirectionProperty FACING = net.minecraft.block.HorizontalBlock.FACING;
 	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
 	public MetalBarsBlock() {
-		super(BlockBehaviour.Properties.of().sound(SoundType.METAL).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+		super(AbstractBlock.Properties.of(Material.METAL).sound(SoundType.METAL).strength(1f, 10f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 		this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
 	}
 
 	@Override
-	public boolean propagatesSkylightDown(BlockState state, BlockGetter reader, BlockPos pos) {
+	public boolean propagatesSkylightDown(BlockState state, IBlockReader reader, BlockPos pos) {
 		return state.getFluidState().isEmpty();
 	}
 
 	@Override
-	public int getLightBlock(BlockState state, BlockGetter worldIn, BlockPos pos) {
+	public int getLightBlock(BlockState state, IBlockReader worldIn, BlockPos pos) {
 		return 0;
 	}
 
 	@Override
-	public VoxelShape getVisualShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return Shapes.empty();
+	public VoxelShape getVisualShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		return VoxelShapes.empty();
 	}
 
 	@Override
-	public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-		return switch (state.getValue(FACING)) {
-			default -> box(0, 0, -8, 16, 14, 2);
-			case NORTH -> box(0, 0, 14, 16, 14, 24);
-			case EAST -> box(-8, 0, 0, 2, 14, 16);
-			case WEST -> box(14, 0, 0, 24, 14, 16);
-		};
+	public VoxelShape getShape(BlockState state, IBlockReader world, BlockPos pos, ISelectionContext context) {
+		switch (state.getValue(FACING)) {
+			default: return box(0, 0, -8, 16, 14, 2);
+			case NORTH: return box(0, 0, 14, 16, 14, 24);
+			case EAST: return box(-8, 0, 0, 2, 14, 16);
+			case WEST: return box(14, 0, 0, 24, 14, 16);
+		}
 	}
 
 	@Override
-	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+	protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		builder.add(FACING, WATERLOGGED);
 	}
 
 	@Override
-	public BlockState getStateForPlacement(BlockPlaceContext context) {
+	public BlockState getStateForPlacement(BlockItemUseContext context) {
 		boolean flag = context.getLevel().getFluidState(context.getClickedPos()).getType() == Fluids.WATER;
 		if (context.getClickedFace().getAxis() == Direction.Axis.Y)
 			return super.getStateForPlacement(context).setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, flag);
@@ -80,9 +83,9 @@ public class MetalBarsBlock extends Block implements SimpleWaterloggedBlock {
 	}
 
 	@Override
-	public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, LevelAccessor world, BlockPos currentPos, BlockPos facingPos) {
+	public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, IWorld world, BlockPos currentPos, BlockPos facingPos) {
 		if (state.getValue(WATERLOGGED)) {
-			world.scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
+			world.getLiquidTicks().scheduleTick(currentPos, Fluids.WATER, Fluids.WATER.getTickDelay(world));
 		}
 		return super.updateShape(state, facing, facingState, world, currentPos, facingPos);
 	}

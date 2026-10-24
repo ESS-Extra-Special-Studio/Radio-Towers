@@ -1,33 +1,33 @@
 package net.mcreator.radiotowers.integration;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 
 /**
- * Holds level/position context for the Zombie Waves API mixin.
+ * Holds level/position context for the ZombieEntity Waves API mixin.
  * Set by ZombieWavesAPILoader before calling the API; the mixin injects this level
  * into the API's WavesManager so the wave runs in the correct dimension.
  */
 public final class ZombieWavesMixinContext {
 
-    private static ServerLevel pendingLevel;
+    private static ServerWorld pendingLevel;
     private static BlockPos pendingPos;
-    private static ServerLevel currentLevel;
+    private static ServerWorld currentLevel;
 
-    public static void setPending(ServerLevel level, BlockPos pos) {
+    public static void setPending(ServerWorld level, BlockPos pos) {
         pendingLevel = level;
         pendingPos = pos;
     }
 
-    public static ServerLevel getAndClearPendingLevel() {
-        ServerLevel level = pendingLevel;
+    public static ServerWorld getAndClearPendingLevel() {
+        ServerWorld level = pendingLevel;
         pendingLevel = null;
         pendingPos = null;
         currentLevel = level;
         return level;
     }
 
-    public static ServerLevel getCurrentLevel() {
+    public static ServerWorld getCurrentLevel() {
         return currentLevel;
     }
 
@@ -39,14 +39,14 @@ public final class ZombieWavesMixinContext {
         return pendingLevel != null;
     }
 
-    public static ServerLevel getBerezkaCurWorld() {
+    public static ServerWorld getBerezkaCurWorld() {
         try {
-            var opt = net.minecraftforge.fml.ModList.get().getModContainerById("berezka_api");
-            if (opt.isEmpty()) return null;
-            Class<?> main = Class.forName("org.berezka.berezka_api.berezka_api_main", true, opt.get().getMod().getClass().getClassLoader());
+            java.util.Optional opt = net.minecraftforge.fml.ModList.get().getModContainerById("berezka_api");
+            if (!opt.isPresent()) return null;
+            Class<?> main = Class.forName("org.berezka.berezka_api.berezka_api_main", true, opt.get().getClass().getClassLoader());
             java.lang.reflect.Field f = main.getField("curWorld");
             Object w = f.get(null);
-            return w instanceof ServerLevel ? (ServerLevel) w : null;
+            return w instanceof ServerWorld ? (ServerWorld) w : null;
         } catch (Throwable t) {
             return null;
         }

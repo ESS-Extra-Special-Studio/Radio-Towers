@@ -1,10 +1,10 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.util.DamageSource;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
 import net.mcreator.radiotowers.integration.WaveSpawnTag;
@@ -23,12 +23,14 @@ public class LivingEntityHurtWaveMixin {
     @Inject(method = "hurt", at = @At("HEAD"), remap = true)
     private void radiotowers$forceDamageableBeforeHurt(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof Monster)) return;
-        if (self.level() == null || self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return;
+        if (!(self instanceof MonsterEntity)) return;
+        ServerWorld level = (self.level instanceof ServerWorld) ? (ServerWorld) self.level : null;
+        if (self.level == null || self.level.isClientSide() || !(level != null)) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         if (!isWaveMob(self)) return;
         self.setInvulnerable(false);
-        if (self instanceof Mob mob) mob.setNoAi(false);
+        MobEntity mob = (self instanceof MobEntity) ? (MobEntity) self : null;
+        if (mob != null) mob.setNoAi(false);
     }
 
     private static boolean isWaveMob(LivingEntity e) {

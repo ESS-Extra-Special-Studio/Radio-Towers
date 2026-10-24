@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.integration;
 
 /**
- * NBT key used to mark entities spawned by the Berezka Zombie Waves API so only they
+ * NBT key used to mark entities spawned by the Berezka ZombieEntity Waves API so only they
  * are treated as wave spawns (ring placement, invuln clear). Must live outside a mixin
  * because mixins cannot have non-private static fields.
  */
@@ -10,7 +10,7 @@ public final class WaveSpawnTag {
 
     /** Set by mixin when entity is added by Berezka API during a wave. */
     public static final String WAVE_SPAWN_TAG = "RadiotowersWaveSpawn";
-    /** Set by us when we spawn a vanilla Zombie to replace an API mob; EntityJoinLevel uses this to register without double-counting. */
+    /** Set by us when we spawn a vanilla ZombieEntity to replace an API mob; EntityJoinLevel uses this to register without double-counting. */
     public static final String REPLACEMENT_TAG = "RadiotowersWaveReplacement";
     /** Set by LevelAddEntityMixin when we've already set ring position for this entity (avoids double-counting if entity goes through addEntity and addFreshEntity). */
     public static final String RING_POSITION_SET = "RadiotowersRingPosSet";

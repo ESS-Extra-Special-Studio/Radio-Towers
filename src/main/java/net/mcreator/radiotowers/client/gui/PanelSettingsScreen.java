@@ -1,4 +1,6 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -7,10 +9,11 @@ import net.mcreator.radiotowers.network.ActivatePanelWithStationMessage;
 import net.mcreator.radiotowers.network.CallAirdropMessage;
 import net.mcreator.radiotowers.network.DeactivatePanelMessage;
 import net.mcreator.radiotowers.network.RequestAirdropStatePacket;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscAnchor;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscFonts;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscInsets;
@@ -26,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Radio panel when Dead Air is present but Zombie Waves API is not: standard airdrop lever (loot table),
+ * Radio panel when Dead Air is present but ZombieEntity Waves API is not: standard airdrop lever (loot table),
  * 3-minute cooldown, and the same Dead Air station controls as the full Call Airdrop screen (no catalog).
  */
 public class PanelSettingsScreen extends EscScreen implements InternetStationParent {
@@ -38,16 +41,14 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     private final BlockPos panelPos;
 
     /** Refreshed from {@link DeadAirDefaultStations} (Jukebox FM only when upgrade is installed on this panel). */
-    private List<StationOption> defaultStationsCache = List.of();
-    private static final List<String> NON_DYNAMIC_STATION_IDS = List.of(
-        "dead_air:emergency_broadcast",
+    private List<StationOption> defaultStationsCache = java.util.Collections.emptyList();
+    private static final List<String> NON_DYNAMIC_STATION_IDS = java.util.Arrays.asList("dead_air:emergency_broadcast",
         "dead_air:bedrock_radio",
         "dead_air:creatopia_radio",
         "dead_air:remix_radio",
         "dead_air:jukebox_fm",
         "dead_air:internet_cr1",
-        "dead_air:internet_ambiance_fm"
-    );
+        "dead_air:internet_ambiance_fm");
 
     private int defaultCycleIndex = 0;
     private int dynamicCycleIndex = 0;
@@ -67,7 +68,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     private EscRect hintLine2;
 
     public PanelSettingsScreen(BlockPos panelPos) {
-        super(Component.translatable("screen.radiotowers.panel_settings.title"));
+        super(new TranslationTextComponent("screen.radiotowers.panel_settings.title"));
         this.panelPos = panelPos;
     }
 
@@ -87,7 +88,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         AirdropLeverWidget lever = new AirdropLeverWidget(0, 0, LEVER_WIDTH, LEVER_HEIGHT, this::onCallStandardAirdrop,
             () -> AirdropConfig.ENABLE_STANDARD_AIRDROP.get());
         layoutWidget(lever, leverBounds);
-        addRenderableWidget(lever);
+        addButton(lever);
 
         int y = leverBounds.bottom() + 14 - bodyRect.y();
         if (ModList.get().isLoaded("dead_air")) {
@@ -100,14 +101,14 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
             dynamicStationButton = addAnchoredButton(EscText.literal(dynamicLabel()), bodyRect,
                 EscLayoutSpec.of(EscAnchor.TOP_CENTER, 0, y, BUTTON_WIDTH, 20), b -> onDynamicCycle());
             y += 24;
-            internetButton = addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.internet")), bodyRect,
+            internetButton = addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.internet")), bodyRect,
                 EscLayoutSpec.of(EscAnchor.TOP_CENTER, 0, y, BUTTON_WIDTH, 20), b -> openInternet());
         }
     }
 
     private void refreshDefaultStationsCache() {
         if (!ModList.get().isLoaded("dead_air")) {
-            defaultStationsCache = List.of();
+            defaultStationsCache = java.util.Collections.emptyList();
             return;
         }
         java.util.ArrayList<StationOption> next = new java.util.ArrayList<>();
@@ -127,7 +128,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
             && minecraft.player.tickCount % 40 == 0) {
             refreshDefaultStationsCache();
             if (defaultStationButton != null) {
-                defaultStationButton.setMessage(Component.literal(defaultLabel()));
+                defaultStationButton.setMessage(new StringTextComponent(defaultLabel()));
             }
         }
     }
@@ -179,14 +180,14 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
     }
 
     private String defaultLabel() {
-        if (defaultStationsCache.isEmpty()) return Component.translatable("screen.radiotowers.button.default").getString();
+        if (defaultStationsCache.isEmpty()) return new TranslationTextComponent("screen.radiotowers.button.default").getString();
         int idx = findDefaultIndex(currentStationId);
         if (idx >= 0) return defaultStationsCache.get(idx).displayName;
         return defaultStationsCache.get(Math.min(defaultCycleIndex, defaultStationsCache.size() - 1)).displayName;
     }
 
     private String dynamicLabel() {
-        return lastDynamicName != null ? lastDynamicName : Component.translatable("screen.radiotowers.button.dynamic").getString();
+        return lastDynamicName != null ? lastDynamicName : new TranslationTextComponent("screen.radiotowers.button.dynamic").getString();
     }
 
     private void onDefaultCycle() {
@@ -204,8 +205,8 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         lastStationIdBeforeTurnOff = opt.stationId;
         activeButton = 0;
         defaultCycleIndex = nextIndex;
-        if (defaultStationButton != null) defaultStationButton.setMessage(Component.literal(defaultLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (defaultStationButton != null) defaultStationButton.setMessage(new StringTextComponent(defaultLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new StringTextComponent(getPowerButtonLabel()));
     }
 
     private void onDynamicCycle() {
@@ -225,8 +226,8 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         activeButton = 1;
         lastDynamicName = opt.displayName;
         dynamicCycleIndex = nextIndex;
-        if (dynamicStationButton != null) dynamicStationButton.setMessage(Component.literal(dynamicLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (dynamicStationButton != null) dynamicStationButton.setMessage(new StringTextComponent(dynamicLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new StringTextComponent(getPowerButtonLabel()));
     }
 
     private void openInternet() {
@@ -239,7 +240,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
         this.currentStationId = deadAirStationId;
         this.lastStationIdBeforeTurnOff = deadAirStationId;
         this.activeButton = 2;
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new StringTextComponent(getPowerButtonLabel()));
     }
 
     private void onCallStandardAirdrop() {
@@ -278,29 +279,30 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 activeButton = 2;
             }
         }
-        if (defaultStationButton != null) defaultStationButton.setMessage(Component.literal(defaultLabel()));
-        if (dynamicStationButton != null) dynamicStationButton.setMessage(Component.literal(dynamicLabel()));
-        if (turnOffButton != null) turnOffButton.setMessage(Component.literal(getPowerButtonLabel()));
+        if (defaultStationButton != null) defaultStationButton.setMessage(new StringTextComponent(defaultLabel()));
+        if (dynamicStationButton != null) dynamicStationButton.setMessage(new StringTextComponent(dynamicLabel()));
+        if (turnOffButton != null) turnOffButton.setMessage(new StringTextComponent(getPowerButtonLabel()));
     }
 
     private String getPowerButtonLabel() {
         return (currentStationId == null || currentStationId.isEmpty())
-            ? Component.translatable("screen.radiotowers.button.turn_on").getString()
-            : Component.translatable("screen.radiotowers.button.turn_off").getString();
+            ? new TranslationTextComponent("screen.radiotowers.button.turn_on").getString()
+            : new TranslationTextComponent("screen.radiotowers.button.turn_off").getString();
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(MatrixStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
 
         EscText.drawInRect(guiGraphics, font, title, EscPanel.titleBar(content, style),
             0xE0E0E0, EscFonts.DEFAULT, false, 0.5f);
 
         if (hintLine1 != null && hintLine2 != null) {
-            EscText.drawInRect(guiGraphics, font, Component.literal("Pull the lever for a standard airdrop (loot crate)."),
+            EscText.drawInRect(guiGraphics, font, new StringTextComponent("Pull the lever for a standard airdrop (loot crate)."),
                 hintLine1, 0x88CCFF, EscFonts.DEFAULT, false, 0.5f);
             int cooldownMin = AirdropConfig.STANDARD_AIRDROP_COOLDOWN_MINUTES.get();
             String cooldownHint = cooldownMin <= 0
@@ -308,15 +310,15 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 : cooldownMin == 1
                     ? "1 minute cooldown between calls."
                     : cooldownMin + " minute cooldown between calls.";
-            EscText.drawInRect(guiGraphics, font, Component.literal(cooldownHint),
+            EscText.drawInRect(guiGraphics, font, new StringTextComponent(cooldownHint),
                 hintLine2, 0xA0A0A0, EscFonts.DEFAULT, false, 0.5f);
         }
 
         if (ModList.get().isLoaded("dead_air") && activeButton >= 0) {
             Button active = activeButton == 0 ? defaultStationButton : (activeButton == 1 ? dynamicStationButton : internetButton);
             if (active != null) {
-                int bx = active.getX();
-                int by = active.getY();
+                int bx = active.x;
+                int by = active.y;
                 int bw = active.getWidth();
                 int bh = active.getHeight();
                 int c = 0xFF22AA22;
@@ -345,12 +347,13 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
 
     @SuppressWarnings("unchecked")
     private List<StationOption> getDynamicStations() {
-        if (!ModList.get().isLoaded("dead_air")) return List.of();
+        if (!ModList.get().isLoaded("dead_air")) return java.util.Collections.emptyList();
         try {
             Class<?> registry = Class.forName("uk.co.extraspecialstudio.dead_air.radio.StationRegistry");
             java.lang.reflect.Method m = registry.getMethod("getAllStations");
             Object result = m.invoke(null);
-            if (!(result instanceof java.util.Collection<?> stations)) return List.of();
+            java.util.Collection<?> stations = (result instanceof java.util.Collection<?>) ? (java.util.Collection<?>) result : null;
+            if (!(stations != null)) return java.util.Collections.emptyList();
             List<StationOption> out = new java.util.ArrayList<>();
             for (Object st : stations) {
                 if (st == null) continue;
@@ -365,7 +368,7 @@ public class PanelSettingsScreen extends EscScreen implements InternetStationPar
                 .thenComparing(s -> s.stationId, String.CASE_INSENSITIVE_ORDER));
             return out;
         } catch (Throwable ignored) {
-            return List.of();
+            return java.util.Collections.emptyList();
         }
     }
 }

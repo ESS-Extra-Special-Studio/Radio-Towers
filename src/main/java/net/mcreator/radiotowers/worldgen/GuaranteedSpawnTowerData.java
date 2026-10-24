@@ -1,18 +1,21 @@
 package net.mcreator.radiotowers.worldgen;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.WorldSavedData;
 
 /** Persists whether the near-spawn guaranteed radio tower has been placed for this overworld. */
-public class GuaranteedSpawnTowerData extends SavedData {
+public class GuaranteedSpawnTowerData extends WorldSavedData {
     private static final String DATA_NAME = "radiotowers_spawn_tower";
 
     private boolean placed;
 
-    public GuaranteedSpawnTowerData() {}
+    public GuaranteedSpawnTowerData() {
+        super(DATA_NAME);
+    }
 
-    public GuaranteedSpawnTowerData(CompoundTag tag) {
+    @Override
+    public void load(CompoundNBT tag) {
         this.placed = tag.getBoolean("placed");
     }
 
@@ -26,20 +29,12 @@ public class GuaranteedSpawnTowerData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag) {
+    public CompoundNBT save(CompoundNBT tag) {
         tag.putBoolean("placed", placed);
         return tag;
     }
 
-    public static GuaranteedSpawnTowerData get(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(
-            GuaranteedSpawnTowerData::load,
-            GuaranteedSpawnTowerData::new,
-            DATA_NAME
-        );
-    }
-
-    public static GuaranteedSpawnTowerData load(CompoundTag tag) {
-        return new GuaranteedSpawnTowerData(tag);
+    public static GuaranteedSpawnTowerData get(ServerWorld level) {
+        return level.getDataStorage().computeIfAbsent(GuaranteedSpawnTowerData::new, DATA_NAME);
     }
 }

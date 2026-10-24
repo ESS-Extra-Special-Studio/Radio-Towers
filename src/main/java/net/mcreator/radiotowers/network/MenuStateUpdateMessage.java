@@ -1,11 +1,11 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.SafeClientCalls;
@@ -25,7 +25,7 @@ public class MenuStateUpdateMessage {
 		this.elementState = elementState;
 	}
 
-	public MenuStateUpdateMessage(FriendlyByteBuf buffer) {
+	public MenuStateUpdateMessage(PacketBuffer buffer) {
 		this.elementType = buffer.readInt();
 		this.name = buffer.readUtf();
 		Object elementState = null;
@@ -39,24 +39,27 @@ public class MenuStateUpdateMessage {
 		this.elementState = elementState;
 	}
 
-	public static void buffer(MenuStateUpdateMessage message, FriendlyByteBuf buffer) {
+	public static void buffer(MenuStateUpdateMessage message, PacketBuffer buffer) {
 		buffer.writeInt(message.elementType);
 		buffer.writeUtf(message.name);
+		Number n = (message.elementState instanceof Number) ? (Number) message.elementState : null;
 		if (message.elementType == 0) {
 			buffer.writeUtf((String) message.elementState);
 		} else if (message.elementType == 1) {
 			buffer.writeBoolean((boolean) message.elementState);
-		} else if (message.elementType == 2 && message.elementState instanceof Number n) {
+		} else if (message.elementType == 2 && n != null) {
 			buffer.writeDouble(n.doubleValue());
 		}
 	}
 
 	public static void handler(MenuStateUpdateMessage message, Supplier<NetworkEvent.Context> contextSupplier) {
-		if (message.name.length() > 256 || message.elementState instanceof String string && string.length() > 8192)
+	String string = (message.elementState instanceof String) ? (String) message.elementState : null;
+		if (message.name.length() > 256 || string != null && string.length() > 8192)
 			return;
 		NetworkEvent.Context context = contextSupplier.get();
 		context.enqueueWork(() -> {
-			if (context.getSender().containerMenu instanceof RadiotowersModMenus.MenuAccessor menu) {
+		Object menu$src = context.getSender().containerMenu; RadiotowersModMenus.MenuAccessor menu = (menu$src instanceof RadiotowersModMenus.MenuAccessor) ? (RadiotowersModMenus.MenuAccessor) menu$src : null;
+			if (menu != null) {
 				menu.getMenuState().put(message.elementType + ":" + message.name, message.elementState);
 				if (!context.getDirection().getReceptionSide().isServer()) {
 					SafeClientCalls.applyMenuStateUpdateScreenSync(menu, message.elementType, message.name, message.elementState);

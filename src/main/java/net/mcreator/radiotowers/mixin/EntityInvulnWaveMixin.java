@@ -1,8 +1,8 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.monster.MonsterEntity;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
 import net.mcreator.radiotowers.integration.WaveSpawnTag;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * During an active wave, force Monsters to never stay invulnerable — after any setInvulnerable call,
- * if this entity is a Monster and now invulnerable, we set it back to false so wave mobs are always killable.
+ * if this entity is a MonsterEntity and now invulnerable, we set it back to false so wave mobs are always killable.
  * Uses RETURN inject + re-entry guard to avoid fighting the API every tick.
  */
 @Mixin(Entity.class)
@@ -27,8 +27,9 @@ public class EntityInvulnWaveMixin {
     private void radiotowers$forceInvulnOffAfterSet(boolean invulnerable, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
         if (radiotowers$inForceOff.get()) return;
-        if (!(self instanceof Monster)) return;
-        if (self.level().isClientSide() || !(self.level() instanceof ServerLevel level)) return;
+        if (!(self instanceof MonsterEntity)) return;
+        ServerWorld level = (self.level instanceof ServerWorld) ? (ServerWorld) self.level : null;
+        if (self.level.isClientSide() || !(level != null)) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         if (!isWaveMob(self)) return;
         if (!self.isInvulnerable()) return;

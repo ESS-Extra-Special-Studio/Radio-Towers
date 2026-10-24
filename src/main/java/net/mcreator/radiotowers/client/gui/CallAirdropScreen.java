@@ -1,4 +1,5 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import net.mcreator.radiotowers.airdrop.AirdropCatalog;
 import net.mcreator.radiotowers.airdrop.TaczAirdropIntegration;
@@ -12,13 +13,13 @@ import net.mcreator.radiotowers.client.AirdropWaveHudData;
 import net.mcreator.radiotowers.integration.DeadAirDefaultStations;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.item.ItemStack;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscAnchor;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscFonts;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscInsets;
@@ -72,17 +73,15 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private final List<AirdropCatalog.Entry> catalog;
     /** Default assignable stations (cycle only; no Emergency Broadcast — that is tune-only in Dead Air GUI). */
     /** Refreshed from {@link DeadAirDefaultStations} (Jukebox FM only when upgrade is installed on this panel). */
-    private List<StationOption> defaultStationsCache = List.of();
+    private List<StationOption> defaultStationsCache = java.util.Collections.emptyList();
     /** Dynamic pool excludes fixed/default/internet stations and includes Dead Air auto-discovered mod stations. */
-    private static final List<String> NON_DYNAMIC_STATION_IDS = List.of(
-        "dead_air:emergency_broadcast",
+    private static final List<String> NON_DYNAMIC_STATION_IDS = java.util.Arrays.asList("dead_air:emergency_broadcast",
         "dead_air:bedrock_radio",
         "dead_air:creatopia_radio",
         "dead_air:remix_radio",
         "dead_air:jukebox_fm",
         "dead_air:internet_cr1",
-        "dead_air:internet_ambiance_fm"
-    );
+        "dead_air:internet_ambiance_fm");
     private int defaultCycleIndex = 0;
     private int dynamicCycleIndex = 0;
     private String lastDynamicName = null;
@@ -100,7 +99,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private String searchQuery = "";
     /** Indices into catalog for entries that match searchQuery. Rebuilt when search changes. */
     private final List<Integer> filteredIndices = new ArrayList<>();
-    private EditBox searchEditBox;
+    private EscSearchBox searchEditBox;
 
     /** Responsive layout regions (recomputed in {@link #buildLayout}). */
     private EscRect listColumn;
@@ -140,7 +139,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     private Button lobbyButton;
 
     public CallAirdropScreen(BlockPos panelPos) {
-        super(Component.translatable("screen.radiotowers.call_airdrop.title"));
+        super(new TranslationTextComponent("screen.radiotowers.call_airdrop.title"));
         this.panelPos = panelPos;
         // So TaCZ recipe fallback can discover guns/ammo from synced recipes (avoids reflection to obfuscated Minecraft)
         TaczAirdropIntegration.setClientLevelForCatalog(Minecraft.getInstance().level);
@@ -322,8 +321,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             return;
         }
 
-        searchEditBox = addSearchBox(searchRect, EscText.styled(Component.translatable("screen.radiotowers.search.title")));
-        searchEditBox.setHint(EscText.styled(Component.translatable("screen.radiotowers.search.hint")));
+        searchEditBox = addSearchBox(searchRect, EscText.styled(new TranslationTextComponent("screen.radiotowers.search.title")));
+        searchEditBox.setHint(EscText.styled(new TranslationTextComponent("screen.radiotowers.search.hint")));
         searchEditBox.setMaxLength(64);
         searchEditBox.setValue(searchQuery);
         searchEditBox.setResponder(s -> {
@@ -338,11 +337,11 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         AirdropLeverWidget lever = new AirdropLeverWidget(0, 0, LEVER_WIDTH, LEVER_HEIGHT, this::onStart,
             () -> AirdropConfig.ENABLE_CATALOG_AIRDROP.get() && AirdropDifficultyTier.canStart(getTotalDifficulty()));
         layoutWidget(lever, leverBounds);
-        addRenderableWidget(lever);
+        addButton(lever);
 
         int y = leverBounds.bottom() + 14 - controlsColumn.y();
         if (net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork.isAvailable()) {
-            lobbyButton = addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.lobby")), controlsColumn,
+            lobbyButton = addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.lobby")), controlsColumn,
                 EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> onOpenLobby());
             y += 24;
         }
@@ -356,14 +355,14 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             dynamicStationButton = addAnchoredButton(EscText.literal(dynamicLabel()), controlsColumn,
                 EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> onDynamicCycle());
             y += 24;
-            internetButton = addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.internet")), controlsColumn,
+            internetButton = addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.internet")), controlsColumn,
                 EscLayoutSpec.of(EscAnchor.TOP_LEFT, 0, y, BUTTON_WIDTH, 20), b -> openInternet());
         }
     }
 
     private void refreshDefaultStationsCache() {
         if (!ModList.get().isLoaded("dead_air")) {
-            defaultStationsCache = List.of();
+            defaultStationsCache = java.util.Collections.emptyList();
             return;
         }
         ArrayList<StationOption> next = new ArrayList<>();
@@ -437,14 +436,14 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     /** Current default station name (no "Default:" prefix). Shows tower's current station if it's a default, else next in cycle. */
     private String defaultLabel() {
-        if (defaultStationsCache.isEmpty()) return Component.translatable("screen.radiotowers.button.default").getString();
+        if (defaultStationsCache.isEmpty()) return new TranslationTextComponent("screen.radiotowers.button.default").getString();
         int idx = findDefaultIndex(currentStationId);
         if (idx >= 0) return defaultStationsCache.get(idx).displayName;
         return defaultStationsCache.get(Math.min(defaultCycleIndex, defaultStationsCache.size() - 1)).displayName;
     }
 
     private String dynamicLabel() {
-        return lastDynamicName != null ? lastDynamicName : Component.translatable("screen.radiotowers.button.dynamic").getString();
+        return lastDynamicName != null ? lastDynamicName : new TranslationTextComponent("screen.radiotowers.button.dynamic").getString();
     }
 
     private void onDefaultCycle() {
@@ -508,7 +507,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         total = Math.min(total, maxTotal);
         List<String> itemIds = new ArrayList<>();
         List<Integer> quantities = new ArrayList<>();
-        for (var e : orderQuantities.entrySet()) {
+        for (java.util.Map.Entry<Integer, Integer> e : orderQuantities.entrySet()) {
             int qty = e.getValue();
             if (qty <= 0) continue;
             int idx = e.getKey();
@@ -530,7 +529,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         List<String> itemIds = new ArrayList<>();
         List<Integer> quantities = new ArrayList<>();
         int total = 0;
-        for (var e : orderQuantities.entrySet()) {
+        for (java.util.Map.Entry<Integer, Integer> e : orderQuantities.entrySet()) {
             int qty = e.getValue();
             if (qty <= 0) continue;
             int idx = e.getKey();
@@ -586,13 +585,13 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     private String getPowerButtonLabel() {
         return (currentStationId == null || currentStationId.isEmpty())
-            ? Component.translatable("screen.radiotowers.button.turn_on").getString()
-            : Component.translatable("screen.radiotowers.button.turn_off").getString();
+            ? new TranslationTextComponent("screen.radiotowers.button.turn_on").getString()
+            : new TranslationTextComponent("screen.radiotowers.button.turn_off").getString();
     }
 
     private int getTotalDifficulty() {
         int t = 0;
-        for (var e : orderQuantities.entrySet()) {
+        for (java.util.Map.Entry<Integer, Integer> e : orderQuantities.entrySet()) {
             int qty = e.getValue();
             if (qty <= 0) continue;
             int idx = e.getKey();
@@ -603,7 +602,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     /** Word-wrap hint to the right of a button row; y = first line baseline (aligned with button text). */
-    private void drawDeadAirHint(GuiGraphics guiGraphics, String text, int x, int y, int maxWidth) {
+    private void drawDeadAirHint(EscGraphics guiGraphics, String text, int x, int y, int maxWidth) {
         EscText.drawWrapped(guiGraphics, font, text, x, y, maxWidth, DEAD_AIR_HINT_COLOR);
     }
 
@@ -617,7 +616,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         return "Music Disc (" + label + ")";
     }
 
-    private void drawTab(GuiGraphics g, EscRect rect, String label, boolean selected, boolean locked) {
+    private void drawTab(EscGraphics g, EscRect rect, String label, boolean selected, boolean locked) {
         if (rect == null) return;
         int bg = locked ? TAB_BG_LOCKED : (selected ? TAB_BG_ACTIVE : TAB_BG);
         g.fill(rect.x(), rect.y(), rect.right(), rect.bottom(), bg);
@@ -642,19 +641,19 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         EscRect body = bodyContentRect;
         int btnW = Math.min(180, body.width() - 32);
         int y = 24;
-        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.claim_base")), body,
+        addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.claim_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
             b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
                 new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
                     net.mcreator.radiotowers.network.BasePanelActionMessage.SET)));
         y += 28;
-        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.unset_base")), body,
+        addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.unset_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
             b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
                 new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
                     net.mcreator.radiotowers.network.BasePanelActionMessage.UNSET)));
         y += 28;
-        addAnchoredButton(EscText.styled(Component.translatable("screen.radiotowers.button.refresh_base")), body,
+        addAnchoredButton(EscText.styled(new TranslationTextComponent("screen.radiotowers.button.refresh_base")), body,
             EscLayoutSpec.of(EscAnchor.TOP_LEFT, 16, y, btnW, 20),
             b -> RadiotowersMod.PACKET_HANDLER.sendToServer(
                 new net.mcreator.radiotowers.network.BasePanelActionMessage(panelPos,
@@ -667,7 +666,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         cachedBaseIsThisPanel = isThisPanel;
     }
 
-    private void drawBaseTab(GuiGraphics g) {
+    private void drawBaseTab(EscGraphics g) {
         if (bodyContentRect == null) return;
         EscRect body = bodyContentRect;
         g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
@@ -676,17 +675,17 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         int maxW = Math.max(40, body.width() - 32);
         int cy = body.y() + 120;
         EscText.drawWrapped(g, font,
-            Component.translatable("screen.radiotowers.base.help").getString(),
+            new TranslationTextComponent("screen.radiotowers.base.help").getString(),
             cx, cy, maxW, 0xAAAAAA);
-        cy += EscText.wrapHeight(font, Component.translatable("screen.radiotowers.base.help").getString(), maxW) + 12;
+        cy += EscText.wrapHeight(font, new TranslationTextComponent("screen.radiotowers.base.help").getString(), maxW) + 12;
         String status = cachedBaseStatusLine.isEmpty()
-            ? Component.translatable("screen.radiotowers.base.status_loading").getString()
+            ? new TranslationTextComponent("screen.radiotowers.base.status_loading").getString()
             : cachedBaseStatusLine;
         int statusColor = cachedBaseIsThisPanel ? 0xFF88FF88 : 0xFFE0E0E0;
         EscText.drawWrapped(g, font, status, cx, cy, maxW, statusColor);
     }
 
-    private void drawModePlaceholder(GuiGraphics g) {
+    private void drawModePlaceholder(EscGraphics g) {
         if (bodyContentRect == null) return;
         EscRect body = bodyContentRect;
         g.fill(body.x(), body.y(), body.right(), body.bottom(), 0xFF1E1E1E);
@@ -699,8 +698,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         String bodyKey = boss
             ? (unlocked ? "screen.radiotowers.mode.boss.coming_soon.body" : "screen.radiotowers.mode.boss.locked.body")
             : (unlocked ? "screen.radiotowers.mode.endless.coming_soon.body" : "screen.radiotowers.mode.endless.locked.body");
-        Component title = Component.translatable(titleKey);
-        Component detail = Component.translatable(bodyKey);
+        ITextComponent title = new TranslationTextComponent(titleKey);
+        ITextComponent detail = new TranslationTextComponent(bodyKey);
         int titleColor = unlocked ? 0xFFE0C060 : 0xFF888888;
         int cx = body.x() + 16;
         int cy = body.y() + Math.max(24, body.height() / 3);
@@ -711,38 +710,39 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(MatrixStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
 
         drawTab(guiGraphics, tabAirdropRect,
-            Component.translatable("screen.radiotowers.tab.airdrop").getString(),
+            new TranslationTextComponent("screen.radiotowers.tab.airdrop").getString(),
             selectedTab == ModeTab.AIRDROP, false);
         if (tabBaseRect != null) {
             drawTab(guiGraphics, tabBaseRect,
-                Component.translatable("screen.radiotowers.tab.base").getString(),
+                new TranslationTextComponent("screen.radiotowers.tab.base").getString(),
                 selectedTab == ModeTab.BASE, false);
         }
         drawTab(guiGraphics, tabBossRect,
-            Component.translatable("screen.radiotowers.tab.boss").getString(),
+            new TranslationTextComponent("screen.radiotowers.tab.boss").getString(),
             selectedTab == ModeTab.BOSS, !AirdropWaveHudData.isBossModeUnlocked());
         drawTab(guiGraphics, tabEndlessRect,
-            Component.translatable("screen.radiotowers.tab.endless").getString(),
+            new TranslationTextComponent("screen.radiotowers.tab.endless").getString(),
             selectedTab == ModeTab.ENDLESS, !AirdropWaveHudData.isEndlessModeUnlocked());
 
         if (isBaseTab()) {
             drawBaseTab(guiGraphics);
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            super.render(pose, mouseX, mouseY, partialTick);
             return;
         }
         if (!isAirdropTab()) {
             drawModePlaceholder(guiGraphics);
-            super.render(guiGraphics, mouseX, mouseY, partialTick);
+            super.render(pose, mouseX, mouseY, partialTick);
             return;
         }
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
 
         if (listAreaRect == null) return;
 
@@ -798,8 +798,8 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 && "tacz".equals(itemId.getNamespace())
                 && (itemId.getPath().startsWith("ammo/") || itemId.getPath().startsWith("gun/"));
             if (!stack.isEmpty() && !useTaczPlaceholder) {
-                guiGraphics.renderItem(stack, listLeft + 4, y + 2);
-                guiGraphics.renderItemDecorations(font, stack, listLeft + 4, y + 2);
+                this.itemRenderer.renderAndDecorateItem(stack, listLeft + 4, y + 2);
+                this.itemRenderer.renderGuiItemDecorations(this.font, stack, listLeft + 4, y + 2);
             } else if (useTaczPlaceholder) {
                 guiGraphics.fill(listLeft + 4, y + 2, listLeft + 20, y + 18, 0xFF_3d3d3d);
                 guiGraphics.fill(listLeft + 5, y + 3, listLeft + 19, y + 17, 0xFF_2d2d2d);
@@ -820,9 +820,9 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
         if (ModList.get().isLoaded("dead_air") && activeButton >= 0) {
             Button active = activeButton == 0 ? defaultStationButton : (activeButton == 1 ? dynamicStationButton : internetButton);
             if (active != null) {
-                int bx = active.getX();
+                int bx = active.x;
                 int bw = active.getWidth();
-                int by = active.getY();
+                int by = active.y;
                 int bh = active.getHeight();
                 int c = 0xFF22AA22;
                 guiGraphics.fill(bx, by, bx + bw, by + 2, c);
@@ -837,7 +837,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             Button topBtn = lobbyButton != null ? lobbyButton : turnOffButton;
             int textX = hintColumn.x();
             int maxW = hintColumn.width();
-            int y = topBtn.getY();
+            int y = topBtn.y;
             final String[] hints = {
                 "Broadcast on/off",
                 "What this tower plays (click to cycle).",
@@ -973,12 +973,13 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
 
     @SuppressWarnings("unchecked")
     private List<StationOption> getDynamicStations() {
-        if (!ModList.get().isLoaded("dead_air")) return List.of();
+        if (!ModList.get().isLoaded("dead_air")) return java.util.Collections.emptyList();
         try {
             Class<?> registry = Class.forName("uk.co.extraspecialstudio.dead_air.radio.StationRegistry");
             java.lang.reflect.Method m = registry.getMethod("getAllStations");
             Object result = m.invoke(null);
-            if (!(result instanceof java.util.Collection<?> stations)) return List.of();
+            java.util.Collection<?> stations = (result instanceof java.util.Collection<?>) ? (java.util.Collection<?>) result : null;
+            if (!(stations != null)) return java.util.Collections.emptyList();
             List<StationOption> out = new java.util.ArrayList<>();
             for (Object st : stations) {
                 if (st == null) continue;
@@ -993,7 +994,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 .thenComparing(s -> s.stationId, String.CASE_INSENSITIVE_ORDER));
             return out;
         } catch (Throwable ignored) {
-            return List.of();
+            return java.util.Collections.emptyList();
         }
     }
 }

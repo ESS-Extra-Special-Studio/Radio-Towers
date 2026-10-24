@@ -1,11 +1,11 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.SafeClientCalls;
@@ -25,11 +25,11 @@ public class OpenCallAirdropPacket {
         this.panelPos = panelPos != null ? panelPos.immutable() : BlockPos.ZERO;
     }
 
-    public OpenCallAirdropPacket(FriendlyByteBuf buf) {
+    public OpenCallAirdropPacket(PacketBuffer buf) {
         this.panelPos = buf.readBlockPos();
     }
 
-    public static void encode(OpenCallAirdropPacket msg, FriendlyByteBuf buf) {
+    public static void encode(OpenCallAirdropPacket msg, PacketBuffer buf) {
         buf.writeBlockPos(msg.panelPos);
     }
 

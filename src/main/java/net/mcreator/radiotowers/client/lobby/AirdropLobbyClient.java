@@ -4,7 +4,7 @@ import net.mcreator.radiotowers.client.gui.AirdropLobbyScreen;
 import net.mcreator.radiotowers.client.gui.CallAirdropScreen;
 import net.mcreator.radiotowers.network.lobby.LobbyPackets;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -22,11 +22,20 @@ public final class AirdropLobbyClient {
     @Nullable
     private static OrderSnapshot pendingOrder;
 
-    public record OrderSnapshot(int totalDifficulty, List<String> itemIds, List<Integer> quantities) {
-        public OrderSnapshot {
-            itemIds = itemIds != null ? List.copyOf(itemIds) : List.of();
-            quantities = quantities != null ? List.copyOf(quantities) : List.of();
+    public static class OrderSnapshot {
+        private final int totalDifficulty;
+        private final List<String> itemIds;
+        private final List<Integer> quantities;
+        public OrderSnapshot(int totalDifficulty, List<String> itemIds, List<Integer> quantities) {
+            itemIds = itemIds != null ? new java.util.ArrayList<>(itemIds) : java.util.Collections.emptyList();
+            quantities = quantities != null ? new java.util.ArrayList<>(quantities) : java.util.Collections.emptyList();
+            this.totalDifficulty = totalDifficulty;
+            this.itemIds = itemIds;
+            this.quantities = quantities;
         }
+        public int totalDifficulty() { return this.totalDifficulty; }
+        public List<String> itemIds() { return this.itemIds; }
+        public List<Integer> quantities() { return this.quantities; }
     }
 
     private AirdropLobbyClient() {}
@@ -41,7 +50,7 @@ public final class AirdropLobbyClient {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return;
         CallAirdropScreen parent = pendingParent;
-        OrderSnapshot order = pendingOrder != null ? pendingOrder : new OrderSnapshot(0, List.of(), List.of());
+        OrderSnapshot order = pendingOrder != null ? pendingOrder : new OrderSnapshot(0, java.util.Collections.emptyList(), java.util.Collections.emptyList());
         BlockPos pos = panelPos != null ? panelPos : pendingPanelPos;
         mc.setScreen(new AirdropLobbyScreen(parent, pos, lobbyId, order));
     }
@@ -49,7 +58,8 @@ public final class AirdropLobbyClient {
     public static void applySync(LobbyPackets.SyncLobby sync) {
         lastSync = sync;
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        AirdropLobbyScreen screen = (mc.screen instanceof AirdropLobbyScreen) ? (AirdropLobbyScreen) mc.screen : null;
+        if (mc != null && screen != null) {
             screen.onSync(sync);
         }
     }
@@ -57,7 +67,8 @@ public final class AirdropLobbyClient {
     public static void applyCountdown(LobbyPackets.Countdown countdown) {
         countdownSeconds = countdown.secondsRemaining();
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        AirdropLobbyScreen screen = (mc.screen instanceof AirdropLobbyScreen) ? (AirdropLobbyScreen) mc.screen : null;
+        if (mc != null && screen != null) {
             screen.onCountdown(countdown.secondsRemaining());
         }
     }
@@ -66,7 +77,8 @@ public final class AirdropLobbyClient {
     public static void applyClosed(LobbyPackets.Closed closed) {
         UUID closedId = closed != null ? closed.lobbyId() : null;
         Minecraft mc = Minecraft.getInstance();
-        if (mc != null && mc.screen instanceof AirdropLobbyScreen screen) {
+        AirdropLobbyScreen screen = (mc.screen instanceof AirdropLobbyScreen) ? (AirdropLobbyScreen) mc.screen : null;
+        if (mc != null && screen != null) {
             if (closedId == null || closedId.equals(screen.lobbyId())) {
                 mc.setScreen(screen.getParent());
             }

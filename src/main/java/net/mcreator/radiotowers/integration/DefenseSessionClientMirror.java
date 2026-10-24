@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.integration;
 
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.World;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class DefenseSessionClientMirror {
 
-    private static final Map<ResourceKey<Level>, Boolean> BY_DIM = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, Boolean> BY_DIM = new ConcurrentHashMap<>();
 
-    public static void set(ResourceKey<Level> dimension, boolean active) {
+    public static void set(RegistryKey<World> dimension, boolean active) {
         if (dimension == null) return;
         if (active) {
             BY_DIM.put(dimension, Boolean.TRUE);
@@ -23,7 +23,7 @@ public final class DefenseSessionClientMirror {
         }
     }
 
-    public static boolean isActive(ResourceKey<Level> dimension) {
+    public static boolean isActive(RegistryKey<World> dimension) {
         if (dimension == null) return false;
         return BY_DIM.getOrDefault(dimension, false);
     }

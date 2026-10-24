@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers;
 
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.mcreator.radiotowers.init.RadiotowersModMenus;
 
 /**

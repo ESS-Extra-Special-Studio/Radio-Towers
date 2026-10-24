@@ -1,7 +1,7 @@
 package net.mcreator.radiotowers.integration;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.MobEntity;
 import net.mcreator.radiotowers.RadiotowersMod;
 
 import java.lang.reflect.Field;
@@ -28,12 +28,12 @@ public final class WaveMobFieldForce {
             } catch (NoSuchFieldException ignored) {}
         }
         if (entityInvulnerable == null)
-            RadiotowersMod.LOGGER.warn("[Zombie Waves] Could not find Entity invulnerable field (tried invulnerable, f_19840_, f_19850_)");
+            RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] Could not find Entity invulnerable field (tried invulnerable, f_19840_, f_19850_)");
         try {
-            mobNoAi = Mob.class.getDeclaredField("noAi");
+            mobNoAi = MobEntity.class.getDeclaredField("noAi");
             mobNoAi.setAccessible(true);
         } catch (NoSuchFieldException e) {
-            for (Field f : Mob.class.getDeclaredFields()) {
+            for (Field f : MobEntity.class.getDeclaredFields()) {
                 if (f.getType() == boolean.class && (f.getName().toLowerCase().contains("noai") || f.getName().toLowerCase().contains("no_ai"))) {
                     mobNoAi = f;
                     mobNoAi.setAccessible(true);
@@ -41,13 +41,13 @@ public final class WaveMobFieldForce {
                 }
             }
             if (mobNoAi == null)
-                RadiotowersMod.LOGGER.warn("[Zombie Waves] Could not find Mob noAi field: {}", e.getMessage());
+                RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] Could not find MobEntity noAi field: {}", e.getMessage());
         }
     }
 
     /** Set invulnerable and noAi to false directly on the entity. Call after setters so we override any bypass. */
-    public static void forceOff(Mob mob) {
-        if (mob == null || mob.isRemoved()) return;
+    public static void forceOff(MobEntity mob) {
+        if (mob == null || mob.removed) return;
         init();
         try {
             if (entityInvulnerable != null)
@@ -73,7 +73,7 @@ public final class WaveMobFieldForce {
     }
 
     /** Read the raw noAi field without any redirect mixins. */
-    public static boolean isNoAiRaw(Mob mob) {
+    public static boolean isNoAiRaw(MobEntity mob) {
         if (mob == null) return false;
         init();
         try {

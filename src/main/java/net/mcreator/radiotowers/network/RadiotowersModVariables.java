@@ -1,21 +1,21 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.TickEvent;
 
-import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.world.IServerWorld;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.World;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundNBT;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 
@@ -32,9 +32,10 @@ public class RadiotowersModVariables {
 	public static class EventBusVariableHandlers {
 		@SubscribeEvent
 		public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-			if (event.getEntity() instanceof ServerPlayer player) {
-				SavedData mapdata = MapVariables.get(player.level());
-				SavedData worlddata = WorldVariables.get(player.level());
+		Object player$src = event.getEntity(); ServerPlayerEntity player = (player$src instanceof ServerPlayerEntity) ? (ServerPlayerEntity) player$src : null;
+			if (player != null) {
+				WorldSavedData mapdata = MapVariables.get(player.level);
+				WorldSavedData worlddata = WorldVariables.get(player.level);
 				if (mapdata != null)
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(0, mapdata));
 				if (worlddata != null)
@@ -44,16 +45,18 @@ public class RadiotowersModVariables {
 
 		@SubscribeEvent
 		public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-			if (event.getEntity() instanceof ServerPlayer player) {
-				SavedData worlddata = WorldVariables.get(player.level());
+		Object player$src = event.getEntity(); ServerPlayerEntity player = (player$src instanceof ServerPlayerEntity) ? (ServerPlayerEntity) player$src : null;
+			if (player != null) {
+				WorldSavedData worlddata = WorldVariables.get(player.level);
 				if (worlddata != null)
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player), new SavedDataSyncMessage(1, worlddata));
 			}
 		}
 
 		@SubscribeEvent
-		public static void onWorldTick(TickEvent.LevelTickEvent event) {
-			if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel level) {
+		public static void onWorldTick(TickEvent.WorldTickEvent event) {
+		ServerWorld level = (event.world instanceof ServerWorld) ? (ServerWorld) event.world : null;
+			if (event.phase == TickEvent.Phase.END && level != null) {
 				WorldVariables worldVariables = WorldVariables.get(level);
 				if (worldVariables._syncDirty) {
 					RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.DIMENSION.with(level::dimension), new SavedDataSyncMessage(1, worldVariables));
@@ -68,21 +71,24 @@ public class RadiotowersModVariables {
 		}
 	}
 
-	public static class WorldVariables extends SavedData {
+	public static class WorldVariables extends WorldSavedData {
 		public static final String DATA_NAME = "radiotowers_worldvars";
 		boolean _syncDirty = false;
 
-		public static WorldVariables load(CompoundTag tag) {
-			WorldVariables data = new WorldVariables();
-			data.read(tag);
-			return data;
-		}
-
-		public void read(CompoundTag nbt) {
+		public WorldVariables() {
+			super(DATA_NAME);
 		}
 
 		@Override
-		public CompoundTag save(CompoundTag nbt) {
+		public void load(CompoundNBT tag) {
+			read(tag);
+		}
+
+		public void read(CompoundNBT nbt) {
+		}
+
+		@Override
+		public CompoundNBT save(CompoundNBT nbt) {
 			return nbt;
 		}
 
@@ -93,16 +99,17 @@ public class RadiotowersModVariables {
 
 		static WorldVariables clientSide = new WorldVariables();
 
-		public static WorldVariables get(LevelAccessor world) {
-			if (world instanceof ServerLevel level) {
-				return level.getDataStorage().computeIfAbsent(e -> WorldVariables.load(e), WorldVariables::new, DATA_NAME);
+		public static WorldVariables get(IWorld world) {
+		ServerWorld level = (world instanceof ServerWorld) ? (ServerWorld) world : null;
+			if (level != null) {
+				return level.getDataStorage().computeIfAbsent(WorldVariables::new, DATA_NAME);
 			} else {
 				return clientSide;
 			}
 		}
 	}
 
-	public static class MapVariables extends SavedData {
+	public static class MapVariables extends WorldSavedData {
 		public static final String DATA_NAME = "radiotowers_mapvars";
 		boolean _syncDirty = false;
 		/** Horizontal range from tower (blocks). Kept within render distance in spawn procedure. */
@@ -112,13 +119,16 @@ public class RadiotowersModVariables {
 		public double PlaneSpawnHeightUpRangeMax = 15.0;
 		public double PlaneSpawnHeightDownRangeMax = 15.0;
 
-		public static MapVariables load(CompoundTag tag) {
-			MapVariables data = new MapVariables();
-			data.read(tag);
-			return data;
+		public MapVariables() {
+			super(DATA_NAME);
 		}
 
-		public void read(CompoundTag nbt) {
+		@Override
+		public void load(CompoundNBT tag) {
+			read(tag);
+		}
+
+		public void read(CompoundNBT nbt) {
 			PlaneSpawnRange = nbt.getDouble("PlaneSpawnRange");
 			PlaneSpawnHeight = nbt.getDouble("PlaneSpawnHeight");
 			PlaneSpawnHeightUpRangeMax = nbt.getDouble("PlaneSpawnHeightUpRangeMax");
@@ -126,7 +136,7 @@ public class RadiotowersModVariables {
 		}
 
 		@Override
-		public CompoundTag save(CompoundTag nbt) {
+		public CompoundNBT save(CompoundNBT nbt) {
 			nbt.putDouble("PlaneSpawnRange", PlaneSpawnRange);
 			nbt.putDouble("PlaneSpawnHeight", PlaneSpawnHeight);
 			nbt.putDouble("PlaneSpawnHeightUpRangeMax", PlaneSpawnHeightUpRangeMax);
@@ -141,9 +151,10 @@ public class RadiotowersModVariables {
 
 		static MapVariables clientSide = new MapVariables();
 
-		public static MapVariables get(LevelAccessor world) {
-			if (world instanceof ServerLevelAccessor serverLevelAcc) {
-				return serverLevelAcc.getLevel().getServer().getLevel(Level.OVERWORLD).getDataStorage().computeIfAbsent(e -> MapVariables.load(e), MapVariables::new, DATA_NAME);
+		public static MapVariables get(IWorld world) {
+		ServerWorld level = (world instanceof ServerWorld) ? (ServerWorld) world : null;
+			if (level != null) {
+				return level.getServer().overworld().getDataStorage().computeIfAbsent(MapVariables::new, DATA_NAME);
 			} else {
 				return clientSide;
 			}
@@ -152,32 +163,34 @@ public class RadiotowersModVariables {
 
 	public static class SavedDataSyncMessage {
 		private final int dataType;
-		private final SavedData data;
+		private final WorldSavedData data;
 
-		public SavedDataSyncMessage(int dataType, SavedData data) {
+		public SavedDataSyncMessage(int dataType, WorldSavedData data) {
 			this.dataType = dataType;
 			this.data = data;
 		}
 
-		public SavedDataSyncMessage(FriendlyByteBuf buffer) {
+		public SavedDataSyncMessage(PacketBuffer buffer) {
 			int dataType = buffer.readInt();
-			CompoundTag nbt = buffer.readNbt();
-			SavedData data = null;
+			CompoundNBT nbt = buffer.readNbt();
+			WorldSavedData data = null;
 			if (nbt != null) {
 				data = dataType == 0 ? new MapVariables() : new WorldVariables();
-				if (data instanceof MapVariables mapVariables)
+				MapVariables mapVariables = (data instanceof MapVariables) ? (MapVariables) data : null;
+				WorldVariables worldVariables = (data instanceof WorldVariables) ? (WorldVariables) data : null;
+				if (mapVariables != null)
 					mapVariables.read(nbt);
-				else if (data instanceof WorldVariables worldVariables)
+				else if (worldVariables != null)
 					worldVariables.read(nbt);
 			}
 			this.dataType = dataType;
 			this.data = data;
 		}
 
-		public static void buffer(SavedDataSyncMessage message, FriendlyByteBuf buffer) {
+		public static void buffer(SavedDataSyncMessage message, PacketBuffer buffer) {
 			buffer.writeInt(message.dataType);
 			if (message.data != null)
-				buffer.writeNbt(message.data.save(new CompoundTag()));
+				buffer.writeNbt(message.data.save(new CompoundNBT()));
 		}
 
 		public static void handleData(final SavedDataSyncMessage message, final Supplier<NetworkEvent.Context> contextSupplier) {
@@ -185,9 +198,9 @@ public class RadiotowersModVariables {
 			context.enqueueWork(() -> {
 				if (!context.getDirection().getReceptionSide().isServer() && message.data != null) {
 					if (message.dataType == 0)
-						MapVariables.clientSide.read(message.data.save(new CompoundTag()));
+						MapVariables.clientSide.read(message.data.save(new CompoundNBT()));
 					else
-						WorldVariables.clientSide.read(message.data.save(new CompoundTag()));
+						WorldVariables.clientSide.read(message.data.save(new CompoundNBT()));
 				}
 			});
 			context.setPacketHandled(true);

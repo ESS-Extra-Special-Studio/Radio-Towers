@@ -14,10 +14,10 @@ public final class DelayedBerezkaCurWorldClear {
 
     /** Called by RadiotowersMod work queue after a short delay so WavesManager.onServerTick can run first. */
     public static void run() {
-        var opt = ModList.get().getModContainerById(BEREZKA_API_MOD_ID);
-        if (opt.isEmpty()) return;
+        java.util.Optional opt = ModList.get().getModContainerById(BEREZKA_API_MOD_ID);
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader loader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader loader = opt.get().getClass().getClassLoader();
             Class<?> main = Class.forName(BEREZKA_MAIN_CLASS, true, loader);
             main.getField("curWorld").set(null, null);
         } catch (Throwable t) {

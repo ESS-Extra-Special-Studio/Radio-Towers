@@ -1,13 +1,13 @@
 package net.mcreator.radiotowers.mixin;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
 import net.mcreator.radiotowers.integration.PendingAirdropStorage;
@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * before add so the entity joins already on the ground. Hooks addFreshEntity, addEntity, and
  * addWithUUID so we reposition wave mobs regardless of which add path the API uses.
  */
-@Mixin(ServerLevel.class)
+@Mixin(ServerWorld.class)
 public class LevelAddEntityMixin {
 
     private static final int WAVE_MOB_RANGE = 200;
@@ -32,38 +32,31 @@ public class LevelAddEntityMixin {
     // This avoids the "spawn then teleport" visual that happens when we only snap in setPos().
     private static final boolean ENABLE_PRE_ADD_REPLACEMENT = true;
 
-    @Inject(method = "addFreshEntity(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), cancellable = true, remap = true)
+    @Inject(method = "addFreshEntity(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), cancellable = true, remap = true)
     private void radiotowers$setWaveMobPositionAddFresh(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (setWaveMobPositionBeforeAdd((ServerLevel) (Object) this, entity)) {
+        if (setWaveMobPositionBeforeAdd((ServerWorld) (Object) this, entity)) {
             cir.setReturnValue(true);
             cir.cancel();
         }
     }
 
-    @Inject(method = "addEntity(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), cancellable = true, remap = true)
-    private void radiotowers$setWaveMobPositionAddEntity(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (setWaveMobPositionBeforeAdd((ServerLevel) (Object) this, entity)) {
-            cir.setReturnValue(true);
-            cir.cancel();
-        }
-    }
-
-    @Inject(method = "addWithUUID(Lnet/minecraft/world/entity/Entity;)Z", at = @At("HEAD"), cancellable = true, remap = true)
+    @Inject(method = "addWithUUID(Lnet/minecraft/entity/Entity;)Z", at = @At("HEAD"), cancellable = true, remap = true)
     private void radiotowers$setWaveMobPositionAddWithUUID(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (setWaveMobPositionBeforeAdd((ServerLevel) (Object) this, entity)) {
+        if (setWaveMobPositionBeforeAdd((ServerWorld) (Object) this, entity)) {
             cir.setReturnValue(true);
             cir.cancel();
         }
     }
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
-    private static boolean setWaveMobPositionBeforeAdd(ServerLevel level, Entity entity) {
+    private static boolean setWaveMobPositionBeforeAdd(ServerWorld level, Entity entity) {
         if (!ENABLE_PRE_ADD_REPLACEMENT) return false;
         if (level.isClientSide()) return false;
         if (RADIOTOWERS_ADDING_REPLACEMENT.get()) return false;
-        if (!(entity instanceof Mob mob) || !(entity instanceof Monster)) return false;
-        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()))) return false;
+        MobEntity mob = (entity instanceof MobEntity) ? (MobEntity) entity : null;
+        if (!(mob != null) || !(entity instanceof MonsterEntity)) return false;
+        if (PLANE_TYPE_ID.equals(ForgeRegistries.ENTITIES.getKey(entity.getType()))) return false;
         if (entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) return false;
         if (entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) return false;
 
@@ -85,11 +78,11 @@ public class LevelAddEntityMixin {
         int nextSpawnCount = pending.spawnCountThisWave + 1;
         if (nextSpawnCount > pending.maxZombiesPerWave) return false;
         int index = pending.spawnCountThisWave;
-        Vec3 pos = WaveMobAggroHandler.getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
-        Zombie vanilla = EntityType.ZOMBIE.create(level);
+        Vector3d pos = WaveMobAggroHandler.getRingSpawnPosition(level, pending.waveStartPos, index, pending.maxZombiesPerWave);
+        ZombieEntity vanilla = EntityType.ZOMBIE.create(level);
         if (vanilla == null) return false;
         vanilla.setPos(pos.x, pos.y, pos.z);
-        vanilla.setDeltaMovement(Vec3.ZERO);
+        vanilla.setDeltaMovement(Vector3d.ZERO);
         vanilla.fallDistance = 0;
         vanilla.setInvulnerable(false);
         vanilla.setNoAi(false);

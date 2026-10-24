@@ -1,17 +1,18 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.util.text.TranslationTextComponent;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.entity.EntityType;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
 import net.mcreator.radiotowers.init.RadiotowersModSounds;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 import uk.co.extraspecialstudio.esl.wave.*;
 
 import javax.annotation.Nullable;
@@ -45,7 +46,7 @@ public final class EslWaveIntegration {
         }
         try {
             ClassLoader loader = ModList.get().getModContainerById(ESL_MOD_ID)
-                    .map(c -> c.getMod().getClass().getClassLoader())
+                    .map(c -> c.getClass().getClassLoader())
                     .orElse(Thread.currentThread().getContextClassLoader());
             Class.forName("uk.co.extraspecialstudio.esl.wave.EslWaveManager", false, loader);
             eslWaveAvailable = true;
@@ -58,7 +59,7 @@ public final class EslWaveIntegration {
     }
 
     /** Cancel all ESL wave controllers in this dimension (e.g. quit-to-menu mid-wave). */
-    public static void abortAllInDimension(ServerLevel level) {
+    public static void abortAllInDimension(ServerWorld level) {
         if (!isEslWaveAvailable() || level == null) return;
         for (EslWaveController controller : new ArrayList<>(EslWaveManager.activeControllersIn(level.dimension()))) {
             EslWaveManager.cancel(controller);
@@ -68,7 +69,7 @@ public final class EslWaveIntegration {
     }
 
     /** Remove frozen/straggler undead near a wave anchor after reconnect abort. */
-    public static void sweepStragglersNear(ServerLevel level, BlockPos center) {
+    public static void sweepStragglersNear(ServerWorld level, BlockPos center) {
         if (level == null || center == null) return;
         ZombieWavesAPILoader.sweepReconnectStragglerUndead(level, center);
         ZombieWavesAPILoader.sweepBrokenUndeadNearWave(level, center, 320);
@@ -80,9 +81,9 @@ public final class EslWaveIntegration {
      *
      * @return true if the sequence started successfully
      */
-    public static boolean startWaveAt(ServerLevel level, BlockPos waveStartPos, BlockPos panelPos,
+    public static boolean startWaveAt(ServerWorld level, BlockPos waveStartPos, BlockPos panelPos,
                                        int tierDifficulty, int numWaves, int maxZombiesPerWave,
-                                       @Nullable ServerPlayer player) {
+                                       @Nullable ServerPlayerEntity player) {
         if (!isEslWaveAvailable()) return false;
         try {
             int waveDurationTicks = AirdropConfig.getWaveDurationTicks();
@@ -121,13 +122,13 @@ public final class EslWaveIntegration {
                     pending.currentWaveStartedAtGameTime = level.getGameTime();
                     PendingAirdropSavedData.get(level).setDirty();
                 }
-                ServerPlayer p = ctx.triggeringPlayer();
+                ServerPlayerEntity p = ctx.triggeringPlayer();
                 if (moreWaves && p != null && p.isAlive()) {
-                    p.sendSystemMessage(Component.translatable(
-                        "message.radiotowers.wave.cleared_next_starting", justCleared, total));
+                    p.sendMessage(new TranslationTextComponent(
+                        "message.radiotowers.wave.cleared_next_starting", justCleared, total), net.minecraft.util.Util.NIL_UUID);
                 }
                 if (moreWaves) {
-                    level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
+                    level.playSound(null, panelPos, RadiotowersModSounds.SIREN.get(), SoundCategory.NEUTRAL, 1.0f, 1.0f);
                 }
             });
 
@@ -141,12 +142,12 @@ public final class EslWaveIntegration {
                 RadiotowersMod.LOGGER.info("[ESL Waves] Wave sequence failed at {}", waveStartPos);
                 ZombieWavesAPILoader.setDefenseSessionActive(level, false);
                 PendingAirdropStorage.removePending(level, waveStartPos);
-                ServerPlayer p = ctx.triggeringPlayer();
+                ServerPlayerEntity p = ctx.triggeringPlayer();
                 if (p != null && p.isAlive()) {
                     long cooldownEnd = AirdropCooldown.getCooldownEndGameTime(level, p.getUUID());
                     RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> p),
                         new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
-                    p.sendSystemMessage(Component.translatable("message.radiotowers.airdrop.failed"));
+                    p.sendMessage(new TranslationTextComponent("message.radiotowers.airdrop.failed"), net.minecraft.util.Util.NIL_UUID);
                 }
             });
 
@@ -171,7 +172,7 @@ public final class EslWaveIntegration {
      * Send wave state to the player's HUD when using ESL waves.
      * Reads directly from the ESL controller instead of polling Berezka's API.
      */
-    public static void sendWaveStateToPlayers(ServerLevel level) {
+    public static void sendWaveStateToPlayers(ServerWorld level) {
         if (!isEslWaveAvailable()) return;
         try {
             PendingAirdropStorage.forEachPendingIn(level, (waveStartPos, p) -> {
@@ -184,12 +185,12 @@ public final class EslWaveIntegration {
                 int zombiesLeft = controller.remainingEnemies();
                 int secondsRemaining = controller.secondsRemaining();
 
-                ServerPlayer player = level.getServer() != null
+                ServerPlayerEntity player = level.getServer() != null
                     ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
-                var packet = new net.mcreator.radiotowers.network.WaveStatePacket(
+                net.mcreator.radiotowers.network.WaveStatePacket packet = new net.mcreator.radiotowers.network.WaveStatePacket(
                     currentWave, totalWaves, zombiesLeft, secondsRemaining, true);
                 for (java.util.UUID memberId : p.effectiveMembers()) {
-                    ServerPlayer m = level.getServer() != null
+                    ServerPlayerEntity m = level.getServer() != null
                         ? level.getServer().getPlayerList().getPlayer(memberId) : null;
                     if (m != null) {
                         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> m), packet);

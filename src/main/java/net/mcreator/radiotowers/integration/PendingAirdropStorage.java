@@ -1,10 +1,11 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.util.text.TranslationTextComponent;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.world.World;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -13,7 +14,7 @@ import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
 import net.mcreator.radiotowers.init.RadiotowersModEntities;
 import net.mcreator.radiotowers.network.AirdropStatePacket;
 
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Pending airdrops: when Zombie Waves API is used, the wave starts at tower ground
+ * Pending airdrops: when ZombieEntity Waves API is used, the wave starts at tower ground
  * and the airdrop is only spawned when the wave is completed (API calls onWaveCompleted).
  * Stored in PendingAirdropSavedData per level so the wave survives leave/rejoin and restart.
  */
@@ -73,7 +74,7 @@ public final class PendingAirdropStorage {
         /** Accepted members for aggro / fan-out; always includes host. */
         public Set<UUID> effectiveMembers() {
             if (memberUuids != null && !memberUuids.isEmpty()) return memberUuids;
-            return Set.of(playerWhoStarted);
+            return java.util.Collections.singleton(playerWhoStarted);
         }
 
         public Pending(BlockPos waveStartPos, BlockPos panelPos, List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted, long storedAtGameTime, int wavesRemaining, int totalWaves, int tierDifficulty, int maxZombiesPerWave) {
@@ -83,8 +84,8 @@ public final class PendingAirdropStorage {
         public Pending(BlockPos waveStartPos, BlockPos panelPos, List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted, long storedAtGameTime, int wavesRemaining, int totalWaves, int tierDifficulty, int maxZombiesPerWave, Set<UUID> memberUuids, UUID lobbyId, boolean membersOnlyCrate) {
             this.waveStartPos = waveStartPos != null ? waveStartPos.immutable() : panelPos.immutable();
             this.panelPos = panelPos.immutable();
-            this.itemIds = new ArrayList<>(itemIds != null ? itemIds : List.of());
-            this.quantities = new ArrayList<>(quantities != null ? quantities : List.of());
+            this.itemIds = new ArrayList<>(itemIds != null ? itemIds : java.util.Collections.emptyList());
+            this.quantities = new ArrayList<>(quantities != null ? quantities : java.util.Collections.emptyList());
             this.difficulty = difficulty;
             this.playerWhoStarted = playerWhoStarted;
             this.storedAtGameTime = storedAtGameTime;
@@ -121,13 +122,13 @@ public final class PendingAirdropStorage {
     public static final int WAVE_COMPLETED_COOLDOWN_TICKS = 60;
 
     /** waveStartPos (ground at tower) -> pending airdrop. Dimension is the level we're in. */
-    private static final Map<ResourceKey<Level>, Map<BlockPos, Pending>> BY_DIMENSION = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, Map<BlockPos, Pending>> BY_DIMENSION = new ConcurrentHashMap<>();
 
     /** Plane UUID -> (itemIds, quantities) for the airdrop we just delivered. Used when the plane spawns the airdrop 65 ticks later. */
     private static final Map<UUID, DeliveryOrderSnapshot> DELIVERY_ORDER_BY_PLANE = new ConcurrentHashMap<>();
     /** Dimension -> next delivery order. Fallback so the 65-tick callback always gets the order even if plane UUID doesn't match. */
-    private static final Map<ResourceKey<Level>, DeliveryOrderSnapshot> NEXT_DELIVERY_ORDER_BY_DIMENSION = new ConcurrentHashMap<>();
-    private static final Map<ResourceKey<Level>, DeliveryMembersSnapshot> NEXT_DELIVERY_MEMBERS_BY_DIMENSION = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, DeliveryOrderSnapshot> NEXT_DELIVERY_ORDER_BY_DIMENSION = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, DeliveryMembersSnapshot> NEXT_DELIVERY_MEMBERS_BY_DIMENSION = new ConcurrentHashMap<>();
 
     public static void putDeliveryOrderForPlane(UUID planeUuid, List<String> itemIds, List<Integer> quantities) {
         if (planeUuid != null && itemIds != null && !itemIds.isEmpty())
@@ -135,23 +136,23 @@ public final class PendingAirdropStorage {
     }
 
     /** Store the order for the next airdrop in this dimension (used by 65-tick callback as fallback). Call from deliverAt. */
-    public static void putNextDeliveryOrder(ResourceKey<Level> dimension, List<String> itemIds, List<Integer> quantities) {
+    public static void putNextDeliveryOrder(RegistryKey<World> dimension, List<String> itemIds, List<Integer> quantities) {
         if (dimension != null && itemIds != null && !itemIds.isEmpty())
             NEXT_DELIVERY_ORDER_BY_DIMENSION.put(dimension, new DeliveryOrderSnapshot(itemIds, quantities));
     }
 
-    public static void putNextDeliveryMembers(ResourceKey<Level> dimension, Set<UUID> members, boolean membersOnly) {
+    public static void putNextDeliveryMembers(RegistryKey<World> dimension, Set<UUID> members, boolean membersOnly) {
         if (dimension == null || members == null || members.isEmpty()) return;
         NEXT_DELIVERY_MEMBERS_BY_DIMENSION.put(dimension, new DeliveryMembersSnapshot(members, membersOnly));
     }
 
     @javax.annotation.Nullable
-    public static DeliveryMembersSnapshot takeNextDeliveryMembers(ResourceKey<Level> dimension) {
+    public static DeliveryMembersSnapshot takeNextDeliveryMembers(RegistryKey<World> dimension) {
         return dimension != null ? NEXT_DELIVERY_MEMBERS_BY_DIMENSION.remove(dimension) : null;
     }
 
     /** Take and remove the next delivery order for this dimension. Returns null if none. */
-    public static DeliveryOrderSnapshot takeNextDeliveryOrder(ResourceKey<Level> dimension) {
+    public static DeliveryOrderSnapshot takeNextDeliveryOrder(RegistryKey<World> dimension) {
         return dimension != null ? NEXT_DELIVERY_ORDER_BY_DIMENSION.remove(dimension) : null;
     }
 
@@ -172,8 +173,8 @@ public final class PendingAirdropStorage {
         public final List<String> itemIds;
         public final List<Integer> quantities;
         DeliveryOrderSnapshot(List<String> itemIds, List<Integer> quantities) {
-            this.itemIds = new ArrayList<>(itemIds != null ? itemIds : List.of());
-            this.quantities = new ArrayList<>(quantities != null ? quantities : List.of());
+            this.itemIds = new ArrayList<>(itemIds != null ? itemIds : java.util.Collections.emptyList());
+            this.quantities = new ArrayList<>(quantities != null ? quantities : java.util.Collections.emptyList());
         }
     }
 
@@ -186,14 +187,14 @@ public final class PendingAirdropStorage {
         }
     }
 
-    public static void store(ServerLevel level, BlockPos waveStartPos, BlockPos panelPos,
+    public static void store(ServerWorld level, BlockPos waveStartPos, BlockPos panelPos,
                              List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted,
                              int wavesRemaining, int totalWaves, int tierDifficulty) {
         store(level, waveStartPos, panelPos, itemIds, quantities, difficulty, playerWhoStarted,
             wavesRemaining, totalWaves, tierDifficulty, null, null);
     }
 
-    public static void store(ServerLevel level, BlockPos waveStartPos, BlockPos panelPos,
+    public static void store(ServerWorld level, BlockPos waveStartPos, BlockPos panelPos,
                              List<String> itemIds, List<Integer> quantities, int difficulty, UUID playerWhoStarted,
                              int wavesRemaining, int totalWaves, int tierDifficulty,
                              Set<UUID> memberUuids, UUID lobbyId) {
@@ -207,12 +208,12 @@ public final class PendingAirdropStorage {
     }
 
     /** Update the loot order for this player's current pending (so reopening GUI and clicking Start uses latest selection). */
-    public static boolean updateOrderForPlayer(ServerLevel level, UUID playerUuid, List<String> itemIds, List<Integer> quantities) {
+    public static boolean updateOrderForPlayer(ServerWorld level, UUID playerUuid, List<String> itemIds, List<Integer> quantities) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null) return false;
         for (Map.Entry<BlockPos, Pending> e : map.entrySet()) {
             if (playerUuid.equals(e.getValue().playerWhoStarted)) {
-                Pending updated = e.getValue().copyWithOrder(itemIds != null ? itemIds : List.of(), quantities != null ? quantities : List.of());
+                Pending updated = e.getValue().copyWithOrder(itemIds != null ? itemIds : java.util.Collections.emptyList(), quantities != null ? quantities : java.util.Collections.emptyList());
                 map.put(e.getKey(), updated);
                 return true;
             }
@@ -221,17 +222,17 @@ public final class PendingAirdropStorage {
     }
 
     /** Remove pending at this position (e.g. when wave failed and we deliver immediately). */
-    public static void removePending(ServerLevel level, BlockPos waveStartPos) {
+    public static void removePending(ServerWorld level, BlockPos waveStartPos) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map != null) map.remove(waveStartPos.immutable());
     }
 
     /**
-     * Wave + panel positions to sweep after quit/rejoin: must be read from SavedData + memory before
+     * Wave + panel positions to sweep after quit/rejoin: must be read from WorldSavedData + memory before
      * {@link #clearAllPendingInLevel}. Using both reduces misses when ground anchor and panel differ in height/XZ.
      */
-    public static List<BlockPos> copyWaveSweepCentersBeforeClear(ServerLevel level) {
-        if (level == null) return List.of();
+    public static List<BlockPos> copyWaveSweepCentersBeforeClear(ServerWorld level) {
+        if (level == null) return java.util.Collections.emptyList();
         LinkedHashSet<BlockPos> set = new LinkedHashSet<>();
         PendingAirdropSavedData saved = PendingAirdropSavedData.get(level);
         for (Pending p : saved.getPending().values()) {
@@ -249,7 +250,7 @@ public final class PendingAirdropStorage {
     }
 
     /** Clear all pending airdrops in this dimension (memory + saved data). Call on level load so rejoin mid-wave does not resume wave / deliver airdrop. */
-    public static void clearAllPendingInLevel(ServerLevel level) {
+    public static void clearAllPendingInLevel(ServerWorld level) {
         if (level == null) return;
         BY_DIMENSION.remove(level.dimension());
         PendingAirdropSavedData saved = PendingAirdropSavedData.get(level);
@@ -260,18 +261,18 @@ public final class PendingAirdropStorage {
     }
 
     /** Get pending without removing (for wave-end check). */
-    public static Pending getPending(ServerLevel level, BlockPos waveStartPos) {
+    public static Pending getPending(ServerWorld level, BlockPos waveStartPos) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         return map != null ? map.get(waveStartPos.immutable()) : null;
     }
 
     /** Get pending whose wave start position is within 64 blocks of the given pos (horizontal only). */
-    public static Pending getPendingNear(ServerLevel level, BlockPos pos) {
+    public static Pending getPendingNear(ServerWorld level, BlockPos pos) {
         return getPendingNear(level, pos, 64);
     }
 
     /** Get pending whose wave start position is within maxRange blocks of the given pos (horizontal only). Use 128 to catch API spawns that land far. */
-    public static Pending getPendingNear(ServerLevel level, BlockPos pos, int maxRange) {
+    public static Pending getPendingNear(ServerWorld level, BlockPos pos, int maxRange) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null) return null;
         int rangeSq = maxRange * maxRange;
@@ -285,7 +286,7 @@ public final class PendingAirdropStorage {
     }
 
     /** Get pending for the given panel position (matches by pending.panelPos so only this tower's airdrop counts). */
-    public static Pending getPendingForPanel(ServerLevel level, BlockPos panelPos) {
+    public static Pending getPendingForPanel(ServerWorld level, BlockPos panelPos) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null || panelPos == null) return null;
         BlockPos p = panelPos.immutable();
@@ -296,14 +297,14 @@ public final class PendingAirdropStorage {
     }
 
     /** If there is exactly one pending airdrop in this dimension, return it (e.g. for spawns whose position not set yet). */
-    public static Pending getOnlyPendingInLevel(ServerLevel level) {
+    public static Pending getOnlyPendingInLevel(ServerWorld level) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null || map.size() != 1) return null;
         return map.values().iterator().next();
     }
 
     /** Any pending airdrop in this dimension (for catch-all wave mob fix when multiple towers possible). */
-    public static Pending getAnyPendingInLevel(ServerLevel level) {
+    public static Pending getAnyPendingInLevel(ServerWorld level) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null || map.isEmpty()) return null;
         return map.values().iterator().next();
@@ -313,7 +314,7 @@ public final class PendingAirdropStorage {
      * True if (x,z) is within {@code horizontalBlocks} (inclusive) of any pending wave anchor in this dimension.
      * Used so we do not tag random monsters globally during a wave (that bypasses spawn caps and pollutes counts).
      */
-    public static boolean isNearAnyWaveStartXZ(ServerLevel level, double x, double z, int horizontalBlocks) {
+    public static boolean isNearAnyWaveStartXZ(ServerWorld level, double x, double z, int horizontalBlocks) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null || map.isEmpty()) return false;
         long maxSq = (long) horizontalBlocks * horizontalBlocks;
@@ -326,7 +327,7 @@ public final class PendingAirdropStorage {
     }
 
     /** Call action for each pending airdrop in this dimension (for time-based wave end). */
-    public static void forEachPendingIn(ServerLevel level, java.util.function.BiConsumer<BlockPos, Pending> action) {
+    public static void forEachPendingIn(ServerWorld level, java.util.function.BiConsumer<BlockPos, Pending> action) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map != null) {
             for (Map.Entry<BlockPos, Pending> e : map.entrySet()) {
@@ -336,7 +337,7 @@ public final class PendingAirdropStorage {
     }
 
     /** Find pending airdrop by wave start position (exact or nearest within range). */
-    public static Pending take(ServerLevel level, BlockPos waveStartPos) {
+    public static Pending take(ServerWorld level, BlockPos waveStartPos) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null) return null;
         BlockPos key = waveStartPos.immutable();
@@ -363,7 +364,7 @@ public final class PendingAirdropStorage {
      * Deliver the airdrop at this wave position (take pending, spawn plane, set cooldown).
      * Called when all waves for this airdrop are complete.
      */
-    public static void deliverAt(ServerLevel level, BlockPos waveStartPos) {
+    public static void deliverAt(ServerWorld level, BlockPos waveStartPos) {
         // End the Berezka wave and purge residue *before* removing pending. If we take() first,
         // pending is gone and invuln/NoAI mixins stop applying while the API can still spawn one tick
         // of ghost zombies (frozen, untracked).
@@ -371,10 +372,11 @@ public final class PendingAirdropStorage {
         Pending p = take(level, waveStartPos);
         if (p == null) return;
         clearAllDeliveryOrders();
-        net.minecraft.world.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, p.panelPos, MobSpawnType.MOB_SUMMONED);
+        net.minecraft.entity.Entity planeEntity = RadiotowersModEntities.PLANEENTITY.get().spawn(level, null, null, null, p.panelPos, SpawnReason.MOB_SUMMONED, false, false);
         if (planeEntity != null) {
-            planeEntity.setYRot(level.getRandom().nextFloat() * 360F);
-            if (planeEntity instanceof PlaneentityEntity pe) {
+            planeEntity.yRot = level.random.nextFloat() * 360F;
+            PlaneentityEntity pe = (planeEntity instanceof PlaneentityEntity) ? (PlaneentityEntity) planeEntity : null;
+            if (pe != null) {
                 if (!p.itemIds.isEmpty()) {
                     pe.setAirdropOrder(p.itemIds, p.quantities);
                     putDeliveryOrderForPlane(pe.getUUID(), p.itemIds, p.quantities);
@@ -388,16 +390,16 @@ public final class PendingAirdropStorage {
         }
         net.mcreator.radiotowers.lobby.AirdropLobbyService.applySharedCooldownWave(level, p.effectiveMembers());
         for (UUID memberId : p.effectiveMembers()) {
-            var player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
+            net.minecraft.entity.player.ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
             if (player != null) {
-                player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                    "message.radiotowers.wave.all_cleared_airdrop_inbound"));
+                player.sendMessage(new TranslationTextComponent(
+                    "message.radiotowers.wave.all_cleared_airdrop_inbound"), net.minecraft.util.Util.NIL_UUID);
             }
         }
     }
 
     /** Whether this player currently has a pending wave (one at a time). */
-    public static boolean hasPendingForPlayer(ServerLevel level, java.util.UUID playerUuid) {
+    public static boolean hasPendingForPlayer(ServerWorld level, java.util.UUID playerUuid) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(level.dimension());
         if (map == null) return false;
         for (Pending p : map.values()) {
@@ -407,7 +409,7 @@ public final class PendingAirdropStorage {
     }
 
     /** For aggro: get the player UUID who started the wave at/near this position, if any. */
-    public static UUID getPlayerWhoStartedWave(ResourceKey<Level> dimension, BlockPos pos) {
+    public static UUID getPlayerWhoStartedWave(RegistryKey<World> dimension, BlockPos pos) {
         Map<BlockPos, Pending> map = BY_DIMENSION.get(dimension);
         if (map == null) return null;
         Pending p = map.get(pos.immutable());

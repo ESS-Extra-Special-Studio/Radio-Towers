@@ -3,9 +3,9 @@ package net.mcreator.radiotowers.mixin;
 import com.tacz.guns.api.event.common.GunShootEvent;
 import net.mcreator.radiotowers.integration.DefenseSessionClientMirror;
 import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * Outside airdrop waves NMS behaves exactly as designed.
  *
  * <p>TacZ gun events run on the logical client as well as the server; NMS chat/warnings are often client-side.
- * We cancel on {@link ServerPlayer} using server state and on the client player using {@link DefenseSessionClientMirror}.
+ * We cancel on {@link ServerPlayerEntity} using server state and on the client player using {@link DefenseSessionClientMirror}.
  */
 @Pseudo
 @Mixin(targets = "stev6.nomindlessshooting.TacZListener")
@@ -37,17 +37,19 @@ public abstract class NoMindlessShootingTacZListenerMixin {
         if (event == null) return;
         try {
             LivingEntity shooter = event.getShooter();
-            if (!(shooter instanceof Player player)) {
+            PlayerEntity player = (shooter instanceof PlayerEntity) ? (PlayerEntity) shooter : null;
+            ServerPlayerEntity sp = (player instanceof ServerPlayerEntity) ? (ServerPlayerEntity) player : null;
+            if (!(player != null)) {
                 return;
             }
-            if (player instanceof ServerPlayer sp) {
-                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.serverLevel())) {
+            if (sp != null) {
+                if (ZombieWavesAPILoader.isDefenseWaveActive(sp.getLevel())) {
                     ci.cancel();
                 }
                 return;
             }
-            if (player.level().isClientSide()
-                && DefenseSessionClientMirror.isActive(player.level().dimension())) {
+            if (player.level.isClientSide()
+                && DefenseSessionClientMirror.isActive(player.level.dimension())) {
                 ci.cancel();
             }
         } catch (Throwable ignored) {

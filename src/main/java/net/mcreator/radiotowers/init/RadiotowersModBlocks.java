@@ -3,11 +3,11 @@
  */
 package net.mcreator.radiotowers.init;
 
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.DeferredRegister;
 
-import net.minecraft.world.level.block.Block;
+import net.minecraft.block.Block;
 
 import net.mcreator.radiotowers.block.TrashblockBlock;
 import net.mcreator.radiotowers.block.RadioPanelBlock;

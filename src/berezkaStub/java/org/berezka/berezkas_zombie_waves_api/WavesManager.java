@@ -1,6 +1,6 @@
 package org.berezka.berezkas_zombie_waves_api;
 
-import net.minecraft.core.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.TickEvent;
 
 /**

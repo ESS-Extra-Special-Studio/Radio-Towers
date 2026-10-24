@@ -1,15 +1,18 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.StringTextComponent;
 
 import net.mcreator.radiotowers.client.lobby.AirdropLobbyClient;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.mcreator.radiotowers.network.lobby.AirdropLobbyNetwork;
 import net.mcreator.radiotowers.network.lobby.LobbyPackets;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.play.NetworkPlayerInfo;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
 import uk.co.extraspecialstudio.extraspecial.esc.theme.EscFrameStyle;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscFonts;
 import uk.co.extraspecialstudio.extraspecial.esc.ui.EscInsets;
@@ -63,20 +66,63 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     private String nameFilter = "";
     private int onlineRefreshTicks;
 
-    private record MemberRow(UUID uuid, String name, String status, boolean host, String action) {}
-    private record OnlineRow(UUID uuid, String name) {}
-    private record Chip(int x, int y, int w, int h) {
+    private static class MemberRow {
+        private final UUID uuid;
+        private final String name;
+        private final String status;
+        private final boolean host;
+        private final String action;
+        public MemberRow(UUID uuid, String name, String status, boolean host, String action) {
+            this.uuid = uuid;
+            this.name = name;
+            this.status = status;
+            this.host = host;
+            this.action = action;
+        }
+        public UUID uuid() { return this.uuid; }
+        public String name() { return this.name; }
+        public String status() { return this.status; }
+        public boolean host() { return this.host; }
+        public String action() { return this.action; }
+    }
+    private static class OnlineRow {
+        private final UUID uuid;
+        private final String name;
+        public OnlineRow(UUID uuid, String name) {
+            this.uuid = uuid;
+            this.name = name;
+        }
+        public UUID uuid() { return this.uuid; }
+        public String name() { return this.name; }
+    }
+    private static class Chip {
+        private final int x;
+        private final int y;
+        private final int w;
+        private final int h;
+        public Chip(int x, int y, int w, int h) {
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
+        public int x() { return this.x; }
+        public int y() { return this.y; }
+        public int w() { return this.w; }
+        public int h() { return this.h; }
+
         boolean contains(double mx, double my) {
             return mx >= x && mx < x + w && my >= y && my < y + h;
         }
+    
     }
 
     public AirdropLobbyScreen(@Nullable Screen parent, BlockPos panelPos, UUID lobbyId, AirdropLobbyClient.OrderSnapshot order) {
-        super(Component.translatable("screen.radiotowers.airdrop_lobby.title"));
+        super(new TranslationTextComponent("screen.radiotowers.airdrop_lobby.title"));
         this.parent = parent;
         this.panelPos = panelPos;
         this.lobbyId = lobbyId;
-        this.order = order != null ? order : new AirdropLobbyClient.OrderSnapshot(0, List.of(), List.of());
+        this.order = order != null ? order : new AirdropLobbyClient.OrderSnapshot(0, java.util.Collections.emptyList(), java.util.Collections.emptyList());
         this.sync = AirdropLobbyClient.lastSync();
         this.countdownSeconds = AirdropLobbyClient.countdownSeconds();
     }
@@ -134,11 +180,11 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
             int btnY = inviteBarRect.y() + (barH - btnH) / 2;
             inviteBox = addSearchBox(
                 new EscRect(inviteBarRect.x() + 4, boxY, boxW, boxH),
-                Component.translatable("screen.radiotowers.airdrop_lobby.name_hint"));
+                new TranslationTextComponent("screen.radiotowers.airdrop_lobby.name_hint"));
             inviteBox.setMaxLength(32);
             if (!nameFilter.isEmpty()) inviteBox.setValue(nameFilter);
             addButton(
-                Component.translatable("screen.radiotowers.airdrop_lobby.invite"),
+                new TranslationTextComponent("screen.radiotowers.airdrop_lobby.invite"),
                 new EscRect(inviteBarRect.right() - btnW - 4, btnY, btnW, btnH),
                 b -> onInvite());
             y = inviteBarRect.bottom() + GAP;
@@ -164,17 +210,17 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         memberList.setViewport(memberViewport);
 
         int by = footerBounds.y() + Math.max(0, (footerBounds.height() - 20) / 2);
-        addButton(Component.translatable("screen.radiotowers.airdrop_lobby.back"),
+        addButton(new TranslationTextComponent("screen.radiotowers.airdrop_lobby.back"),
             new EscRect(footerBounds.x() + PAD, by, 64, 20), b -> onBack());
-        addButton(Component.translatable("screen.radiotowers.airdrop_lobby.leave"),
+        addButton(new TranslationTextComponent("screen.radiotowers.airdrop_lobby.leave"),
             new EscRect(footerBounds.x() + PAD + 70, by, 64, 20), b -> onLeave());
         EscRect primary = new EscRect(footerBounds.right() - PAD - 96, by, 96, 20);
         if (host) {
-            goButton = addButton(Component.translatable("screen.radiotowers.airdrop_lobby.go"), primary, b -> onGo());
+            goButton = addButton(new TranslationTextComponent("screen.radiotowers.airdrop_lobby.go"), primary, b -> onGo());
             readyButton = null;
         } else {
             goButton = null;
-            readyButton = addButton(Component.translatable("screen.radiotowers.airdrop_lobby.ready"), primary, b -> onReady());
+            readyButton = addButton(new TranslationTextComponent("screen.radiotowers.airdrop_lobby.ready"), primary, b -> onReady());
         }
 
         refreshMembers();
@@ -227,11 +273,11 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
                 for (LobbyPackets.MemberSnapshot m : sync.members()) inLobby.add(m.uuid());
             }
             String q = nameFilter == null ? "" : nameFilter.trim().toLowerCase(Locale.ROOT);
-            for (PlayerInfo info : minecraft.getConnection().getOnlinePlayers()) {
+            for (NetworkPlayerInfo info : minecraft.getConnection().getOnlinePlayers()) {
                 if (info == null || info.getProfile() == null) continue;
                 UUID id = info.getProfile().getId();
                 String name = info.getProfile().getName();
-                if (id == null || name == null || name.isBlank()) continue;
+                if (id == null || name == null || name.trim().isEmpty()) continue;
                 if (id.equals(self) || inLobby.contains(id)) continue;
                 if (!q.isEmpty() && !name.toLowerCase(Locale.ROOT).contains(q)) continue;
                 rows.add(new OnlineRow(id, name));
@@ -241,7 +287,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         onlineList.replaceItems(rows);
     }
 
-    private void renderMemberRow(GuiGraphics g, MemberRow row, int index, int left, int top, int width, int height,
+    private void renderMemberRow(EscGraphics g, MemberRow row, int index, int left, int top, int width, int height,
                                  int mouseX, int mouseY, boolean hovered, float partialTick) {
         paintRow(g, left, top, width, height, hovered, index);
         String badge = row.host ? tr("screen.radiotowers.airdrop_lobby.host") : statusLabel(row.status);
@@ -258,7 +304,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         EscText.drawScrollingString(g, font, row.name, left + 6, top + (height - font.lineHeight) / 2, nameMax, titleRgb());
     }
 
-    private void renderOnlineRow(GuiGraphics g, OnlineRow row, int index, int left, int top, int width, int height,
+    private void renderOnlineRow(EscGraphics g, OnlineRow row, int index, int left, int top, int width, int height,
                                  int mouseX, int mouseY, boolean hovered, float partialTick) {
         paintRow(g, left, top, width, height, hovered, index);
         String invite = tr("screen.radiotowers.airdrop_lobby.invite");
@@ -268,7 +314,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         EscText.drawScrollingString(g, font, row.name, left + 6, top + (height - font.lineHeight) / 2, nameMax, titleRgb());
     }
 
-    private void paintRow(GuiGraphics g, int left, int top, int width, int height, boolean hovered, int index) {
+    private void paintRow(EscGraphics g, int left, int top, int width, int height, boolean hovered, int index) {
         int fill = hovered ? argb(style.accentColor(), 0x33) : ((index & 1) == 1 ? 0x22000000 : 0);
         if (fill != 0) g.fill(left, top + 1, left + width, top + height - 1, fill);
     }
@@ -281,7 +327,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         return new Chip(x, y, w, h);
     }
 
-    private void drawChip(GuiGraphics g, Chip chip, String label, int rgb, boolean hot) {
+    private void drawChip(EscGraphics g, Chip chip, String label, int rgb, boolean hot) {
         g.fill(chip.x, chip.y, chip.x + chip.w, chip.y + chip.h, argb(rgb, hot ? 0x66 : 0x28));
         EscPanel.border(g, new EscRect(chip.x, chip.y, chip.w, chip.h), 0xFF000000 | (rgb & 0xFFFFFF), 1);
         EscText.drawString(g, font, label, chip.x + 5, chip.y + (chip.h - font.lineHeight) / 2,
@@ -299,7 +345,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     }
 
     private void inviteByName(String name) {
-        if (!AirdropLobbyNetwork.isAvailable() || name == null || name.isBlank()) return;
+        if (!AirdropLobbyNetwork.isAvailable() || name == null || name.trim().isEmpty()) return;
         if (inviteBox != null) inviteBox.setValue(name);
         nameFilter = name;
         AirdropLobbyNetwork.channel().sendToServer(new LobbyPackets.Invite(lobbyId, name));
@@ -339,8 +385,9 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics);
+    public void render(MatrixStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        renderBackground(pose);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         drawHeader(guiGraphics);
@@ -363,11 +410,11 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         drawEmpty(guiGraphics, memberViewport, memberList, tr("screen.radiotowers.airdrop_lobby.empty_party"));
         if (onlineList != null) drawScrollbar(guiGraphics, onlineList, onlineViewport);
         if (memberList != null) drawScrollbar(guiGraphics, memberList, memberViewport);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.render(pose, mouseX, mouseY, partialTick);
         markPrimary(guiGraphics);
     }
 
-    private void drawHeader(GuiGraphics g) {
+    private void drawHeader(EscGraphics g) {
         if (headerRect == null) return;
         String title = tr("screen.radiotowers.airdrop_lobby.title");
         int y = headerRect.y() + (headerRect.height() - font.lineHeight) / 2;
@@ -380,16 +427,16 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         g.fill(headerRect.x(), headerRect.bottom() - 1, headerRect.x() + Math.min(headerRect.width(), EscText.width(font, title, EscFonts.DEFAULT) + 16), headerRect.bottom(), rule);
     }
 
-    private void drawStatusBanner(GuiGraphics g) {
+    private void drawStatusBanner(EscGraphics g) {
         if (statusRect == null) return;
         Banner banner = banner();
         EscPanel.fill(g, statusRect, argb(banner.rgb, banner.tone == BannerTone.COUNT ? 0x44 : 0x22));
         EscPanel.renderFrame(g, statusRect, opaque(banner.rgb), 1, EscFrameStyle.SQUARE);
-        EscText.drawInRect(g, font, Component.literal(banner.text), statusRect.inset(EscInsets.of(6, 2)),
+        EscText.drawInRect(g, font, new StringTextComponent(banner.text), statusRect.inset(EscInsets.of(6, 2)),
             opaque(banner.rgb), EscFonts.DEFAULT, true, 0.7f);
     }
 
-    private void drawCard(GuiGraphics g, EscRect card, String title, String meta) {
+    private void drawCard(EscGraphics g, EscRect card, String title, String meta) {
         EscPanel.fill(g, card, EscPanel.withOpacity(0xFF000000, 0.28f));
         EscPanel.renderFrame(g, card, style.panelBorderColor(), 1, EscFrameStyle.SQUARE);
         EscRect head = new EscRect(card.x() + 1, card.y() + 1, card.width() - 2, COL_HEADER);
@@ -401,13 +448,13 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         EscText.drawString(g, font, meta, head.right() - metaW - 6, y, opaque(style.mutedColor()), false, EscFonts.DEFAULT);
     }
 
-    private void drawEmpty(GuiGraphics g, EscRect viewport, EscSimpleScrollList<?> list, String text) {
+    private void drawEmpty(EscGraphics g, EscRect viewport, EscSimpleScrollList<?> list, String text) {
         if (viewport == null || list == null || !list.items().isEmpty() || text == null || text.isEmpty()) return;
         int y = viewport.y() + Math.max(4, (viewport.height() - font.lineHeight) / 2);
-        EscText.drawCentered(g, font, Component.literal(text), viewport.x() + viewport.width() / 2, y, opaque(style.mutedColor()), EscFonts.DEFAULT);
+        EscText.drawCentered(g, font, new StringTextComponent(text), viewport.x() + viewport.width() / 2, y, opaque(style.mutedColor()), EscFonts.DEFAULT);
     }
 
-    private void drawScrollbar(GuiGraphics g, EscSimpleScrollList<?> list, EscRect viewport) {
+    private void drawScrollbar(EscGraphics g, EscSimpleScrollList<?> list, EscRect viewport) {
         if (viewport == null) return;
         int max = list.maxScrollPixels();
         if (max <= 0 || viewport.height() <= 8) return;
@@ -419,16 +466,16 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
         g.fill(x, thumbY, x + 2, thumbY + thumbH, opaque(style.accentColor()));
     }
 
-    private void markPrimary(GuiGraphics g) {
+    private void markPrimary(EscGraphics g) {
         Button primary = goButton != null ? goButton : readyButton;
         if (primary == null || !primary.active || !primary.visible) return;
-        g.fill(primary.getX() + 1, primary.getY() + primary.getHeight() - 2,
-            primary.getX() + primary.getWidth() - 1, primary.getY() + primary.getHeight() - 1,
+        g.fill(primary.x + 1, primary.y + primary.getHeight() - 2,
+            primary.x + primary.getWidth() - 1, primary.y + primary.getHeight() - 1,
             opaque(style.accentColor()));
     }
 
     private String onlineEmpty() {
-        return nameFilter == null || nameFilter.isBlank()
+        return nameFilter == null || nameFilter.trim().isEmpty()
             ? tr("screen.radiotowers.airdrop_lobby.empty_online")
             : tr("screen.radiotowers.airdrop_lobby.empty_filter");
     }
@@ -461,12 +508,12 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     }
 
     private static String statusLabel(String status) {
-        return switch (status) {
-            case "READY" -> tr("screen.radiotowers.airdrop_lobby.status.ready_member");
-            case "INVITED" -> tr("screen.radiotowers.airdrop_lobby.status.invited");
-            case "JOINED" -> tr("screen.radiotowers.airdrop_lobby.status.joined");
-            default -> status;
-        };
+        switch (status) {
+            case "READY": return tr("screen.radiotowers.airdrop_lobby.status.ready_member");
+            case "INVITED": return tr("screen.radiotowers.airdrop_lobby.status.invited");
+            case "JOINED": return tr("screen.radiotowers.airdrop_lobby.status.joined");
+            default: return status;
+        }
     }
 
     private static String actionLabel(String action) {
@@ -480,7 +527,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
     }
 
     private static String tr(String key, Object... args) {
-        return Component.translatable(key, args).getString();
+        return new TranslationTextComponent(key, args).getString();
     }
 
     private static int rgb(int argb) {
@@ -497,7 +544,19 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
 
     private enum BannerTone { READY, WAIT, SYNC, COUNT }
 
-    private record Banner(BannerTone tone, String text, int rgb) {}
+    private static class Banner {
+        private final BannerTone tone;
+        private final String text;
+        private final int rgb;
+        public Banner(BannerTone tone, String text, int rgb) {
+            this.tone = tone;
+            this.text = text;
+            this.rgb = rgb;
+        }
+        public BannerTone tone() { return this.tone; }
+        public String text() { return this.text; }
+        public int rgb() { return this.rgb; }
+    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {

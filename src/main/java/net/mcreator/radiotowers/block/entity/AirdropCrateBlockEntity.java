@@ -1,29 +1,29 @@
 package net.mcreator.radiotowers.block.entity;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import net.minecraftforge.items.wrapper.SidedInvWrapper;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.common.capabilities.Capability;
 
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.WorldlyContainer;
-import net.minecraft.world.ContainerHelper;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.NonNullList;
-import net.minecraft.core.Direction;
-import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.block.BlockState;
+import net.minecraft.tileentity.LockableLootTileEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.util.NonNullList;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.ResourceLocation;
 
 import net.mcreator.radiotowers.airdrop.TaczAirdropIntegration;
 import net.mcreator.radiotowers.config.AirdropConfig;
@@ -41,8 +41,8 @@ import java.util.stream.IntStream;
 
 import io.netty.buffer.Unpooled;
 
-public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity implements WorldlyContainer {
-	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = ResourceLocation.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
+public class AirdropCrateBlockEntity extends LockableLootTileEntity implements ISidedInventory {
+	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = new ResourceLocation("radiotowers", "radio_tower_overrun_loot");
 
 	private NonNullList<ItemStack> stacks = NonNullList.withSize(27, ItemStack.EMPTY);
 	private final LazyOptional<? extends IItemHandler>[] handlers = SidedInvWrapper.create(this, Direction.values());
@@ -55,18 +55,18 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	/** When non-empty, only these UUIDs may open the crate (lobbied delivery). */
 	private final java.util.Set<java.util.UUID> allowedOpeners = new java.util.LinkedHashSet<>();
 
-	public AirdropCrateBlockEntity(BlockPos position, BlockState state) {
-		super(RadiotowersModBlockEntities.AIRDROP_CRATE.get(), position, state);
+	public AirdropCrateBlockEntity() {
+		super(RadiotowersModBlockEntities.AIRDROP_CRATE.get());
 	}
 
 	@Override
-	public void load(CompoundTag compound) {
-		super.load(compound);
+	public void load(BlockState state, CompoundNBT compound) {
+		super.load(state, compound);
 		this.filledFromOrder = compound.getBoolean("FilledFromOrder");
 		this.structureLoot = compound.getBoolean("StructureLoot");
 		allowedOpeners.clear();
-		if (compound.contains("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_LIST)) {
-			net.minecraft.nbt.ListTag list = compound.getList("AllowedOpenerStrings", net.minecraft.nbt.Tag.TAG_STRING);
+		if (compound.contains("AllowedOpenerStrings", 9)) {
+			net.minecraft.nbt.ListNBT list = compound.getList("AllowedOpenerStrings", 8);
 			for (int i = 0; i < list.size(); i++) {
 				try {
 					allowedOpeners.add(java.util.UUID.fromString(list.getString(i)));
@@ -75,41 +75,40 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 		}
 		if (!this.tryLoadLootTable(compound))
 			this.stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
-		ContainerHelper.loadAllItems(compound, this.stacks);
-		// Only tower overrun loot is structure-owned. Live delivery uses the same LootTable id —
-		// never treat it as structureLoot or order fills / opens get the wrong path.
-		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", net.minecraft.nbt.Tag.TAG_STRING)) {
-			ResourceLocation table = ResourceLocation.tryParse(compound.getString("LootTable"));
+		net.minecraft.inventory.ItemStackHelper.loadAllItems(compound, this.stacks);
+		if (!this.filledFromOrder && !this.structureLoot && compound.contains("LootTable", 8)) {
+			ResourceLocation table = compound.getString("LootTable").isEmpty() || !ResourceLocation.isValidResourceLocation(compound.getString("LootTable")) ? null : new ResourceLocation(compound.getString("LootTable"));
 			if (table != null && STRUCTURE_OVERRUN_LOOT.equals(table))
 				this.structureLoot = true;
 		}
 	}
 
 	@Override
-	public void saveAdditional(CompoundTag compound) {
-		super.saveAdditional(compound);
+	public CompoundNBT save(CompoundNBT compound) {
+		super.save(compound);
 		compound.putBoolean("FilledFromOrder", this.filledFromOrder);
 		compound.putBoolean("StructureLoot", this.structureLoot);
 		if (!allowedOpeners.isEmpty()) {
-			net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+			net.minecraft.nbt.ListNBT list = new net.minecraft.nbt.ListNBT();
 			for (java.util.UUID u : allowedOpeners) {
-				list.add(net.minecraft.nbt.StringTag.valueOf(u.toString()));
+				list.add(net.minecraft.nbt.StringNBT.valueOf(u.toString()));
 			}
 			compound.put("AllowedOpenerStrings", list);
 		}
 		if (!this.trySaveLootTable(compound)) {
-			ContainerHelper.saveAllItems(compound, this.stacks);
+			net.minecraft.inventory.ItemStackHelper.saveAllItems(compound, this.stacks);
 		}
+		return compound;
 	}
 
 	@Override
-	public ClientboundBlockEntityDataPacket getUpdatePacket() {
-		return ClientboundBlockEntityDataPacket.create(this);
+	public SUpdateTileEntityPacket getUpdatePacket() {
+		return new SUpdateTileEntityPacket(this.getBlockPos(), 0, this.getUpdateTag());
 	}
 
 	@Override
-	public CompoundTag getUpdateTag() {
-		return this.saveWithFullMetadata();
+	public CompoundNBT getUpdateTag() {
+		return this.save(new CompoundNBT());
 	}
 
 	@Override
@@ -126,8 +125,8 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	}
 
 	@Override
-	public Component getDefaultName() {
-		return Component.translatable("block.radiotowers.airdrop_crate");
+	public ITextComponent getDefaultName() {
+		return new TranslationTextComponent("block.radiotowers.airdrop_crate");
 	}
 
 	@Override
@@ -136,13 +135,13 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	}
 
 	@Override
-	public AbstractContainerMenu createMenu(int id, Inventory inventory) {
-		return new AirdropCrateguiMenu(id, inventory, new FriendlyByteBuf(Unpooled.buffer()).writeBlockPos(this.worldPosition));
+	public Container createMenu(int id, PlayerInventory inventory) {
+		return new AirdropCrateguiMenu(id, inventory, new PacketBuffer(Unpooled.buffer()).writeBlockPos(this.worldPosition));
 	}
 
 	@Override
-	public Component getDisplayName() {
-		return Component.translatable("block.radiotowers.airdrop_crate");
+	public ITextComponent getDisplayName() {
+		return new TranslationTextComponent("block.radiotowers.airdrop_crate");
 	}
 
 	@Override
@@ -177,7 +176,7 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 
 	@Override
 	public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-		if (!this.remove && capability == ForgeCapabilities.ITEM_HANDLER) {
+		if (!this.remove && capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
 			// AirdropCrateguiMenu binds with facing == null. Previously only sided handlers
 			// were exposed, so the menu fell back to a private empty ItemStackHandler —
 			// classic ghost-slot / click-reshuffle desync (especially visible with TaCZ NBT items).
@@ -226,13 +225,13 @@ public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity im
 	}
 
 	@Override
-	public void unpackLootTable(Player player) {
+	public void unpackLootTable(PlayerEntity player) {
 		boolean hadLootTable = this.lootTable != null;
 		super.unpackLootTable(player);
 		// Structure / ordered crates keep fixed contents. Bonus TaCZ only for live loot-table drops.
 		if (!hadLootTable || this.filledFromOrder || this.structureLoot) return;
 		if (!ModList.get().isLoaded("tacz") || !AirdropConfig.INCLUDE_TACZ_AMMO.get()) return;
-		RandomSource random = level != null ? level.getRandom() : RandomSource.create();
+		java.util.Random random = level != null ? level.random : new java.util.Random();
 		List<Integer> emptySlots = new ArrayList<>();
 		for (int i = 0; i < getContainerSize(); i++)
 			if (this.stacks.get(i).isEmpty()) emptySlots.add(i);

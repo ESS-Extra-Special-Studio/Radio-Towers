@@ -1,14 +1,14 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.mcreator.radiotowers.RadiotowersMod;
 
 import java.util.function.Supplier;
@@ -30,12 +30,12 @@ public class BasePanelActionMessage {
         this.action = action;
     }
 
-    public BasePanelActionMessage(FriendlyByteBuf buf) {
+    public BasePanelActionMessage(PacketBuffer buf) {
         this.pos = buf.readBlockPos();
         this.action = buf.readVarInt();
     }
 
-    public static void encode(BasePanelActionMessage msg, FriendlyByteBuf buf) {
+    public static void encode(BasePanelActionMessage msg, PacketBuffer buf) {
         buf.writeBlockPos(msg.pos);
         buf.writeVarInt(msg.action);
     }
@@ -44,21 +44,24 @@ public class BasePanelActionMessage {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isServer()) return;
-            ServerPlayer sender = ctx.getSender();
+            ServerPlayerEntity sender = ctx.getSender();
             if (sender == null || !ModList.get().isLoaded("dead_air")) return;
             try {
                 Class<?> api = Class.forName("uk.co.extraspecialstudio.dead_air.api.DeadAirAPI");
                 if (msg.action == SET) {
-                    api.getMethod("setPlayerBase", ServerPlayer.class, BlockPos.class)
+                    api.getMethod("setPlayerBase", ServerPlayerEntity.class, BlockPos.class)
                         .invoke(null, sender, msg.pos);
                 } else if (msg.action == UNSET) {
-                    api.getMethod("unsetPlayerBase", ServerPlayer.class).invoke(null, sender);
+                    api.getMethod("unsetPlayerBase", ServerPlayerEntity.class).invoke(null, sender);
                 }
-                Object info = api.getMethod("getPlayerBaseGuiInfo", ServerPlayer.class, BlockPos.class)
+                Object info = api.getMethod("getPlayerBaseGuiInfo", ServerPlayerEntity.class, BlockPos.class)
                     .invoke(null, sender, msg.pos);
-                if (info instanceof Object[] arr && arr.length >= 2) {
-                    String line = arr[0] instanceof String s ? s : String.valueOf(arr[0]);
-                    boolean isThis = arr[1] instanceof Boolean b && b;
+                    Object[] arr = (info instanceof Object[]) ? (Object[]) info : null;
+                if (arr != null && arr.length >= 2) {
+                Object s$src = arr[0]; String s = (s$src instanceof String) ? (String) s$src : null;
+                    String line = s != null ? s : String.valueOf(arr[0]);
+                    Object b$src = arr[1]; Boolean b = (b$src instanceof Boolean) ? (Boolean) b$src : null;
+                    boolean isThis = b != null && b;
                     RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> sender),
                         new BaseStatusPacket(line, isThis));
                 }

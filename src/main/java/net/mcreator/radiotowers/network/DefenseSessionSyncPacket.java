@@ -1,14 +1,14 @@
 package net.mcreator.radiotowers.network;
 
-import net.minecraft.core.registries.Registries;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.integration.DefenseSessionClientMirror;
@@ -29,12 +29,12 @@ public class DefenseSessionSyncPacket {
         this.active = active;
     }
 
-    public DefenseSessionSyncPacket(FriendlyByteBuf buf) {
+    public DefenseSessionSyncPacket(PacketBuffer buf) {
         this.dimensionId = buf.readResourceLocation();
         this.active = buf.readBoolean();
     }
 
-    public static void encode(DefenseSessionSyncPacket msg, FriendlyByteBuf buf) {
+    public static void encode(DefenseSessionSyncPacket msg, PacketBuffer buf) {
         buf.writeResourceLocation(msg.dimensionId);
         buf.writeBoolean(msg.active);
     }
@@ -43,7 +43,7 @@ public class DefenseSessionSyncPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.enqueueWork(() -> {
             if (!ctx.getDirection().getReceptionSide().isClient()) return;
-            ResourceKey<Level> key = ResourceKey.create(Registries.DIMENSION, msg.dimensionId);
+            RegistryKey<World> key = RegistryKey.create(Registry.DIMENSION_REGISTRY, msg.dimensionId);
             DefenseSessionClientMirror.set(key, msg.active);
         });
         ctx.setPacketHandled(true);

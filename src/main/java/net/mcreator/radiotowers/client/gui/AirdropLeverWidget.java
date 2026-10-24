@@ -1,30 +1,32 @@
 package net.mcreator.radiotowers.client.gui;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import net.mcreator.radiotowers.client.AirdropWaveHudData;
 import net.mcreator.radiotowers.config.AirdropConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import uk.co.extraspecialstudio.extraspecial.esc.ui.EscGraphics;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.ResourceLocation;
 
 import java.util.function.BooleanSupplier;
 
 /**
  * Textured lever for calling an airdrop. Uses {@link AirdropWaveHudData} for wave/cooldown (server-synced).
  */
-public class AirdropLeverWidget extends AbstractWidget {
+public class AirdropLeverWidget extends Widget {
 
-    private static final ResourceLocation TEX_OFF = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_off.png");
-    private static final ResourceLocation TEX_ON = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_on.png");
+    private static final ResourceLocation TEX_OFF = new ResourceLocation("radiotowers", "textures/gui/airdrop_switch_off.png");
+    private static final ResourceLocation TEX_ON = new ResourceLocation("radiotowers", "textures/gui/airdrop_switch_on.png");
 
     private final Runnable onActivate;
     /** Extra gate (e.g. catalog needs 10+ points); standard airdrop uses {@code () -> true}. */
     private final BooleanSupplier extraCanActivate;
 
     public AirdropLeverWidget(int x, int y, int w, int h, Runnable onActivate, BooleanSupplier extraCanActivate) {
-        super(x, y, w, h, Component.translatable("screen.radiotowers.call_airdrop.title"));
+        super(x, y, w, h, new TranslationTextComponent("screen.radiotowers.call_airdrop.title"));
         this.onActivate = onActivate;
         this.extraCanActivate = extraCanActivate;
     }
@@ -36,7 +38,7 @@ public class AirdropLeverWidget extends AbstractWidget {
         }
         long end = AirdropWaveHudData.getCooldownEndGameTime();
         if (end <= 0) return true;
-        var level = Minecraft.getInstance().level;
+        net.minecraft.client.world.ClientWorld level = Minecraft.getInstance().level;
         return level != null && level.getGameTime() >= end;
     }
 
@@ -52,11 +54,12 @@ public class AirdropLeverWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        int x = getX();
-        int y = getY();
-        int w = getWidth();
-        int h = getHeight();
+    public void renderButton(MatrixStack pose, int mouseX, int mouseY, float partialTick) {
+        EscGraphics guiGraphics = new EscGraphics(pose);
+        int x = this.x;
+        int y = this.y;
+        int w = this.width;
+        int h = this.height;
         long cdEnd = AirdropWaveHudData.getCooldownEndGameTime();
         boolean on = AirdropWaveHudData.isWaveInProgress()
             || (cdEnd > 0 && Minecraft.getInstance().level != null && Minecraft.getInstance().level.getGameTime() < cdEnd);
@@ -74,7 +77,7 @@ public class AirdropLeverWidget extends AbstractWidget {
         } else if (!canActivateLever() && cdEnd > 0
                 && !(AirdropConfig.getStandardAirdropCooldownTicks() == 0
                     && AirdropConfig.getWaveDeliveryCooldownTicks() == 0)) {
-            var level = Minecraft.getInstance().level;
+            net.minecraft.client.world.ClientWorld level = Minecraft.getInstance().level;
             if (level != null) {
                 long remaining = cdEnd - level.getGameTime();
                 if (remaining > 0) {
@@ -86,10 +89,5 @@ public class AirdropLeverWidget extends AbstractWidget {
                 }
             }
         }
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput output) {
-        defaultButtonNarrationText(output);
     }
 }

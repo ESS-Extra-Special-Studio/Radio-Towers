@@ -1,26 +1,26 @@
 package net.mcreator.radiotowers.integration;
+import net.minecraft.util.text.TranslationTextComponent;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobType;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.Skeleton;
-import net.minecraft.world.entity.monster.Stray;
-import net.minecraft.world.entity.monster.WitherSkeleton;
-import net.minecraft.world.entity.monster.Zombie;
-import net.minecraft.world.entity.monster.ZombieVillager;
-import net.minecraft.world.entity.monster.Zoglin;
-import net.minecraft.world.entity.monster.ZombifiedPiglin;
-import net.minecraft.world.entity.monster.warden.Warden;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.World;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.CreatureAttribute;
+import net.minecraft.entity.monster.MonsterEntity;
+import net.minecraft.entity.monster.PhantomEntity;
+import net.minecraft.entity.monster.SkeletonEntity;
+import net.minecraft.entity.monster.StrayEntity;
+import net.minecraft.entity.monster.WitherSkeletonEntity;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.monster.ZombieVillagerEntity;
+import net.minecraft.entity.monster.ZoglinEntity;
+import net.minecraft.entity.monster.ZombifiedPiglinEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.vector.Vector3d;
 import net.mcreator.radiotowers.RadiotowersMod;
 import net.mcreator.radiotowers.util.LoadedEntityScan;
 import net.mcreator.radiotowers.events.WaveMobAggroHandler;
@@ -28,8 +28,8 @@ import net.mcreator.radiotowers.init.RadiotowersModSounds;
 import net.mcreator.radiotowers.network.WaveStatePacket;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModContainer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.mcreator.radiotowers.network.DefenseSessionSyncPacket;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Integration with Berezka's Zombie Waves API (no compile dependency).
+ * Integration with Berezka's ZombieEntity Waves API (no compile dependency).
  * - Start wave at tower ground when player clicks START; airdrop is delivered only when wave completes.
  * - We detect wave end by reading the API's manager.remainEnemysCount and manager.pos (no API changes needed).
  * - Optional: API can still call onWaveCompleted(level, waveStartPos) for immediate delivery.
@@ -60,10 +60,10 @@ public final class ZombieWavesAPILoader {
     /** Wave must run at least this long before we sync "ghost" count (0 in area but API > 0). 60 seconds. */
     private static final long MIN_TICKS_FOR_GHOST_SYNC = 60 * 20;
     /** True while a RadioTowers defense-wave session is active in a dimension (from first start to final deliver/fail). */
-    private static final Map<ResourceKey<net.minecraft.world.level.Level>, Boolean> ACTIVE_DEFENSE_SESSION_BY_DIM = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<net.minecraft.world.World>, Boolean> ACTIVE_DEFENSE_SESSION_BY_DIM = new ConcurrentHashMap<>();
     /** After quit mid-wave, sweep undead near these positions for a short time (chunks/player load asynchronously). */
-    private static final Map<ResourceKey<Level>, List<BlockPos>> RECONNECT_STRAGGLER_CENTERS = new ConcurrentHashMap<>();
-    private static final Map<ResourceKey<Level>, Long> RECONNECT_STRAGGLER_UNTIL_GAME_TIME = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, List<BlockPos>> RECONNECT_STRAGGLER_CENTERS = new ConcurrentHashMap<>();
+    private static final Map<RegistryKey<World>, Long> RECONNECT_STRAGGLER_UNTIL_GAME_TIME = new ConcurrentHashMap<>();
     private static final long RECONNECT_STRAGGLER_QUEUE_TICKS = 6000L;
 
     /** Retained to clear any stale state from older builds that used zero-alive completion streaks. */
@@ -81,13 +81,13 @@ public final class ZombieWavesAPILoader {
     /** When we last called start for (dimension, pos); used to debounce double-start. */
     private static final java.util.Map<String, Long> LAST_START_AT = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public static boolean startWaveAt(ServerLevel level, BlockPos groundPos, int tierDifficulty, ServerPlayer playerWhoStarted) {
+    public static boolean startWaveAt(ServerWorld level, BlockPos groundPos, int tierDifficulty, ServerPlayerEntity playerWhoStarted) {
         if (level == null || level.isClientSide() || groundPos == null) {
-            RadiotowersMod.LOGGER.warn("[Zombie Waves] startWaveAt skipped: level null or client or pos null (level={}, pos={})", level != null && !level.isClientSide(), groundPos);
+            RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] startWaveAt skipped: level null or client or pos null (level={}, pos={})", level != null && !level.isClientSide(), groundPos);
             return false;
         }
         if (!isZombieWavesAPILoaded()) {
-            RadiotowersMod.LOGGER.warn("[Zombie Waves] startWaveAt skipped: API mod not loaded");
+            RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] startWaveAt skipped: API mod not loaded");
             return false;
         }
         BerezkaWaveChatSilencer.apply();
@@ -125,7 +125,7 @@ public final class ZombieWavesAPILoader {
             net.mcreator.radiotowers.events.DrownedKillCountsHandler.clearDeathCountedIds();
             ZombieWavesMixinContext.setPending(level, groundPos);
 
-            // Prefer API overload with ServerPlayer so WavesManager gets Optional.of(player) for built-in agro (zombies target that player)
+            // Prefer API overload with ServerPlayerEntity so WavesManager gets Optional.of(player) for built-in agro (zombies target that player)
             started = tryStartZombieWaveWithPlayer(level, groundPos, waveDifficulty, waveDurationTicks, spawnRange, timeBetweenWaves, playerWhoStarted);
             if (!started)
                 started = tryStartZombieWaveDirect(level, groundPos, waveDifficulty, waveDurationTicks, spawnRange, timeBetweenWaves);
@@ -135,7 +135,7 @@ public final class ZombieWavesAPILoader {
 
         if (!started) {
             ZombieWavesMixinContext.getAndClearPendingLevel(); // clear if unused
-            RadiotowersMod.LOGGER.warn("[Zombie Waves] Wave did not start at {} — API and command failed. Airdrop will be delivered immediately.", groundPos);
+            RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] Wave did not start at {} — API and command failed. Airdrop will be delivered immediately.", groundPos);
         } else {
             setDefenseSessionActive(level, true);
             PendingAirdropStorage.Pending p = PendingAirdropStorage.getPending(level, groundPos);
@@ -146,8 +146,8 @@ public final class ZombieWavesAPILoader {
                 PendingAirdropSavedData.get(level).setDirty();
                 if (playerWhoStarted != null) {
                     int waveNum = p.totalWaves - p.wavesRemaining + 1;
-                    playerWhoStarted.sendSystemMessage(Component.translatable(
-                        "message.radiotowers.wave.started", waveNum, p.totalWaves));
+                    playerWhoStarted.sendMessage(new TranslationTextComponent(
+                        "message.radiotowers.wave.started", waveNum, p.totalWaves), net.minecraft.util.Util.NIL_UUID);
                 }
                 if (RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) {
                     logNuclearWaveAPISnapshot(level, p.waveStartPos);
@@ -159,13 +159,13 @@ public final class ZombieWavesAPILoader {
         return started;
     }
 
-    private static void logNuclearWaveAPISnapshot(ServerLevel level, BlockPos waveStartPos) {
+    private static void logNuclearWaveAPISnapshot(ServerWorld level, BlockPos waveStartPos) {
         if (level == null || level.isClientSide() || waveStartPos == null) return;
         if (!RadiotowersMod.WAVE_PATCH_NUCLEAR_MODE) return;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return;
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return;
@@ -179,14 +179,14 @@ public final class ZombieWavesAPILoader {
             final double RING_TOLERANCE = 6.0;
             if (apiPos != null) {
                 int r = 120;
-                AABB box = new AABB(
-                    apiPos.getX() - r, level.getMinBuildHeight(), apiPos.getZ() - r,
+                AxisAlignedBB box = new AxisAlignedBB(
+                    apiPos.getX() - r, 0, apiPos.getZ() - r,
                     apiPos.getX() + r, level.getMaxBuildHeight(), apiPos.getZ() + r
                 );
-                for (net.minecraft.world.entity.Mob m : level.getEntitiesOfClass(net.minecraft.world.entity.Mob.class, box)) {
-                    if (!m.isAlive() || m.isRemoved()) continue;
-                    var t = m.getType();
-                    if (t == net.minecraft.world.entity.EntityType.ZOMBIE || t == net.minecraft.world.entity.EntityType.DROWNED) {
+                for (net.minecraft.entity.MobEntity m : level.getEntitiesOfClass(net.minecraft.entity.MobEntity.class, box)) {
+                    if (!m.isAlive() || m.removed) continue;
+                    net.minecraft.entity.EntityType t = m.getType();
+                    if (t == net.minecraft.entity.EntityType.ZOMBIE || t == net.minecraft.entity.EntityType.DROWNED) {
                         aliveZombieFamily++;
                         double dx = (m.getX() + 0.5) - (waveStartPos.getX() + 0.5);
                         double dz = (m.getZ() + 0.5) - (waveStartPos.getZ() + 0.5);
@@ -210,34 +210,37 @@ public final class ZombieWavesAPILoader {
         return false;
     }
 
-    /** Get the Zombie Waves API mod's classloader (whichever mod id is loaded). */
+    /** Get the ZombieEntity Waves API mod's classloader (whichever mod id is loaded). */
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     private static Optional<ModContainer> getZombieWavesModContainer() {
         for (String id : MOD_IDS) {
-            var opt = ModList.get().getModContainerById(id);
-            if (opt.isPresent()) return Optional.of(opt.get());
+            java.util.Optional<? extends ModContainer> opt = ModList.get().getModContainerById(id);
+            if (opt.isPresent()) {
+                ModContainer container = opt.get();
+                return Optional.of(container);
+            }
         }
         return Optional.empty();
     }
 
     /** Convenience: start wave without player context (command runs as server). */
-    public static boolean startWaveAt(ServerLevel level, BlockPos groundPos, int tierDifficulty) {
+    public static boolean startWaveAt(ServerWorld level, BlockPos groundPos, int tierDifficulty) {
         return startWaveAt(level, groundPos, tierDifficulty, null);
     }
 
     /**
-     * Call API.startZombieWave(BlockPos, int, int, int, int, ServerPlayer) when we have a player.
+     * Call API.startZombieWave(BlockPos, int, int, int, int, ServerPlayerEntity) when we have a player.
      * The API passes Optional.of(player) to WavesManager so the wave has built-in agro (zombies target that player).
      */
-    private static boolean tryStartZombieWaveWithPlayer(ServerLevel level, BlockPos groundPos, int waveDifficulty, int waveDurationTicks, int spawnRange, int timeBetweenWaves, ServerPlayer player) {
+    private static boolean tryStartZombieWaveWithPlayer(ServerWorld level, BlockPos groundPos, int waveDifficulty, int waveDurationTicks, int spawnRange, int timeBetweenWaves, ServerPlayerEntity player) {
         if (player == null) return false;
         int zombiesPerWave = AirdropDifficultyTier.getZombiesPerWaveForTier(waveDifficulty);
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return false;
-        ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+        if (!opt.isPresent()) return false;
+        ClassLoader zwLoader = opt.get().getClass().getClassLoader();
         try {
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
-            java.lang.reflect.Method m = apiClass.getMethod("startZombieWave", BlockPos.class, int.class, int.class, int.class, int.class, ServerPlayer.class);
+            java.lang.reflect.Method m = apiClass.getMethod("startZombieWave", BlockPos.class, int.class, int.class, int.class, int.class, ServerPlayerEntity.class);
             m.invoke(null, groundPos, waveDifficulty, zombiesPerWave, spawnRange, timeBetweenWaves, player);
             return true;
         } catch (Throwable t) {
@@ -250,11 +253,11 @@ public final class ZombieWavesAPILoader {
      * API order is (pos, difficulty, enemysToSpawn, spawn_range, time_between_waves). Passing duration (3600)
      * as 2nd int made it try to spawn 3600; pass our zombie cap and ticks-between-spawns instead.
      */
-    private static boolean tryStartZombieWaveDirect(ServerLevel level, BlockPos groundPos, int waveDifficulty, int waveDurationTicks, int spawnRange, int timeBetweenWaves) {
+    private static boolean tryStartZombieWaveDirect(ServerWorld level, BlockPos groundPos, int waveDifficulty, int waveDurationTicks, int spawnRange, int timeBetweenWaves) {
         int zombiesPerWave = AirdropDifficultyTier.getZombiesPerWaveForTier(waveDifficulty);
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return false;
-        ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+        if (!opt.isPresent()) return false;
+        ClassLoader zwLoader = opt.get().getClass().getClassLoader();
         try {
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             java.lang.reflect.Method m = apiClass.getMethod("startZombieWave", BlockPos.class, int.class, int.class, int.class, int.class);
@@ -266,11 +269,11 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Run the /wave start command. The API's command handler uses source.getPlayer().blockPosition() for spawn pos — so it ignores source position. When player != null the wave starts (spawn Y will be player Y; our resnap fixes). When player == null the command returns 1 but never calls startZombieWave, so direct call is required. */
-    private static boolean tryCommandWaveStart(ServerLevel level, BlockPos groundPos, int waveDifficulty, int waveDuration, int spawnRange, int timeBetweenWaves, net.minecraft.server.level.ServerPlayer player) {
+    private static boolean tryCommandWaveStart(ServerWorld level, BlockPos groundPos, int waveDifficulty, int waveDuration, int spawnRange, int timeBetweenWaves, net.minecraft.entity.player.ServerPlayerEntity player) {
         try {
-            var server = level.getServer();
+            net.minecraft.server.MinecraftServer server = level.getServer();
             if (server == null) {
-                RadiotowersMod.LOGGER.warn("[Zombie Waves] Command skipped: level.getServer() is null");
+                RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] Command skipped: level.getServer() is null");
                 return false;
             }
             if (player == null) {
@@ -279,11 +282,11 @@ public final class ZombieWavesAPILoader {
             // Command args match API.startZombieWave: difficulty, enemysToSpawn, spawn_range, time_between_waves (NOT wave duration).
             int zombiesPerWave = AirdropDifficultyTier.getZombiesPerWaveForTier(waveDifficulty);
             String cmd = String.format("wave start %d %d %d %d", waveDifficulty, zombiesPerWave, spawnRange, timeBetweenWaves);
-            var source = player.createCommandSourceStack().withLevel(level).withPosition(Vec3.atCenterOf(groundPos));
-            int result = server.getCommands().performPrefixedCommand(source, cmd);
+            net.minecraft.command.CommandSource source = player.createCommandSourceStack().withLevel(level).withPosition(Vector3d.atCenterOf(groundPos));
+            int result = server.getCommands().performCommand(source, cmd);
             return result > 0;
         } catch (Throwable t) {
-            RadiotowersMod.LOGGER.warn("[Zombie Waves] Command wave start threw: {} (cause: {})", t.getMessage(), t.getCause() != null ? t.getCause().getMessage() : "none", t);
+            RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] Command wave start threw: {} (cause: {})", t.getMessage(), t.getCause() != null ? t.getCause().getMessage() : "none", t);
             return false;
         }
     }
@@ -293,7 +296,7 @@ public final class ZombieWavesAPILoader {
      * If more waves remain, starts the next wave; otherwise delivers the airdrop.
      * Sets lastWaveCompletedAtGameTime so we don't double-fire from API and time-based checks.
      */
-    public static void onWaveCompleted(ServerLevel level, BlockPos waveStartPos) {
+    public static void onWaveCompleted(ServerWorld level, BlockPos waveStartPos) {
         if (level == null || level.isClientSide() || waveStartPos == null) return;
         PendingAirdropStorage.Pending p = PendingAirdropStorage.getPending(level, waveStartPos);
         if (p == null) return;
@@ -309,13 +312,13 @@ public final class ZombieWavesAPILoader {
             // we force-discard the remaining tagged mobs so the wave can actually complete.
             if (p.killedCountThisWave >= p.maxZombiesPerWave) {
                 int removed = discardRemainingWaveMobsInArea(level, waveStartPos);
-                RadiotowersMod.LOGGER.warn("[Zombie Waves] onWaveCompleted forced cleanup at {}: killedCountReachedMax={} removedStillAlive={} removed={}",
+                RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] onWaveCompleted forced cleanup at {}: killedCountReachedMax={} removedStillAlive={} removed={}",
                     waveStartPos, p.killedCountThisWave, aliveInArea, removed);
                 forcedCleanup = removed > 0;
                 // Stop API spawning in case it is still running (prevents "kept spawning after HUD hit 0").
                 endWaveViaReflection();
             } else {
-                RadiotowersMod.LOGGER.warn("[Zombie Waves] onWaveCompleted at {} blocked: {} alive wave mobs still in area (killedCount={}/{})",
+                RadiotowersMod.LOGGER.warn("[ZombieEntity Waves] onWaveCompleted at {} blocked: {} alive wave mobs still in area (killedCount={}/{})",
                     waveStartPos, aliveInArea, p.killedCountThisWave, p.maxZombiesPerWave);
                 return;
             }
@@ -339,25 +342,25 @@ public final class ZombieWavesAPILoader {
             }
             logWaveDeliverySnapshot(level, waveStartPos, "onWaveCompleted_afterDeliver", p);
         } else {
-            ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
+            ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
             if (player != null) {
                 int cleared = p.totalWaves - p.wavesRemaining;
-                player.sendSystemMessage(Component.translatable(
-                    "message.radiotowers.wave.cleared_next_starting", cleared, p.totalWaves));
+                player.sendMessage(new TranslationTextComponent(
+                    "message.radiotowers.wave.cleared_next_starting", cleared, p.totalWaves), net.minecraft.util.Util.NIL_UUID);
             }
             if (!forcedCleanup) endWaveViaReflection(); // stop current wave before starting next
             WaveMobAggroHandler.clearAllWaveAggroState();
             p.currentWaveStartedAtGameTime = level.getGameTime(); // 3-min timer for the next wave
             PendingAirdropSavedData.get(level).setDirty();
             startWaveAt(level, waveStartPos, p.tierDifficulty, player);
-            level.playSound(null, waveStartPos, RadiotowersModSounds.SIREN.get(), SoundSource.NEUTRAL, 1.0f, 1.0f);
+            level.playSound(null, waveStartPos, RadiotowersModSounds.SIREN.get(), SoundCategory.NEUTRAL, 1.0f, 1.0f);
         }
     }
 
     /**
      * Call when time ran out and zombies are still alive (wave failed). Removes pending, ends API wave, no delivery.
      */
-    public static void onWaveFailedTimeout(ServerLevel level, BlockPos waveStartPos) {
+    public static void onWaveFailedTimeout(ServerWorld level, BlockPos waveStartPos) {
         if (level == null || level.isClientSide() || waveStartPos == null) return;
         PendingAirdropStorage.Pending p = PendingAirdropStorage.getPending(level, waveStartPos);
         if (p == null) return;
@@ -366,12 +369,12 @@ public final class ZombieWavesAPILoader {
         setDefenseSessionActive(level, false);
         purgeWaveEntityResidue(level, waveStartPos);
         PendingAirdropSavedData.get(level).setDirty();
-        ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
+        ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
         if (player != null) {
             long cooldownEnd = net.mcreator.radiotowers.integration.AirdropCooldown.getCooldownEndGameTime(level, p.playerWhoStarted);
             RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
                 new net.mcreator.radiotowers.network.AirdropStatePacket(false, cooldownEnd));
-            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.radiotowers.airdrop.failed"));
+            player.sendMessage(new TranslationTextComponent("message.radiotowers.airdrop.failed"), net.minecraft.util.Util.NIL_UUID);
         }
     }
 
@@ -381,11 +384,11 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Set berezka_api_main.curWorld so WavesManager.onServerTick() spawns in our level. Safe no-op if berezka_api not present. */
-    private static void setBerezkaCurWorld(ServerLevel level) {
-        var opt = ModList.get().getModContainerById(BEREZKA_API_MOD_ID);
-        if (opt.isEmpty()) return;
+    private static void setBerezkaCurWorld(ServerWorld level) {
+        java.util.Optional opt = ModList.get().getModContainerById(BEREZKA_API_MOD_ID);
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader loader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader loader = opt.get().getClass().getClassLoader();
             Class<?> main = Class.forName(BEREZKA_MAIN_CLASS, true, loader);
             java.lang.reflect.Field curWorld = main.getField("curWorld");
             curWorld.set(null, level);
@@ -402,9 +405,9 @@ public final class ZombieWavesAPILoader {
         if (!isZombieWavesAPILoaded()) return;
         net.mcreator.radiotowers.events.DrownedKillCountsHandler.clearDeathCountedIds();
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return;
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager != null)
@@ -426,14 +429,14 @@ public final class ZombieWavesAPILoader {
      * Safety guard: if the API wave manager still looks active but we no longer have any pending airdrop
      * for this level, force-stop the API wave so it cannot keep trickle-spawning zombies after delivery.
      */
-    public static void enforceApiStoppedWhenNoPending(ServerLevel level) {
+    public static void enforceApiStoppedWhenNoPending(ServerWorld level) {
         if (level == null || level.isClientSide() || !isZombieWavesAPILoaded()) return;
         // Active pending exists -> do nothing.
         if (PendingAirdropStorage.getAnyPendingInLevel(level) != null) return;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return;
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return;
@@ -443,7 +446,8 @@ public final class ZombieWavesAPILoader {
             int currentWave = 0;
             try {
                 Object posObj = manager.getClass().getField("pos").get(manager);
-                if (posObj instanceof BlockPos p) apiPos = p;
+                BlockPos p = (posObj instanceof BlockPos) ? (BlockPos) posObj : null;
+                if (p != null) apiPos = p;
             } catch (Throwable ignored) {}
             try { remain = manager.getClass().getField("remainEnemysCount").getInt(manager); } catch (Throwable ignored) {}
             try { currentWave = manager.getClass().getField("currentWave").getInt(manager); } catch (Throwable ignored) {}
@@ -458,20 +462,20 @@ public final class ZombieWavesAPILoader {
 
     /**
      * True only while a RadioTowers defense wave is actually active in this level.
-     * Uses both our pending storage and the Zombie Waves API manager runtime state.
+     * Uses both our pending storage and the ZombieEntity Waves API manager runtime state.
      */
     /**
      * True while our defense session flag is set for this dimension.
      * Does not require {@link #isZombieWavesAPILoaded()} — the session is only set after a successful
      * wave start; gating on the mod list could incorrectly return false and let NMS spawn hordes anyway.
      */
-    public static boolean isDefenseWaveActive(ServerLevel level) {
+    public static boolean isDefenseWaveActive(ServerWorld level) {
         if (level == null || level.isClientSide()) return false;
         return ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
     }
 
     /** Explicitly clear active defense-wave session marker for this dimension (used on load/unload hard reset). */
-    public static void clearDefenseWaveSession(ServerLevel level) {
+    public static void clearDefenseWaveSession(ServerWorld level) {
         if (level == null) return;
         setDefenseSessionActive(level, false);
     }
@@ -480,9 +484,9 @@ public final class ZombieWavesAPILoader {
      * Server-only: set whether a defense wave session is active and sync to all players in the dimension.
      * Client mirror is updated via {@link DefenseSessionSyncPacket} so optional mixins can cancel on the logical client too.
      */
-    public static void setDefenseSessionActive(ServerLevel level, boolean active) {
+    public static void setDefenseSessionActive(ServerWorld level, boolean active) {
         if (level == null || level.isClientSide()) return;
-        ResourceKey<Level> dim = level.dimension();
+        RegistryKey<World> dim = level.dimension();
         if (active) {
             ACTIVE_DEFENSE_SESSION_BY_DIM.put(dim, Boolean.TRUE);
         } else {
@@ -493,9 +497,9 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Server -> one player: current defense session flag (call on login so client mirror matches). */
-    public static void pushDefenseSessionStateToPlayer(ServerPlayer player) {
+    public static void pushDefenseSessionStateToPlayer(ServerPlayerEntity player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerWorld level = player.getLevel();
         boolean active = ACTIVE_DEFENSE_SESSION_BY_DIM.getOrDefault(level.dimension(), false);
         RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> player),
             new DefenseSessionSyncPacket(level.dimension().location(), active));
@@ -504,9 +508,9 @@ public final class ZombieWavesAPILoader {
     /**
      * Poll the API's state: when a wave actually ran (currentWave > 0), remainEnemysCount == 0,
      * and we have a pending airdrop for manager.pos, deliver it. Do not deliver if the wave never started.
-     * Uses the Zombie Waves mod's classloader so we don't load their classes in our mod's context.
+     * Uses the ZombieEntity Waves mod's classloader so we don't load their classes in our mod's context.
      */
-    public static void checkWaveEndAndDeliver(ServerLevel level) {
+    public static void checkWaveEndAndDeliver(ServerWorld level) {
         if (level == null || level.isClientSide() || !isZombieWavesAPILoaded()) return;
         // Don't deliver in first 5 seconds after level load (mobs may not be in our count yet)
         if (level.getGameTime() < 100) return;
@@ -536,9 +540,9 @@ public final class ZombieWavesAPILoader {
     /**
      * Send wave state (wave number, zombies left, time left) to each player who has a pending airdrop.
      * Uses OUR pending data for wave index and timer so the UI always shows correct countdown.
-     * Zombie count from API when manager.pos matches this pending's position, else -1 (client shows "—").
+     * ZombieEntity count from API when manager.pos matches this pending's position, else -1 (client shows "—").
      */
-    public static void sendWaveStateToPlayers(ServerLevel level) {
+    public static void sendWaveStateToPlayers(ServerWorld level) {
         if (level == null || level.isClientSide()) return;
         long now = level.getGameTime();
         PendingAirdropStorage.forEachPendingIn(level, (waveStartPos, p) -> {
@@ -550,10 +554,10 @@ public final class ZombieWavesAPILoader {
             // Using killedCount makes it start at max immediately and only decrease on actual deaths.
             int killed = Math.max(0, Math.min(p.killedCountThisWave, p.maxZombiesPerWave));
             int zombies = Math.max(0, p.maxZombiesPerWave - killed);
-            ServerPlayer player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
-            var packet = new WaveStatePacket(currentWave, p.totalWaves, zombies, secondsRemaining, true);
+            ServerPlayerEntity player = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(p.playerWhoStarted) : null;
+            net.mcreator.radiotowers.network.WaveStatePacket packet = new WaveStatePacket(currentWave, p.totalWaves, zombies, secondsRemaining, true);
             for (java.util.UUID memberId : p.effectiveMembers()) {
-                ServerPlayer m = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
+                ServerPlayerEntity m = level.getServer() != null ? level.getServer().getPlayerList().getPlayer(memberId) : null;
                 if (m != null) {
                     RadiotowersMod.PACKET_HANDLER.send(PacketDistributor.PLAYER.with(() -> m), packet);
                 }
@@ -565,7 +569,7 @@ public final class ZombieWavesAPILoader {
     /** Temporary diagnostics around completion/delivery for trickle-spawn reports. */
     private static final boolean WAVE_DELIVERY_DEBUG = true;
 
-    private static void logWaveDeliverySnapshot(ServerLevel level, BlockPos waveStartPos, String stage, PendingAirdropStorage.Pending pending) {
+    private static void logWaveDeliverySnapshot(ServerWorld level, BlockPos waveStartPos, String stage, PendingAirdropStorage.Pending pending) {
         if (!WAVE_DELIVERY_DEBUG || level == null || waveStartPos == null) return;
         Integer apiRemain = getApiRemainingCountForPosition(level, waveStartPos);
         int apiCurrentWave = -1;
@@ -573,14 +577,15 @@ public final class ZombieWavesAPILoader {
         try {
             Optional<ModContainer> opt = getZombieWavesModContainer();
             if (opt.isPresent()) {
-                ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+                ClassLoader zwLoader = opt.get().getClass().getClassLoader();
                 Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
                 Object manager = apiClass.getField("manager").get(null);
                 if (manager != null) {
                     try { apiCurrentWave = manager.getClass().getField("currentWave").getInt(manager); } catch (Throwable ignored) {}
                     try {
                         Object posObj = manager.getClass().getField("pos").get(manager);
-                        if (posObj instanceof BlockPos p) apiPos = p;
+                        BlockPos p = (posObj instanceof BlockPos) ? (BlockPos) posObj : null;
+                        if (p != null) apiPos = p;
                     } catch (Throwable ignored) {}
                 }
             }
@@ -604,12 +609,12 @@ public final class ZombieWavesAPILoader {
      * Uses exact position match, or if {@code waveStartPos} is within 16 blocks (horizontal), treats as match.
      * @return true if the count was decremented (manager pos matched and count was &gt; 0)
      */
-    public static boolean decrementRemainingCountForWaveAt(ServerLevel level, BlockPos waveStartPos) {
+    public static boolean decrementRemainingCountForWaveAt(ServerWorld level, BlockPos waveStartPos) {
         if (level == null || level.isClientSide() || !isZombieWavesAPILoaded()) return false;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return false;
+        if (!opt.isPresent()) return false;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return false;
@@ -629,12 +634,12 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Decrement the API's remainEnemysCount for the wave at the manager's current position (no position match needed). Use when a wave mob dies and we know a wave is active. */
-    public static boolean decrementRemainingCountForCurrentWave(ServerLevel level) {
+    public static boolean decrementRemainingCountForCurrentWave(ServerWorld level) {
         if (level == null || level.isClientSide() || !isZombieWavesAPILoaded()) return false;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return false;
+        if (!opt.isPresent()) return false;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return false;
@@ -657,18 +662,18 @@ public final class ZombieWavesAPILoader {
      * Call periodically with the number of wave mobs that are actually alive in the world.
      * Safeguard: never mass-decrement when aliveCount > 0 (only fix off-by-one when e.g. 1 stuck); full sync only when aliveCount == 0.
      */
-    public static void syncRemainingCountToAliveWaveMobs(ServerLevel level, BlockPos waveStartPos, int aliveCount) {
+    public static void syncRemainingCountToAliveWaveMobs(ServerWorld level, BlockPos waveStartPos, int aliveCount) {
         // No-op: Berezka's internal remainEnemysCount has shown heavy desync with our replacements.
         // We now complete/deliver based on LOCAL alive counting instead of mutating API state.
     }
 
     /** If API manager exists and its pos equals waveStartPos, return remainEnemysCount; else null. */
-    private static Integer getApiRemainingCountForPosition(ServerLevel level, BlockPos waveStartPos) {
+    private static Integer getApiRemainingCountForPosition(ServerWorld level, BlockPos waveStartPos) {
         if (!isZombieWavesAPILoaded()) return null;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return null;
+        if (!opt.isPresent()) return null;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return null;
@@ -690,7 +695,7 @@ public final class ZombieWavesAPILoader {
      * sync the API count to 0 so the wave can complete. Only runs when wave has been active at least 60s.
      * Never sync when we still have mobs in WAVE_SPAWNED_ENTITY_IDS (avoids "wave ended before I killed all 20").
      */
-    public static void checkGhostSync(ServerLevel level) {
+    public static void checkGhostSync(ServerWorld level) {
         // Disabled: the API's internal remainEnemysCount is already desync'ing heavily
         // with our compatibility layer (replacements + tag adoption). Any API sync/dec logic
         // can cause early end/complete spam and/or prevent delivery.
@@ -700,7 +705,7 @@ public final class ZombieWavesAPILoader {
      * Remove any wave zombies/drowned that were saved with the world (persist across quit/reload).
      * Call after level load so reconnecting players don't see a full wave of leftover mobs at the tower.
      */
-    public static void removeSavedWaveMobsFromLevel(ServerLevel level) {
+    public static void removeSavedWaveMobsFromLevel(ServerWorld level) {
         if (level == null || level.isClientSide()) return;
         discardAllWaveTaggedMobsInLevel(level);
     }
@@ -709,26 +714,27 @@ public final class ZombieWavesAPILoader {
      * If Berezka's wave manager still has a spawn position (e.g. pending save missed), add it as an extra sweep center.
      * Call before {@link #endWaveAfterDeliver()} clears API state.
      */
-    public static void addCurrentApiWavePosToList(ServerLevel level, Collection<BlockPos> out) {
+    public static void addCurrentApiWavePosToList(ServerWorld level, Collection<BlockPos> out) {
         if (level == null || out == null || !isZombieWavesAPILoaded()) return;
         Optional<ModContainer> opt = getZombieWavesModContainer();
-        if (opt.isEmpty()) return;
+        if (!opt.isPresent()) return;
         try {
-            ClassLoader zwLoader = opt.get().getMod().getClass().getClassLoader();
+            ClassLoader zwLoader = opt.get().getClass().getClassLoader();
             Class<?> apiClass = Class.forName(API_CLASS, true, zwLoader);
             Object manager = apiClass.getField("manager").get(null);
             if (manager == null) return;
             Object posObj = manager.getClass().getField("pos").get(manager);
-            if (posObj instanceof BlockPos p) {
+            BlockPos p = (posObj instanceof BlockPos) ? (BlockPos) posObj : null;
+            if (p != null) {
                 out.add(p.immutable());
             }
         } catch (Throwable ignored) {
         }
     }
 
-    public static void registerReconnectStragglerCenters(ServerLevel level, List<BlockPos> centers) {
+    public static void registerReconnectStragglerCenters(ServerWorld level, List<BlockPos> centers) {
         if (level == null) return;
-        ResourceKey<Level> dim = level.dimension();
+        RegistryKey<World> dim = level.dimension();
         if (centers == null || centers.isEmpty()) {
             RECONNECT_STRAGGLER_CENTERS.remove(dim);
             RECONNECT_STRAGGLER_UNTIL_GAME_TIME.remove(dim);
@@ -738,14 +744,14 @@ public final class ZombieWavesAPILoader {
         RECONNECT_STRAGGLER_UNTIL_GAME_TIME.put(dim, level.getGameTime() + RECONNECT_STRAGGLER_QUEUE_TICKS);
     }
 
-    public static void clearReconnectStragglerQueue(ServerLevel level) {
+    public static void clearReconnectStragglerQueue(ServerWorld level) {
         if (level == null) return;
-        ResourceKey<Level> dim = level.dimension();
+        RegistryKey<World> dim = level.dimension();
         RECONNECT_STRAGGLER_CENTERS.remove(dim);
         RECONNECT_STRAGGLER_UNTIL_GAME_TIME.remove(dim);
     }
 
-    public static boolean hasReconnectStragglerQueue(ServerLevel level) {
+    public static boolean hasReconnectStragglerQueue(ServerWorld level) {
         if (level == null) return false;
         List<BlockPos> c = RECONNECT_STRAGGLER_CENTERS.get(level.dimension());
         return c != null && !c.isEmpty();
@@ -754,13 +760,13 @@ public final class ZombieWavesAPILoader {
     /**
      * Tagged wave mobs + undead stragglers near queued reconnect centers (used on timer and on player join).
      */
-    public static void runReconnectStragglerCleanupPass(ServerLevel level) {
+    public static void runReconnectStragglerCleanupPass(ServerWorld level) {
         if (level == null || level.isClientSide()) return;
         // Quit/rejoin ghost cleanup must not run during a live catalog wave: it wipes all wave-tagged mobs
         // in the dimension and all zombies in 320 blocks of each reconnect center — same towers as new waves.
         if (PendingAirdropStorage.getAnyPendingInLevel(level) != null) return;
         removeSavedWaveMobsFromLevel(level);
-        ResourceKey<Level> dim = level.dimension();
+        RegistryKey<World> dim = level.dimension();
         List<BlockPos> centers = RECONNECT_STRAGGLER_CENTERS.get(dim);
         if (centers == null || centers.isEmpty()) return;
         Long until = RECONNECT_STRAGGLER_UNTIL_GAME_TIME.get(dim);
@@ -775,34 +781,33 @@ public final class ZombieWavesAPILoader {
 
     /**
      * Removes undead monsters near a sweep center after quit/rejoin. Includes modded undead (not only vanilla
-     * {@code Zombie}), matching the wave arena radius used elsewhere.
+     * {@code ZombieEntity}), matching the wave arena radius used elsewhere.
      */
-    public static int sweepReconnectStragglerUndead(ServerLevel level, BlockPos center) {
+    public static int sweepReconnectStragglerUndead(ServerWorld level, BlockPos center) {
         if (level == null || level.isClientSide() || center == null) return 0;
         final int horizontalRadius = WAVE_AREA_RANGE;
-        AABB box = new AABB(
-            center.getX() - horizontalRadius, level.getMinBuildHeight(), center.getZ() - horizontalRadius,
+        AxisAlignedBB box = new AxisAlignedBB(
+            center.getX() - horizontalRadius, 0, center.getZ() - horizontalRadius,
             center.getX() + horizontalRadius, level.getMaxBuildHeight(), center.getZ() + horizontalRadius);
         int removed = 0;
-        for (Mob mob : level.getEntitiesOfClass(Mob.class, box)) {
-            if (mob.isRemoved() || !mob.isAlive()) continue;
-            if (!(mob instanceof Monster)) continue;
-            if (mob.getMobType() != MobType.UNDEAD) continue;
-            if (mob instanceof ZombifiedPiglin) continue;
-            if (mob instanceof Warden) continue;
-            if (mob instanceof Phantom) continue;
-            if (mob instanceof Skeleton) continue;
-            if (mob instanceof Stray) continue;
-            if (mob instanceof WitherSkeleton) continue;
-            if (mob instanceof Zoglin) continue;
-            // Vanilla zombie family (incl. Drowned/Husk subclasses of Zombie) + modded undead wave mobs.
-            if (mob instanceof Zombie || mob instanceof ZombieVillager) {
-                mob.discard();
+        for (MobEntity mob : level.getEntitiesOfClass(MobEntity.class, box)) {
+            if (mob.removed || !mob.isAlive()) continue;
+            if (!(mob instanceof MonsterEntity)) continue;
+            if (mob.getMobType() != CreatureAttribute.UNDEAD) continue;
+            if (mob instanceof ZombifiedPiglinEntity) continue;
+            if (mob instanceof PhantomEntity) continue;
+            if (mob instanceof SkeletonEntity) continue;
+            if (mob instanceof StrayEntity) continue;
+            if (mob instanceof WitherSkeletonEntity) continue;
+            if (mob instanceof ZoglinEntity) continue;
+            // Vanilla zombie family (incl. Drowned/Husk subclasses of ZombieEntity) + modded undead wave mobs.
+            if (mob instanceof ZombieEntity || mob instanceof ZombieVillagerEntity) {
+                mob.remove();
                 removed++;
                 continue;
             }
-            if (mob.getMobType() == MobType.UNDEAD) {
-                mob.discard();
+            if (mob.getMobType() == CreatureAttribute.UNDEAD) {
+                mob.remove();
                 removed++;
             }
         }
@@ -810,14 +815,14 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Discard every living entity in this dimension that still carries our wave NBT (full-world sweep). */
-    public static int discardAllWaveTaggedMobsInLevel(ServerLevel level) {
+    public static int discardAllWaveTaggedMobsInLevel(ServerWorld level) {
         if (level == null || level.isClientSide()) return 0;
         int[] removed = {0};
         LoadedEntityScan.forEach(level, LivingEntity.class, entity -> {
             if (entity.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
                 || entity.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)
                 || entity.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)) {
-                entity.discard();
+                entity.remove();
                 removed[0]++;
             }
         });
@@ -828,21 +833,21 @@ public final class ZombieWavesAPILoader {
      * Remove wave stragglers in the arena: undead with invuln/NoAI (incl. untagged after unfreeze tick stops), or any
      * undead monster still in {@link WaveMobAggroHandler}'s tracked spawn set (tags stripped but mob never died).
      */
-    public static int sweepBrokenUndeadNearWave(ServerLevel level, BlockPos center, int horizontalRadius) {
+    public static int sweepBrokenUndeadNearWave(ServerWorld level, BlockPos center, int horizontalRadius) {
         if (level == null || level.isClientSide() || center == null) return 0;
-        AABB box = new AABB(
-            center.getX() - horizontalRadius, level.getMinBuildHeight(), center.getZ() - horizontalRadius,
+        AxisAlignedBB box = new AxisAlignedBB(
+            center.getX() - horizontalRadius, 0, center.getZ() - horizontalRadius,
             center.getX() + horizontalRadius, level.getMaxBuildHeight(), center.getZ() + horizontalRadius);
         int removed = 0;
-        for (Mob mob : level.getEntitiesOfClass(Mob.class, box)) {
-            if (mob.isRemoved() || !mob.isAlive()) continue;
-            if (!(mob instanceof Monster)) continue;
-            if (mob.getMobType() != MobType.UNDEAD) continue;
+        for (MobEntity mob : level.getEntitiesOfClass(MobEntity.class, box)) {
+            if (mob.removed || !mob.isAlive()) continue;
+            if (!(mob instanceof MonsterEntity)) continue;
+            if (mob.getMobType() != CreatureAttribute.UNDEAD) continue;
             boolean frozen = WaveMobFieldForce.isInvulnerableRaw(mob) || WaveMobFieldForce.isNoAiRaw(mob)
                 || mob.isInvulnerable() || mob.isNoAi();
             boolean stillTracked = WaveMobAggroHandler.isTrackedWaveSpawnId(mob.getId());
             if (!frozen && !stillTracked) continue;
-            mob.discard();
+            mob.remove();
             removed++;
         }
         return removed;
@@ -852,7 +857,7 @@ public final class ZombieWavesAPILoader {
      * After pending is cleared: stop API, remove tagged mobs, clear client-tracked wave IDs, and sweep stragglers.
      * Does not spawn the plane — use when wave is cancelled or after {@link PendingAirdropStorage#deliverAt} took pending.
      */
-    public static void purgeWaveEntityResidue(ServerLevel level, BlockPos waveAnchor) {
+    public static void purgeWaveEntityResidue(ServerWorld level, BlockPos waveAnchor) {
         if (level == null || level.isClientSide() || waveAnchor == null) return;
         discardAllWaveTaggedMobsInLevel(level);
         WaveMobAggroHandler.discardAllTrackedWaveMobsStillAlive(level);
@@ -870,7 +875,7 @@ public final class ZombieWavesAPILoader {
         }
     }
 
-    private static void runPostWaveSweep(ServerLevel level, BlockPos waveAnchor) {
+    private static void runPostWaveSweep(ServerWorld level, BlockPos waveAnchor) {
         if (level == null || level.isClientSide()) return;
         discardAllWaveTaggedMobsInLevel(level);
         WaveMobAggroHandler.discardAllTrackedWaveMobsStillAlive(level);
@@ -878,20 +883,20 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Call right after a successful final-wave delivery: ensure API is stopped and no stray wave entities remain. */
-    public static void cleanupAfterRadioTowersWaveFinished(ServerLevel level, BlockPos waveAnchor) {
+    public static void cleanupAfterRadioTowersWaveFinished(ServerWorld level, BlockPos waveAnchor) {
         logWaveDeliverySnapshot(level, waveAnchor, "cleanup_beforeEndWave", PendingAirdropStorage.getPending(level, waveAnchor));
         endWaveAfterDeliver();
         purgeWaveEntityResidue(level, waveAnchor);
         logWaveDeliverySnapshot(level, waveAnchor, "cleanup_afterPurge", PendingAirdropStorage.getPending(level, waveAnchor));
     }
 
-    /** Count only wave-spawned Zombie/Drowned in the area. Uses RING_POSITION_SET so our replacements (which have that tag only) are counted; WAVE_SPAWN_TAG/REPLACEMENT_TAG are removed after processing. */
-    private static int countWaveZombiesInArea(ServerLevel level, BlockPos waveStartPos) {
-        AABB box = new AABB(
-            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_AREA_RANGE,
+    /** Count only wave-spawned ZombieEntity/Drowned in the area. Uses RING_POSITION_SET so our replacements (which have that tag only) are counted; WAVE_SPAWN_TAG/REPLACEMENT_TAG are removed after processing. */
+    private static int countWaveZombiesInArea(ServerWorld level, BlockPos waveStartPos) {
+        AxisAlignedBB box = new AxisAlignedBB(
+            waveStartPos.getX() - WAVE_AREA_RANGE, 0, waveStartPos.getZ() - WAVE_AREA_RANGE,
             waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_AREA_RANGE);
         return (int) level.getEntitiesOfClass(LivingEntity.class, box).stream()
-            .filter(e -> e != null && e.isAlive() && !e.isRemoved())
+            .filter(e -> e != null && e.isAlive() && !e.removed)
             .filter(e -> e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
                 || e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
                 || e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG))
@@ -899,17 +904,17 @@ public final class ZombieWavesAPILoader {
     }
 
     /** Discard any still-alive wave mobs in the arena that are tagged for our wave logic. */
-    private static int discardRemainingWaveMobsInArea(ServerLevel level, BlockPos waveStartPos) {
-        AABB box = new AABB(
-            waveStartPos.getX() - WAVE_AREA_RANGE, level.getMinBuildHeight(), waveStartPos.getZ() - WAVE_AREA_RANGE,
+    private static int discardRemainingWaveMobsInArea(ServerWorld level, BlockPos waveStartPos) {
+        AxisAlignedBB box = new AxisAlignedBB(
+            waveStartPos.getX() - WAVE_AREA_RANGE, 0, waveStartPos.getZ() - WAVE_AREA_RANGE,
             waveStartPos.getX() + WAVE_AREA_RANGE, level.getMaxBuildHeight(), waveStartPos.getZ() + WAVE_AREA_RANGE);
         int removed = 0;
         for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box)) {
-            if (e == null || e.isRemoved() || !e.isAlive()) continue;
+            if (e == null || e.removed || !e.isAlive()) continue;
             if (!e.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET)
                 && !e.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG)
                 && !e.getPersistentData().getBoolean(WaveSpawnTag.REPLACEMENT_TAG)) continue;
-            e.discard();
+            e.remove();
             removed++;
         }
         return removed;
@@ -919,7 +924,7 @@ public final class ZombieWavesAPILoader {
      * Time-based wave end: after 3 minutes per wave, either complete (if all zombies dead) or fail (time ran out).
      * Time ran out with zombies left = fail: cancel airdrop, no next wave, no delivery.
      */
-    public static void checkTimeBasedWaveEnd(ServerLevel level) {
+    public static void checkTimeBasedWaveEnd(ServerWorld level) {
         if (level == null || level.isClientSide()) return;
         long now = level.getGameTime();
         long waveDurationTicks = AirdropDifficultyTier.getTicksPerWave();

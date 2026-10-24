@@ -13,8 +13,10 @@ import java.util.Set;
 public final class TowerSpawnDensity {
     public static final int DATAPACK_BASELINE_PERCENT = 100;
 
-    /** Salt for the combined radiotowers structure set. */
-    private static final Set<Integer> RADIO_TOWER_SALTS = Set.of(689686682);
+    /** Salt for the combined radiotowers structure set (spacing 34 / separation 22). */
+    public static final int RADIO_TOWER_SALT = 689686682;
+
+    private static final Set<Integer> RADIO_TOWER_SALTS = java.util.Collections.singleton(RADIO_TOWER_SALT);
 
     private TowerSpawnDensity() {}
 

@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.integration;
 
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -19,24 +19,25 @@ public final class DeadAirUnlockBridge {
     }
 
     /** Survived first Listener encounter → Boss Mode tab unlock. */
-    public static boolean isBossModeUnlocked(ServerPlayer player) {
+    public static boolean isBossModeUnlocked(ServerPlayerEntity player) {
         return invokeBool(player, "isBossModeUnlocked");
     }
 
     /** Defeated Listener → Endless Mode tab unlock. */
-    public static boolean isEndlessModeUnlocked(ServerPlayer player) {
+    public static boolean isEndlessModeUnlocked(ServerPlayerEntity player) {
         return invokeBool(player, "isListenerDefeated");
     }
 
-    private static boolean invokeBool(ServerPlayer player, String method) {
+    private static boolean invokeBool(ServerPlayerEntity player, String method) {
         if (player == null || !isDeadAirLoaded()) return false;
         try {
             ClassLoader cl = ModList.get().getModContainerById(DEAD_AIR_MOD_ID)
-                .map(c -> c.getMod().getClass().getClassLoader())
+                .map(c -> c.getClass().getClassLoader())
                 .orElse(DeadAirUnlockBridge.class.getClassLoader());
             Class<?> api = Class.forName(API_CLASS, true, cl);
-            Object result = api.getMethod(method, ServerPlayer.class).invoke(null, player);
-            return result instanceof Boolean b && b;
+            Object result = api.getMethod(method, ServerPlayerEntity.class).invoke(null, player);
+            Boolean b = (result instanceof Boolean) ? (Boolean) result : null;
+            return b != null && b;
         } catch (Throwable ignored) {
             return false;
         }

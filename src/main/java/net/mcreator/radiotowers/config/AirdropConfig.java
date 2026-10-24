@@ -1,6 +1,6 @@
 package net.mcreator.radiotowers.config;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.Collections;
@@ -92,11 +92,11 @@ public class AirdropConfig {
                 "Minimum points required to launch a catalog airdrop.",
                 "Must be between 10 and 500 in 10-point steps. Default: 10."
             )
-            .define("minimumCatalogPoints", 10,
-                value -> value instanceof Number number
-                    && number.intValue() >= 10
-                    && number.intValue() <= 500
-                    && number.intValue() % 10 == 0);
+            .define("minimumCatalogPoints", 10, value -> {
+                if (!(value instanceof Number)) return false;
+                int n = ((Number) value).intValue();
+                return n >= 10 && n <= 500 && n % 10 == 0;
+            });
         MAX_TOTAL_DIFFICULTY = BUILDER
             .comment(
                 "Maximum points a player can spend on one catalog airdrop.",
@@ -189,11 +189,9 @@ public class AirdropConfig {
                 "TaCZ: tacz:gun/m1911 also hides tacz:m1911 and any id ending in /m1911. Bare names (m1911, 9mm) work too.",
                 "Custom catalog lines cannot put a blacklisted id back."
             )
-            .defineList("blacklistItems", List.of(
-                "minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
+            .defineList("blacklistItems", java.util.Arrays.asList("minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
                 "minecraft:structure_block", "minecraft:jigsaw", "minecraft:bedrock",
-                "minecraft:spectral_arrow", "minecraft:tipped_arrow"
-            ), o -> o instanceof String);
+                "minecraft:spectral_arrow", "minecraft:tipped_arrow"), o -> o instanceof String);
         WHITELIST_FILE = BUILDER
             .comment(
                 "Optional file under config/radiotowers/ with one extra tag id per line.",
@@ -225,7 +223,7 @@ public class AirdropConfig {
             "============================================================",
             "DEFENSE WAVES",
             "Catalog airdrops use Extra Special LIB waves when ESL is installed.",
-            "If ESL is absent, Berezka Zombie Waves API is used when present.",
+            "If ESL is absent, Berezka ZombieEntity Waves API is used when present.",
             "Set useZombieWavesForAirdrop=false for immediate plane delivery.",
             "============================================================"
         ).push("waves");
@@ -255,7 +253,7 @@ public class AirdropConfig {
                 "Entities that defense-wave aggro must ignore.",
                 "Use registry ids such as minecraft:enderman or minecraft:creeper."
             )
-            .defineList("aggroExcludeEntityIds", List.of("minecraft:enderman"), o -> o instanceof String);
+            .defineList("aggroExcludeEntityIds", java.util.Collections.singletonList("minecraft:enderman"), o -> o instanceof String);
         BUILDER.pop();
 
         // ========== WORLDGEN ==========
@@ -324,11 +322,11 @@ public class AirdropConfig {
      */
     public static ResourceLocation getStandardAirdropLootTable() {
         String raw = STANDARD_AIRDROP_LOOT_TABLE.get();
-        if (raw == null || raw.isBlank()) {
-            return ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+        if (raw == null || raw.trim().isEmpty()) {
+            return new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
         }
-        ResourceLocation parsed = ResourceLocation.tryParse(raw.trim());
-        return parsed != null ? parsed : ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+        ResourceLocation parsed = raw != null && ResourceLocation.isValidResourceLocation(raw.trim()) ? new ResourceLocation(raw.trim()) : null;
+        return parsed != null ? parsed : new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
     }
 
     /** Whether catalog airdrops should use ESL (preferred) or Berezka waves when a backend is present. */
@@ -337,15 +335,16 @@ public class AirdropConfig {
     }
 
     /** True if this entity type is excluded from defense-wave aggro / capture. */
-    public static boolean isWaveAggroExcluded(net.minecraft.world.entity.EntityType<?> type) {
+    public static boolean isWaveAggroExcluded(net.minecraft.entity.EntityType<?> type) {
         if (type == null) return false;
-        net.minecraft.resources.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getKey(type);
+        net.minecraft.util.ResourceLocation id = net.minecraftforge.registries.ForgeRegistries.ENTITIES.getKey(type);
         if (id == null) return false;
         List<? extends String> list = WAVES_AGGRO_EXCLUDE_ENTITY_IDS.get();
         if (list == null || list.isEmpty()) return false;
         String needle = id.toString();
         for (Object o : list) {
-            if (o instanceof String raw && needle.equalsIgnoreCase(raw.trim())) return true;
+        String raw = (o instanceof String) ? (String) o : null;
+            if (raw != null && needle.equalsIgnoreCase(raw.trim())) return true;
         }
         return false;
     }
@@ -376,15 +375,13 @@ public class AirdropConfig {
         INCLUDE_TACZ_AMMO.set(true);
         INCLUDE_TACZ_GUNS.set(true);
         SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.set(false);
-        CUSTOM_CATALOG_ENTRIES.set(List.of());
+        CUSTOM_CATALOG_ENTRIES.set(java.util.Collections.emptyList());
         CUSTOM_CATALOG_FILE.set("");
-        WHITELIST_TAGS.set(List.of());
-        BLACKLIST_ITEMS.set(List.of(
-            "minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
+        WHITELIST_TAGS.set(java.util.Collections.emptyList());
+        BLACKLIST_ITEMS.set(java.util.Arrays.asList("minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
             "minecraft:structure_block", "minecraft:jigsaw", "minecraft:bedrock",
             "minecraft:spectral_arrow", "minecraft:tipped_arrow",
-            TEST_BLACKLIST_GUN, TEST_BLACKLIST_AMMO
-        ));
+            TEST_BLACKLIST_GUN, TEST_BLACKLIST_AMMO));
         WHITELIST_FILE.set("");
         BLACKLIST_FILE.set("");
         DEFAULT_DIFFICULTY_PER_ITEM.set(2);
@@ -395,7 +392,7 @@ public class AirdropConfig {
         BASE_ZOMBIES_PER_WAVE.set(5);
         ZOMBIES_PER_TIER_STEP.set(5);
         WAVE_DURATION_MINUTES.set(1);
-        WAVES_AGGRO_EXCLUDE_ENTITY_IDS.set(List.of("minecraft:enderman", "minecraft:creeper"));
+        WAVES_AGGRO_EXCLUDE_ENTITY_IDS.set(java.util.Arrays.asList("minecraft:enderman", "minecraft:creeper"));
         TOWER_SPAWN_DENSITY_PERCENT.set(200);
         GUARANTEE_SPAWN_TOWER.set(true);
         SPAWN_TOWER_SEARCH_RADIUS_CHUNKS.set(12);
@@ -418,14 +415,12 @@ public class AirdropConfig {
         INCLUDE_TACZ_AMMO.set(true);
         INCLUDE_TACZ_GUNS.set(true);
         SIMPLIFY_TACZ_ICONS_IN_AIRDROP_LIST.set(false);
-        CUSTOM_CATALOG_ENTRIES.set(List.of());
+        CUSTOM_CATALOG_ENTRIES.set(java.util.Collections.emptyList());
         CUSTOM_CATALOG_FILE.set("");
-        WHITELIST_TAGS.set(List.of());
-        BLACKLIST_ITEMS.set(List.of(
-            "minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
+        WHITELIST_TAGS.set(java.util.Collections.emptyList());
+        BLACKLIST_ITEMS.set(java.util.Arrays.asList("minecraft:nether_star", "minecraft:command_block", "minecraft:barrier",
             "minecraft:structure_block", "minecraft:jigsaw", "minecraft:bedrock",
-            "minecraft:spectral_arrow", "minecraft:tipped_arrow"
-        ));
+            "minecraft:spectral_arrow", "minecraft:tipped_arrow"));
         WHITELIST_FILE.set("");
         BLACKLIST_FILE.set("");
         DEFAULT_DIFFICULTY_PER_ITEM.set(2);
@@ -436,7 +431,7 @@ public class AirdropConfig {
         BASE_ZOMBIES_PER_WAVE.set(20);
         ZOMBIES_PER_TIER_STEP.set(10);
         WAVE_DURATION_MINUTES.set(3);
-        WAVES_AGGRO_EXCLUDE_ENTITY_IDS.set(List.of("minecraft:enderman"));
+        WAVES_AGGRO_EXCLUDE_ENTITY_IDS.set(java.util.Collections.singletonList("minecraft:enderman"));
         TOWER_SPAWN_DENSITY_PERCENT.set(100);
         GUARANTEE_SPAWN_TOWER.set(true);
         SPAWN_TOWER_SEARCH_RADIUS_CHUNKS.set(12);
