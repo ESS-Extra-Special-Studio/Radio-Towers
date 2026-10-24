@@ -50,7 +50,7 @@ public class AirdropentityOnEntityTickUpdateProcedure {
 					try {
 						String idStr = ids.get(i);
 						if (idStr == null || idStr.isEmpty()) continue;
-						ResourceLocation id = ResourceLocation.parse(idStr);
+						ResourceLocation id = new ResourceLocation(idStr);
 						ItemStack stack = ItemStack.EMPTY;
 						int unitsPerStack = 1;
 						String path = id.getPath();

@@ -79,9 +79,9 @@ public class RadiotowersMod {
 		NeoForge.EVENT_BUS.register(new net.mcreator.radiotowers.events.WaveMobAggroHandler());
 
 		// RadioTowers special blocks in airdrop loot catalog: metal bars 5, trash 2.5 (3), airdrop crate 5
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:metal_bars"), 5));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:trashblock"), 1));
-		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse("radiotowers:airdrop_crate"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:metal_bars"), 5));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:trashblock"), 1));
+		AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation("radiotowers:airdrop_crate"), 5));
 
 		// Vanilla music discs in airdrop loot selection, 30 points each
 		int discPoints = 30;
@@ -93,7 +93,7 @@ public class RadiotowersMod {
 			"minecraft:music_disc_otherside", "minecraft:music_disc_pigstep", "minecraft:music_disc_5",
 			"minecraft:music_disc_relic"
 		}) {
-			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(ResourceLocation.parse(id), discPoints));
+			AirdropCatalog.ADDON_ENTRIES.add(new AirdropCatalog.Entry(new ResourceLocation(id), discPoints));
 		}
 	}
 
@@ -199,7 +199,7 @@ public class RadiotowersMod {
 
 	/** Discard any airdrop plane entities in the level so a saved-in-flight plane doesn't appear when rejoining. */
 	private static void discardSavedPlanesInLevel(ServerLevel level) {
-		ResourceLocation planeId = ResourceLocation.parse("radiotowers:planeentity");
+		ResourceLocation planeId = new ResourceLocation("radiotowers:planeentity");
 		for (Entity e : level.getAllEntities()) {
 			if (planeId.equals(BuiltInRegistries.ENTITY_TYPE.getKey(e.getType())))
 				e.discard();

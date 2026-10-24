@@ -18,7 +18,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 // Made with Blockbench 5.2.2 — crashed wreck variant of Modelplane (same airplane.png atlas)
 public class Modelplanecrashed<T extends Entity> extends EntityModel<T> {
 	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(
-			ResourceLocation.fromNamespaceAndPath("radiotowers", "modelplanecrashed"), "main");
+			new ResourceLocation("radiotowers", "modelplanecrashed"), "main");
 	private final ModelPart bone;
 
 	public Modelplanecrashed(ModelPart root) {
@@ -98,7 +98,7 @@ public class Modelplanecrashed<T extends Entity> extends EntityModel<T> {
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+		bone.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
 	}
 }

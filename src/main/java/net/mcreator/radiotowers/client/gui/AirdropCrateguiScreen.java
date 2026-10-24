@@ -36,7 +36,7 @@ public class AirdropCrateguiScreen extends AbstractContainerScreen<AirdropCrateg
 		menuStateUpdateActive = false;
 	}
 
-	private static final ResourceLocation texture = ResourceLocation.parse("radiotowers:textures/screens/airdrop_crategui.png");
+	private static final ResourceLocation texture = new ResourceLocation("radiotowers:textures/screens/airdrop_crategui.png");
 
 	@Override
 	public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {

@@ -56,7 +56,7 @@ public class LevelAddEntityMixin {
         }
     }
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     private static boolean setWaveMobPositionBeforeAdd(ServerLevel level, Entity entity) {
         if (!ENABLE_PRE_ADD_REPLACEMENT) return false;

@@ -45,8 +45,8 @@ import java.util.Optional;
  */
 @EventBusSubscriber(modid = RadiotowersMod.MODID)
 public final class GuaranteedSpawnTower {
-    private static final ResourceLocation TEMPLATE = ResourceLocation.fromNamespaceAndPath("radiotowers", "tower");
-    private static final ResourceLocation TEMPLATE_FALLBACK = ResourceLocation.fromNamespaceAndPath("radiotowers", "radiotower");
+    private static final ResourceLocation TEMPLATE = new ResourceLocation("radiotowers", "tower");
+    private static final ResourceLocation TEMPLATE_FALLBACK = new ResourceLocation("radiotowers", "radiotower");
     private static final int STEP_BLOCKS = 8;
     private static final int GROUND_SEARCH_DEPTH = 48;
     /** radiotowers:tower size is 12×48×19 */

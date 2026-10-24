@@ -17,7 +17,7 @@ public class AirdropentityRenderer extends MobRenderer<AirdropentityEntity, Mode
 
 	@Override
 	public ResourceLocation getTextureLocation(AirdropentityEntity entity) {
-		return ResourceLocation.parse("radiotowers:textures/entities/airdrop_crate2.png");
+		return new ResourceLocation("radiotowers:textures/entities/airdrop_crate2.png");
 	}
 
 	private static final class AnimatedModel extends Modelairdropcrate_Converted<AirdropentityEntity> {

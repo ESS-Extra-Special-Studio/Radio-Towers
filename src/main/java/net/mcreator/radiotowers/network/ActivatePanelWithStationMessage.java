@@ -24,7 +24,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
  * Server calls Dead Air's API to activate the panel at the given pos with the chosen station (if Dead Air is loaded).
  */
 public class ActivatePanelWithStationMessage implements CustomPacketPayload {
-    public static final Type<ActivatePanelWithStationMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "activate_panel_station"));
+    public static final Type<ActivatePanelWithStationMessage> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "activate_panel_station"));
     public static final StreamCodec<FriendlyByteBuf, ActivatePanelWithStationMessage> STREAM_CODEC = StreamCodec.of((buf, msg) -> ActivatePanelWithStationMessage.encode(msg, buf), ActivatePanelWithStationMessage::new);
 
     @Override

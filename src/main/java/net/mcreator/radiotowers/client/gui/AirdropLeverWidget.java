@@ -16,8 +16,8 @@ import java.util.function.BooleanSupplier;
  */
 public class AirdropLeverWidget extends AbstractWidget {
 
-    private static final ResourceLocation TEX_OFF = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_off.png");
-    private static final ResourceLocation TEX_ON = ResourceLocation.fromNamespaceAndPath("radiotowers", "textures/gui/airdrop_switch_on.png");
+    private static final ResourceLocation TEX_OFF = new ResourceLocation("radiotowers", "textures/gui/airdrop_switch_off.png");
+    private static final ResourceLocation TEX_ON = new ResourceLocation("radiotowers", "textures/gui/airdrop_switch_on.png");
 
     private final Runnable onActivate;
     /** Extra gate (e.g. catalog needs 10+ points); standard airdrop uses {@code () -> true}. */

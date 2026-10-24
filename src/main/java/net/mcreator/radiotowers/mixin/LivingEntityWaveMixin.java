@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Entity.class)
 public class LivingEntityWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     @ModifyVariable(method = "setInvulnerable(Z)V", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceInvulnOffDuringWave(boolean invulnerable) {

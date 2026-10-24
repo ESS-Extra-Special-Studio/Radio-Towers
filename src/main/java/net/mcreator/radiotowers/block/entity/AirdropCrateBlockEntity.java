@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 import io.netty.buffer.Unpooled;
 
 public class AirdropCrateBlockEntity extends RandomizableContainerBlockEntity implements WorldlyContainer {
-	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = ResourceLocation.fromNamespaceAndPath("radiotowers", "radio_tower_overrun_loot");
+	private static final ResourceLocation STRUCTURE_OVERRUN_LOOT = new ResourceLocation("radiotowers", "radio_tower_overrun_loot");
 
 	private NonNullList<ItemStack> stacks = NonNullList.withSize(27, ItemStack.EMPTY);
 	/** When true, crate was filled from player's airdrop selection — do not add Tacz ammo on open. */

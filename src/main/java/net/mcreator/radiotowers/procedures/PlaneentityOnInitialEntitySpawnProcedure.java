@@ -76,9 +76,9 @@ public class PlaneentityOnInitialEntitySpawnProcedure {
 		}
 		if (world instanceof Level _level) {
 			if (!_level.isClientSide()) {
-				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
+				_level.playSound(null, BlockPos.containing(entity.getX(), entity.getY(), entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1);
 			} else {
-				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(ResourceLocation.parse("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
+				_level.playLocalSound((entity.getX()), (entity.getY()), (entity.getZ()), BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("radiotowers:planeflyby")), SoundSource.AMBIENT, 200, 1, false);
 			}
 		}
 		RadiotowersMod.queueServerWork(65, () -> {

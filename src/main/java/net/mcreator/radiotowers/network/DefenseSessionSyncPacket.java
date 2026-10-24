@@ -22,7 +22,7 @@ import net.mcreator.radiotowers.integration.DefenseSessionClientMirror;
  * Server -> Client: whether a RadioTowers defense wave session is active in this dimension (for NMS mixin on client).
  */
 public class DefenseSessionSyncPacket implements CustomPacketPayload {
-    public static final Type<DefenseSessionSyncPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "defense_session_sync"));
+    public static final Type<DefenseSessionSyncPacket> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "defense_session_sync"));
     public static final StreamCodec<FriendlyByteBuf, DefenseSessionSyncPacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> DefenseSessionSyncPacket.encode(msg, buf), DefenseSessionSyncPacket::new);
 
     @Override

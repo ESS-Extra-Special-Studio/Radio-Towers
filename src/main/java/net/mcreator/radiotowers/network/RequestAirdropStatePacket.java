@@ -27,7 +27,7 @@ import net.mcreator.radiotowers.integration.ZombieWavesAPILoader;
  * Server responds with AirdropStatePacket. Wave-in-progress is only true if this player has a pending airdrop at this panel.
  */
 public class RequestAirdropStatePacket implements CustomPacketPayload {
-    public static final Type<RequestAirdropStatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "request_airdrop_state"));
+    public static final Type<RequestAirdropStatePacket> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "request_airdrop_state"));
     public static final StreamCodec<FriendlyByteBuf, RequestAirdropStatePacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> RequestAirdropStatePacket.encode(msg, buf), RequestAirdropStatePacket::new);
 
     @Override

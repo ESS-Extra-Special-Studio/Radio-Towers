@@ -18,7 +18,7 @@ import net.mcreator.radiotowers.SafeClientCalls;
  * Server -> Client: current airdrop button state (wave in progress, cooldown end).
  */
 public class AirdropStatePacket implements CustomPacketPayload {
-    public static final Type<AirdropStatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "airdrop_state"));
+    public static final Type<AirdropStatePacket> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "airdrop_state"));
     public static final StreamCodec<FriendlyByteBuf, AirdropStatePacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> AirdropStatePacket.encode(msg, buf), AirdropStatePacket::new);
 
     @Override

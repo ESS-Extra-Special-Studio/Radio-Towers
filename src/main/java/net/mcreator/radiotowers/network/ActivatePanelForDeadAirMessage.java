@@ -22,7 +22,7 @@ import net.mcreator.radiotowers.RadiotowersMod;
  * Server calls Dead Air's API to activate the panel at the given pos (if Dead Air is loaded).
  */
 public class ActivatePanelForDeadAirMessage implements CustomPacketPayload {
-    public static final Type<ActivatePanelForDeadAirMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "activate_panel_deadair"));
+    public static final Type<ActivatePanelForDeadAirMessage> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "activate_panel_deadair"));
     public static final StreamCodec<FriendlyByteBuf, ActivatePanelForDeadAirMessage> STREAM_CODEC = StreamCodec.of((buf, msg) -> ActivatePanelForDeadAirMessage.encode(msg, buf), ActivatePanelForDeadAirMessage::new);
 
     @Override

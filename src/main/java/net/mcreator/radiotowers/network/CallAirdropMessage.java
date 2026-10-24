@@ -39,7 +39,7 @@ import java.util.List;
  * Without API: spawn plane at panel immediately.
  */
 public class CallAirdropMessage implements CustomPacketPayload {
-    public static final Type<CallAirdropMessage> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "call_airdrop"));
+    public static final Type<CallAirdropMessage> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "call_airdrop"));
     public static final StreamCodec<FriendlyByteBuf, CallAirdropMessage> STREAM_CODEC = StreamCodec.of((buf, msg) -> CallAirdropMessage.encode(msg, buf), CallAirdropMessage::new);
 
     @Override

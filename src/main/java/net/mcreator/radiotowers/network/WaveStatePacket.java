@@ -20,7 +20,7 @@ import net.mcreator.radiotowers.SafeClientCalls;
  * Also carries a flag so the client keeps NMS suppression in sync even if {@link DefenseSessionSyncPacket} is missed.
  */
 public class WaveStatePacket implements CustomPacketPayload {
-    public static final Type<WaveStatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "wave_state"));
+    public static final Type<WaveStatePacket> TYPE = new Type<>(new ResourceLocation(RadiotowersMod.MODID, "wave_state"));
     public static final StreamCodec<FriendlyByteBuf, WaveStatePacket> STREAM_CODEC = StreamCodec.of((buf, msg) -> WaveStatePacket.encode(msg, buf), WaveStatePacket::new);
 
     @Override

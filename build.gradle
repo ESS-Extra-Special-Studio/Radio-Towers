@@ -32,10 +32,6 @@ sourceSets {
 
 neoForge {
     version = project.neo_version
-    parchment {
-        mappingsVersion = project.parchment_mappings_version
-        minecraftVersion = project.parchment_minecraft_version
-    }
     runs {
         client {
             client()
@@ -59,9 +55,9 @@ neoForge {
 }
 
 dependencies {
-    implementation "uk.co.extraspecialstudio:extraspeciallib:${esl_version}"
-    implementation "uk.co.extraspecialstudio:extraspecialcore:${esc_version}"
-    implementation "uk.co.extraspecialstudio:esn:${esn_version}"
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESL - 1.20.6 NeoForge/build/libs/extraspeciallib-1.2.0+1.20.6-neoforge.jar')
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESC - 1.20.6 NeoForge/build/libs/extraspecialcore-2.1.0+1.20.6-neoforge.jar')
+    implementation files('C:/Users/Ksivi/IdeaProjects/ESN - 1.20.6 NeoForge/build/libs/esn-1.0.2+1.20.6-neoforge.jar')
 }
 
 afterEvaluate {
@@ -104,23 +100,6 @@ var generateModMetadata = tasks.register("generateModMetadata", ProcessResources
 
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
-
-tasks.register('copyToNeoForgeTestPack') {
-    dependsOn 'jar'
-    doLast {
-        def jar = tasks.named('jar', Jar).get().archiveFile.get().asFile
-        def dest = file("${System.getProperty('user.home')}/curseforge/minecraft/Instances/NEOFORGE 1.21.1 TESTS/mods")
-        if (dest.exists()) {
-            dest.listFiles({ f -> f.name.startsWith('radiotowers-') && f.name.endsWith('.jar') } as FileFilter)?.each { it.delete() }
-            copy { from jar; into dest }
-            println "Copied ${jar.name} to ${dest}"
-        } else {
-            println "NeoForge test pack mods folder not found: ${dest}"
-        }
-    }
-}
-
-tasks.named('build').configure { finalizedBy 'copyToNeoForgeTestPack' }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'

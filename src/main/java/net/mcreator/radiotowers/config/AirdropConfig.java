@@ -325,10 +325,10 @@ public class AirdropConfig {
     public static ResourceLocation getStandardAirdropLootTable() {
         String raw = STANDARD_AIRDROP_LOOT_TABLE.get();
         if (raw == null || raw.isBlank()) {
-            return ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+            return new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
         }
         ResourceLocation parsed = ResourceLocation.tryParse(raw.trim());
-        return parsed != null ? parsed : ResourceLocation.parse(DEFAULT_STANDARD_LOOT_TABLE);
+        return parsed != null ? parsed : new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
     }
 
     /** Whether catalog airdrops should use ESL (preferred) or Berezka waves when a backend is present. */

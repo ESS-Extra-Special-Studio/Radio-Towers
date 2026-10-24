@@ -145,7 +145,7 @@ public class RadiotowersModVariables {
 	}
 
 	public static class SavedDataSyncMessage implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
-		public static final Type<SavedDataSyncMessage> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "saved_data_sync"));
+		public static final Type<SavedDataSyncMessage> TYPE = new Type<>(new net.minecraft.resources.ResourceLocation(RadiotowersMod.MODID, "saved_data_sync"));
 		public static final net.minecraft.network.codec.StreamCodec<FriendlyByteBuf, SavedDataSyncMessage> STREAM_CODEC =
 			net.minecraft.network.codec.StreamCodec.of((buf, msg) -> SavedDataSyncMessage.buffer(msg, buf), SavedDataSyncMessage::new);
 

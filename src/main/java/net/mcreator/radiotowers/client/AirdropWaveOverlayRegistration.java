@@ -13,7 +13,7 @@ public class AirdropWaveOverlayRegistration {
 
     @SubscribeEvent
     public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
-        event.registerAbove(VanillaGuiLayers.HOTBAR, ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "airdrop_wave"),
+        event.registerAbove(VanillaGuiLayers.HOTBAR, new ResourceLocation(RadiotowersMod.MODID, "airdrop_wave"),
             (guiGraphics, deltaTracker) -> {
                 var window = net.minecraft.client.Minecraft.getInstance().getWindow();
                 AirdropWaveOverlay.render(guiGraphics, window.getGuiScaledWidth(), window.getGuiScaledHeight());

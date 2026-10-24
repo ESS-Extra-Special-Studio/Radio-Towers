@@ -28,7 +28,7 @@ public class PlaneentityRenderer extends MobRenderer<PlaneentityEntity, EntityMo
 
 	@Override
 	public ResourceLocation getTextureLocation(PlaneentityEntity entity) {
-		return ResourceLocation.parse("radiotowers:textures/entities/airplane.png");
+		return new ResourceLocation("radiotowers:textures/entities/airplane.png");
 	}
 
 	@Override

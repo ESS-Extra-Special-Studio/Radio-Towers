@@ -15,7 +15,7 @@ import net.mcreator.radiotowers.SafeClientCalls;
  */
 public class AirdropModeUnlockPacket implements CustomPacketPayload {
     public static final Type<AirdropModeUnlockPacket> TYPE =
-        new Type<>(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, "airdrop_mode_unlock"));
+        new Type<>(new ResourceLocation(RadiotowersMod.MODID, "airdrop_mode_unlock"));
     public static final StreamCodec<FriendlyByteBuf, AirdropModeUnlockPacket> STREAM_CODEC =
         StreamCodec.of((buf, msg) -> AirdropModeUnlockPacket.encode(msg, buf), AirdropModeUnlockPacket::new);
 

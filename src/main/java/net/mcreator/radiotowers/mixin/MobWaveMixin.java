@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(Mob.class)
 public class MobWaveMixin {
 
-    private static final ResourceLocation PLANE_TYPE_ID = ResourceLocation.parse("radiotowers:planeentity");
+    private static final ResourceLocation PLANE_TYPE_ID = new ResourceLocation("radiotowers:planeentity");
 
     @ModifyVariable(method = "setNoAi", at = @At("HEAD"), argsOnly = true, remap = true)
     private boolean radiotowers$forceNoAiOffDuringWave(boolean noAi) {

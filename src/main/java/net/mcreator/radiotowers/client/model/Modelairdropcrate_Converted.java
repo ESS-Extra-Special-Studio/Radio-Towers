@@ -23,7 +23,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T> {
 	// This layer location should be baked with EntityRendererProvider.Context in
 	// the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("radiotowers", "modelairdropcrate_converted"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("radiotowers", "modelairdropcrate_converted"), "main");
 	public final ModelPart airdrop;
 	public final ModelPart parachute;
 	public final ModelPart Glider;
@@ -203,7 +203,7 @@ public class Modelairdropcrate_Converted<T extends Entity> extends EntityModel<T
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
-		airdrop.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
+		airdrop.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
 	}
 }

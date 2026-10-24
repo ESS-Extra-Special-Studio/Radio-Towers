@@ -29,7 +29,7 @@ public class RadiotowersModEntities {
 			EntityType.Builder.<PlaneentityEntity>of(PlaneentityEntity::new, MobCategory.MONSTER).fireImmune().sized(0.6f, 1.8f).clientTrackingRange(64).updateInterval(3));
 
 	private static <T extends Entity> DeferredHolder<EntityType<?>, EntityType<T>> register(String registryname, EntityType.Builder<T> entityTypeBuilder) {
-		return REGISTRY.register(registryname, () -> entityTypeBuilder.build(ResourceLocation.fromNamespaceAndPath(RadiotowersMod.MODID, registryname).toString()));
+		return REGISTRY.register(registryname, () -> entityTypeBuilder.build(new ResourceLocation(RadiotowersMod.MODID, registryname).toString()));
 	}
 
 	@SubscribeEvent

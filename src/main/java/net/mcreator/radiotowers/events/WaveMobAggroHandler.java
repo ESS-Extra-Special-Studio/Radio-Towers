@@ -263,7 +263,7 @@ public class WaveMobAggroHandler {
         // Adopt any Monster with wave tags that we didn't register (e.g. added via path we don't hook) so we clear invuln/NoAI and count their death
         boolean inSet = WAVE_SPAWNED_ENTITY_IDS.contains(entity.getId());
         if (!inSet && (mob.getPersistentData().getBoolean(WaveSpawnTag.WAVE_SPAWN_TAG) || mob.getPersistentData().getBoolean(WaveSpawnTag.RING_POSITION_SET))) {
-            if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+            if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).equals(new net.minecraft.resources.ResourceLocation("radiotowers:planeentity"))) return;
             PendingAirdropStorage.Pending pending = PendingAirdropStorage.getPendingNear(level, mob.blockPosition(), WAVE_MOB_RANGE);
             if (pending == null) pending = PendingAirdropStorage.getAnyPendingInLevel(level);
             if (pending != null) {
@@ -323,7 +323,7 @@ public class WaveMobAggroHandler {
         if (!(entity.level() instanceof ServerLevel level)) return;
         if (!(entity instanceof Monster)) return;
         if (entity instanceof Player) return;
-        if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+        if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).equals(new net.minecraft.resources.ResourceLocation("radiotowers:planeentity"))) return;
         if (PendingAirdropStorage.getAnyPendingInLevel(level) == null) return;
         Mob mob = (Mob) entity;
         mob.setInvulnerable(false);
@@ -372,7 +372,7 @@ public class WaveMobAggroHandler {
         long waveAge = level.getGameTime() - pending.currentWaveStartedAtGameTime;
         if (waveAge < 0 || waveAge > UNTRACKED_CAPTURE_WINDOW_TICKS) return;
         var mobTypeId = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
-        if (mobTypeId != null && mobTypeId.equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) return;
+        if (mobTypeId != null && mobTypeId.equals(new net.minecraft.resources.ResourceLocation("radiotowers:planeentity"))) return;
         if (AirdropConfig.isWaveAggroExcluded(mob.getType())) return;
         // Only capture zombie-family wave mobs; ignore ambient creepers/skeletons around the area.
         if (mob.getType() != EntityType.ZOMBIE && mob.getType() != EntityType.DROWNED) return;
@@ -586,7 +586,7 @@ public class WaveMobAggroHandler {
                         // Deleting them here causes "spawn then instant despawn" and under-filled waves.
                         continue;
                     }
-                    if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).equals(net.minecraft.resources.ResourceLocation.parse("radiotowers:planeentity"))) continue;
+                    if (net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).equals(new net.minecraft.resources.ResourceLocation("radiotowers:planeentity"))) continue;
                     WAVE_SPAWNED_ENTITY_IDS.add(mob.getId());
                     // Ensure this adopted wave mob is always counted for HUD + wave completion.
                     mob.getPersistentData().putBoolean(WaveSpawnTag.RING_POSITION_SET, true);
