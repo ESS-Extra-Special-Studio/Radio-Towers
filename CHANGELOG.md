@@ -1,3 +1,10 @@
+## 1.3.1
+
+Update by: Extra_Special_K
+
+Fixed:
+NeoForge no longer registers a listener on abstract ESL lobby events (use concrete lobby event subclasses so the mod loads on NeoForge 1.21.1+).
+
 ## 1.3.0
 
 Update by: Extra_Special_K
