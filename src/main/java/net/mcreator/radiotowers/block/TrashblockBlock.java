@@ -19,7 +19,7 @@ public class TrashblockBlock extends Block {
 				.sound(new DeferredSoundType(1.0f, 1.0f, () -> BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("block.metal.break")), () -> BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("radiotowers:trash_walking")),
 						() -> BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("block.metal.place")), () -> BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("block.metal.hit")),
 						() -> BuiltInRegistries.SOUND_EVENT.get(new ResourceLocation("block.metal.fall"))))
-				.strength(1f, 10f).noCollission().friction(0.5f).speedFactor(0.4f).jumpFactor(1.1f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
+				.strength(1f, 10f).noCollission().friction(0.5f).speedFactor(0.4f).jumpFactor(0.5f).noOcclusion().isRedstoneConductor((bs, br, bp) -> false));
 	}
 
 	@Override
