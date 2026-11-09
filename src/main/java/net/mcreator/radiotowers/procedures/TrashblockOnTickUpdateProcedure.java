@@ -63,8 +63,6 @@ public class TrashblockOnTickUpdateProcedure {
 				}
 				if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
 					_entity.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 50, false, false));
-				if (entity instanceof LivingEntity _entity && !_entity.level().isClientSide())
-					_entity.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 40, 128, false, false));
 			}
 		}
 	}
