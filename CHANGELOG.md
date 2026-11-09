@@ -1,3 +1,11 @@
+## 1.3.2
+
+Update by: Extra_Special_K
+
+Fixed:
+Hard landings in trash no longer apply Jump Boost level 128 (that launched players on the next jump; parkour/flip mods made it obvious).
+Trash jump factor lowered so the block feels sticky instead of bouncy.
+NeoForge lobby no longer registers a listener on abstract ESL lobby events (concrete subclasses only).
 ## 1.3.0
 
 Update by: Extra_Special_K
