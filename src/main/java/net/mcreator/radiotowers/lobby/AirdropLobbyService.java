@@ -460,26 +460,53 @@ public final class AirdropLobbyService {
     }
 
     @SubscribeEvent
-    public static void onLobbyEvent(EslLobbyEvent event) {
-        if (event instanceof EslLobbyEvent.Closed closed) {
-            PENDING_GO.remove(closed.lobby().id());
-            COUNTDOWN_END.remove(closed.lobby().id());
-            MinecraftServer server = closed.lobby().level() != null ? closed.lobby().level().getServer() : null;
-            if (server != null) {
-                notifyClosed(server, closed.lobby().id(), closed.lobby().allMemberUuids());
-            }
-            return;
+    public static void onLobbyClosed(EslLobbyEvent.Closed closed) {
+        PENDING_GO.remove(closed.lobby().id());
+        COUNTDOWN_END.remove(closed.lobby().id());
+        MinecraftServer server = closed.lobby().level() != null ? closed.lobby().level().getServer() : null;
+        if (server != null) {
+            notifyClosed(server, closed.lobby().id(), closed.lobby().allMemberUuids());
         }
-        if (event instanceof EslLobbyEvent.InviteSent
-            || event instanceof EslLobbyEvent.Joined
-            || event instanceof EslLobbyEvent.Left
-            || event instanceof EslLobbyEvent.Kicked
-            || event instanceof EslLobbyEvent.ReadyChanged
-            || event instanceof EslLobbyEvent.AllReady
-            || event instanceof EslLobbyEvent.Starting
-            || event instanceof EslLobbyEvent.Created) {
-            syncToLobby(event.lobby());
-        }
+    }
+
+    @SubscribeEvent
+    public static void onLobbyCreated(EslLobbyEvent.Created event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyInviteSent(EslLobbyEvent.InviteSent event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyJoined(EslLobbyEvent.Joined event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyLeft(EslLobbyEvent.Left event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyKicked(EslLobbyEvent.Kicked event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyReadyChanged(EslLobbyEvent.ReadyChanged event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyAllReady(EslLobbyEvent.AllReady event) {
+        syncToLobby(event.lobby());
+    }
+
+    @SubscribeEvent
+    public static void onLobbyStarting(EslLobbyEvent.Starting event) {
+        syncToLobby(event.lobby());
     }
 
     private static EslLobby ensureLobby(ServerPlayer host, BlockPos panelPos) {
