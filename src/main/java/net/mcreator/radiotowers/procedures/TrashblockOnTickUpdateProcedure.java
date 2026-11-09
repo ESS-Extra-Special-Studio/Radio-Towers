@@ -68,8 +68,6 @@ public class TrashblockOnTickUpdateProcedure {
 				}
 				if (living != null && !living.level.isClientSide())
 					living.addEffect(new EffectInstance(Effects.MOVEMENT_SLOWDOWN, 40, 50, false, false));
-				if (living != null && !living.level.isClientSide())
-					living.addEffect(new EffectInstance(Effects.JUMP, 40, 128, false, false));
 			}
 		}
 	}
