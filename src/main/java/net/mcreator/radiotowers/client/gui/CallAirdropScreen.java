@@ -986,6 +986,7 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
                 java.lang.reflect.Method getName = st.getClass().getMethod("getName");
                 String id = String.valueOf(getId.invoke(st));
                 if (NON_DYNAMIC_STATION_IDS.contains(id)) continue;
+                if (isDeadAirMissingPackStation(getId.invoke(st))) continue;
                 String name = String.valueOf(getName.invoke(st));
                 out.add(new StationOption(name, id));
             }
@@ -994,6 +995,18 @@ public class CallAirdropScreen extends EscScreen implements InternetStationParen
             return out;
         } catch (Throwable ignored) {
             return List.of();
+        }
+    }
+
+    /** Skip Dead Air stand-in stations for soundtrack packs this client does not have. */
+    private static boolean isDeadAirMissingPackStation(Object stationIdObj) {
+        try {
+            Class<?> packs = Class.forName("uk.co.extraspecialstudio.dead_air.music.ExpansionPacks");
+            java.lang.reflect.Method m = packs.getMethod("isMissingPack", net.minecraft.resources.ResourceLocation.class);
+            Object r = m.invoke(null, stationIdObj);
+            return Boolean.TRUE.equals(r);
+        } catch (Throwable ignored) {
+            return false;
         }
     }
 }

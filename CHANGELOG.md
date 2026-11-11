@@ -1,3 +1,16 @@
+## 1.3.3
+
+Update by: Extra_Special_K
+
+Added:
+Mod page section explaining how to edit `radiotowers-common.toml` for wave length and Call Airdrop shop (blacklist / prices / TaCZ toggles), with copy-paste examples.
+Changed:
+Trash jump factor raised so players can jump out again while the block stays sticky underfoot.
+Hard landings in trash use mild Slowness instead of a near-freeze amplifier.
+Declared dependencies no longer list Berezka mods; ESL remains the wave runtime (legacy zombie-waves API stays a silent optional fallback only if ESL is missing).
+CurseForge description rewritten: no Berezka optional-use copy; config how-to included.
+ESN compile pin updated to 1.0.2 (runtime range already accepted it).
+
 ## 1.3.2
 
 Update by: Extra_Special_K
