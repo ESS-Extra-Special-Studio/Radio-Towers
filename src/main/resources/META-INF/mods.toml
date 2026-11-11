@@ -61,17 +61,12 @@ Server and client: install this mod on the dedicated server and on every client.
     ordering="AFTER"
     side="BOTH"
 
-# Optional: defense waves + delayed airdrop delivery. Without these, Call Airdrop spawns the plane immediately.
-[[dependencies.radiotowers]]
-    modId="berezkas_zombie_waves_api"
-    mandatory=false
+
     versionRange="[1.0,)"
     ordering="AFTER"
     side="BOTH"
 
-[[dependencies.radiotowers]]
-    modId="berezka_api"
-    mandatory=false
+
     versionRange="[1.0,)"
     ordering="AFTER"
     side="BOTH"
