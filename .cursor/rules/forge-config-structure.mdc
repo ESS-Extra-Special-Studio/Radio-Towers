@@ -1,0 +1,37 @@
+---
+description: Structure Forge/NeoForge ModConfigSpec configs like RadioTowers (banners, push/pop, start-here)
+globs: "**/Config.java,**/*Config.java,**/*ConfigSpec*.java"
+alwaysApply: false
+---
+
+# ESS config layout (RadioTowers style)
+
+When adding or editing Forge / NeoForge `ForgeConfigSpec` / `ModConfigSpec` configs, match **RadioTowers** (`AirdropConfig`) and **Dead Letters** (`Config`).
+
+## Required shape
+
+1. **Section banners** before each `push(...)` — multi-line `BUILDER.comment("====…", "TITLE", "plain-English what this section does", "====…")`.
+2. **`push("section")` / `pop()`** for every logical group so the in-game config screen and toml get clear categories (`[general]`, `[placement]`, …).
+3. **Start-here first** — put the options pack makers actually change at the top of the first section, with a `----- START HERE: … -----` comment line.
+4. **Plain-English comments** on every key: what it does, recommended range, and **Default: …** when helpful. Prefer several short comment lines over one dense paragraph.
+5. **Preserve key paths** when tidying an existing mod (`push("general")` + `define("spawnChance")` ≡ old `define("general.spawnChance")`) so existing `*-common.toml` / modpacks keep working.
+6. **Do not invent new keys or bump versions** just for a tidy pass.
+
+## Do not
+
+- Dump a flat list of `define(...)` with one-liner comments and no sections.
+- Nest dotted key names *and* `push` for the same segment (pick `push` + short key names).
+- Hide critical player-facing toggles under Debug / Advanced without a Start-here pointer.
+
+## Gold references
+
+- `RadioTowers` → `net.mcreator.radiotowers.config.AirdropConfig`
+- `Dead Letters` → `uk.co.extraspecialstudio.Config`
+
+## Checklist before finishing
+
+- [ ] Every group has banner + `push` / `pop`
+- [ ] Start-here options ordered first in the primary section
+- [ ] Comments readable in Mod Menu / config screen and in the toml
+- [ ] Existing toml paths unchanged (unless the user asked for a breaking rename)
+- [ ] Forge and NeoForge siblings stay in parity when both exist
