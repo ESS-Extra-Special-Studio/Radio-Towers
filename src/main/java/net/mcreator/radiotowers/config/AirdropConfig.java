@@ -58,7 +58,7 @@ public class AirdropConfig {
     public static final ModConfigSpec.IntValue LOBBY_INVITE_TIMEOUT_SECONDS;
     public static final ModConfigSpec.BooleanValue LOBBY_MEMBERS_ONLY_CRATES;
 
-        // --- Waves (ESL Wave API preferred; Berezka optional fallback) ---
+        // --- Waves (ESL preferred; optional legacy zombie-waves API if ESL missing) ---
     public static final ModConfigSpec.BooleanValue USE_ZOMBIE_WAVES_FOR_AIRDROP;
     public static final ModConfigSpec.ConfigValue<List<? extends String>> WAVES_AGGRO_EXCLUDE_ENTITY_IDS;
     public static final ModConfigSpec.IntValue WAVE_DURATION_MINUTES;
@@ -225,13 +225,13 @@ public class AirdropConfig {
             "============================================================",
             "DEFENSE WAVES",
             "Catalog airdrops use Extra Special LIB waves when ESL is installed.",
-            "If ESL is absent, Berezka Zombie Waves API is used when present.",
+            "If ESL is absent, an optional legacy zombie-waves API may be used when present.",
             "Set useZombieWavesForAirdrop=false for immediate plane delivery.",
             "============================================================"
         ).push("waves");
         USE_ZOMBIE_WAVES_FOR_AIRDROP = BUILDER
             .comment(
-                "true: catalog airdrops start defense waves when ESL or Berezka is installed.",
+                "true: catalog airdrops start defense waves when ESL (or a legacy wave API) is installed.",
                 "false: the plane arrives immediately, even when a wave backend is installed."
             )
             .define("useZombieWavesForAirdrop", true);
@@ -331,7 +331,7 @@ public class AirdropConfig {
         return parsed != null ? parsed : new ResourceLocation(DEFAULT_STANDARD_LOOT_TABLE);
     }
 
-    /** Whether catalog airdrops should use ESL (preferred) or Berezka waves when a backend is present. */
+    /** Whether catalog airdrops should use ESL (preferred) or a legacy wave API when ESL is missing. */
     public static boolean shouldUseZombieWavesForAirdrop() {
         return USE_ZOMBIE_WAVES_FOR_AIRDROP.get();
     }
