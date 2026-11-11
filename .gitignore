@@ -14,3 +14,6 @@ compile_err*.txt
 _port*.py
 _tacz_nbt.py
 !gradle/wrapper/gradle-wrapper.jar
+
+run-client-*.txt
+
