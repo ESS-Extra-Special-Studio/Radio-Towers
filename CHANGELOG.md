@@ -1,3 +1,9 @@
+## 1.3.4
+
+Update by: Extra_Special_K
+
+Fixed:
+mods.toml / neoforge.mods.toml no longer leave orphan dependency fields after removing Berezka declarations (that broke FML with "corrupt or misconfigured toml").
 ## 1.3.3
 
 Update by: Extra_Special_K
