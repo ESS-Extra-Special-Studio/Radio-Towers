@@ -61,15 +61,5 @@ Server and client: install this mod on the dedicated server and on every client.
     ordering="AFTER"
     side="BOTH"
 
-
-    versionRange="[1.0,)"
-    ordering="AFTER"
-    side="BOTH"
-
-
-    versionRange="[1.0,)"
-    ordering="AFTER"
-    side="BOTH"
-
 # Start of user code block dependencies configuration
 # End of user code block dependencies configuration
