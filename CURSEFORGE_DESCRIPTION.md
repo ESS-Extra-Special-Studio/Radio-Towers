@@ -1,4 +1,4 @@
-# Apocalypse Structures: Radio Towers and Airdrops — CurseForge Page Description
+﻿# Apocalypse Structures: Radio Towers and Airdrops — CurseForge Page Description
 
 ## Short Summary (for CurseForge short description field — under 200 characters)
 
@@ -14,7 +14,7 @@ Worldgen radio towers and airdrops: climb metal bars, use the radio panel for co
 
 **Apocalypse Structures: Radio Towers and Airdrops**
 
-Adds **three climbable radio tower** structures and an **airdrop** system to your world. Climb **Metal Bars** to the top, use the **Radio Panel**, and call in supply drops—or coordinate with **Dead Air** for full broadcast and walkie-tuning gameplay when that mod is installed.
+Adds **three climbable radio tower** structures and an **airdrop** system to your world. Climb **Metal Bars** to the top, use the **Radio Panel**, and call in supply drops—or coordinate with **Dead Air** for full broadcast and radio-tuning gameplay when that mod is installed.
 
 ---
 
@@ -42,7 +42,7 @@ Adds **three climbable radio tower** structures and an **airdrop** system to you
 **Radio Panel** behaviour depends on what else is installed:
 
 - **RadioTowers only** — panel UI for coordinates and a **standard airdrop** (loot table, cooldown).
-- **+ Dead Air (optional)** — panel also assigns **broadcast stations** (Turn off, default cycle, Dynamic, Internet). Tune and listen on a **walkie-talkie** through Dead Air’s GUI.
+- **+ Dead Air (optional)** — panel also assigns **broadcast stations** (Turn off, default cycle, Dynamic, Internet). Tune and listen on a **radio** through Dead Air’s GUI.
 - **+ Extra Special LIB (required on the ESS stack)** — **Call Airdrop** catalog with a point budget, search, difficulty, optional multiplayer lobby (needs ESN), and **defense waves** before the plane delivers your order.
 
 **Airdrop cooldown:** 3 minutes for standard panel calls; longer after wave-delivered catalog runs (both configurable).
@@ -97,7 +97,7 @@ You do **not** need to edit the mod jar or create a “new version” in an IDE 
 1. Find a radio tower in the world (or spawn one if your pack adds commands/datapacks).
 2. Climb **Metal Bars** to the **Radio Panel** at the top.
 3. Right-click the panel — coordinates to the nearest airdrop site, lever/buttons for drops and (if installed) station and catalog options.
-4. With **Dead Air** + a **walkie-talkie**, turn the walkie on and open Dead Air’s tuning screen to hear assigned stations.
+4. With **Dead Air** + a **radio**, turn the radio on and open Dead Air’s tuning screen to hear assigned stations.
 
 ---
 
@@ -106,7 +106,7 @@ You do **not** need to edit the mod jar or create a “new version” in an IDE 
 - **Required:** **ExtraSpecialCore (ESC)** — shared panel and airdrop GUIs.
 - **Required:** **ExtraSpecialLIB (ESL)** — lobby/session and wave runtime APIs (ESC already depends on ESL).
 - **Required:** **ExtraSpecialNetwork (ESN)** — multiplayer lobby packet fabric. Packs must include ESN with Radio Towers.
-- **Optional:** **Dead Air** — tower broadcasts, station assignment on panels, walkie integration. Radio Towers does **not** require Dead Air to load; structures and basic airdrops work without it.  
+- **Optional:** **Dead Air** — tower broadcasts, station assignment on panels, radio integration. Radio Towers does **not** require Dead Air to load; structures and basic airdrops work without it.  
   https://www.curseforge.com/minecraft/mc-mods/dead-air
 - **Optional:** **Timeless and Classics Zero (TaCZ)** — guns/ammo appear in the Call Airdrop catalog when installed (togglable in config).
 
