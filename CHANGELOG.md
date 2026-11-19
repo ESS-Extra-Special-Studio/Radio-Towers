@@ -1,3 +1,9 @@
+## 1.3.5
+
+Update by: Extra_Special_K
+
+Fixed:
+EscScreen GUIs on 1.20.2+ use renderWorldDim so panel chrome is not double-dimmed (muddy Call Airdrop / panel / lobby screens).
 ## 1.3.4
 
 Update by: Extra_Special_K
