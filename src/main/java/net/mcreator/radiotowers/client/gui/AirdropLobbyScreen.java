@@ -341,7 +341,7 @@ public class AirdropLobbyScreen extends EscScreen implements EscOwnsBackNav {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        renderWorldDim(guiGraphics);
         EscRect content = contentRect();
         EscPanel.renderPanel(guiGraphics, content, style);
         drawHeader(guiGraphics);
